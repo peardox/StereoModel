@@ -545,6 +545,181 @@ Keep this file up to date when the rules or the state of the work change.
   Logged "The SR display is ..."; StereoModel's note and Stereo-on status
   use it. PACKAGE REBUILD. Check whether the bridge's child window
   passes mouse messages through (drag on the output vs on the launcher).
+  Owner (20:33): DisplayName undeclared + ForceQueue E2250 (knock-on) -
+  the package had not been rebuilt; 46b also drops Eyes' unused
+  RGBA := False. Owner pushed "2 windows" 977a107 and "Stupid gitignore"
+  273bb9d (logs out of git, *.log and Win64/ ignored); synced, every file
+  matches.
+  ZERO COPY (owner, 20:45: "SRDemoFMX already does ZeroCopy ... for people
+  with worse [laptops] ... all the speed we can give them helps"). Plan, no
+  bridge change: StereoModel makes its own D3D11 device on the SR display's
+  adapter and gives it to the bridge (srb_SetExternalDevice before
+  srb_Initialize, as SRDemoFMX gives FMX's); two eye textures on it,
+  registered with OpenGL through WGL_NV_DX_interop2 (wglDXOpenDeviceNV,
+  wglDXRegisterObjectNV, Lock / Unlock); after each eye's RenderManual,
+  glBlitFramebuffer from Gorilla3D's picture into the eye texture, flipped
+  (GL is bottom-up); then srb_CopyEyeTexture(eye) and srb_PresentViews
+  (the bridge accepts any texture on its device). Screenshot route kept as
+  the fallback. Saves shot + copy + upload, ~6 ms of a 12-14 ms frame.
+  Step 1, StereoCam47: src/common/StereoModelGLProbe.pas (new; .dpr +
+  .dproj) ProbeGL logs once, after the first eye's RenderManual and after
+  its MakeScreenshot: current GL context / DC, vendor / renderer / version,
+  WGL_NV_DX_interop2 + wglDXOpenDeviceNV, draw / read framebuffer,
+  renderbuffer, 2D texture bindings, the read framebuffer's colour
+  attachment (texture / renderbuffer, name, size, internal format,
+  samples), and by RTTI the viewport's TTexture / TContext3D fields
+  (contexts one level deeper) and integer fields named *FBO* / *FRAMEBUF* /
+  *RENDERBUF* / *TEX*. Program only. 47b: GLInt hid the type GLint (Delphi
+  is case-blind) - GLInteger; FMX.Types for TPixelFormat.
+  Owner (20:51), the probe's answer: after RenderManual the context is
+  current, NVIDIA RTX 5090 OpenGL 4.6 (driver 610.47), WGL_NV_DX_interop2
+  there; draw and read framebuffer 3, its colour attachment texture 24
+  1280 x 720 GL_RGB8 - the viewport's LOGICAL size (1280 x 720 at scale
+  1.5; MakeScreenshot gave 1920 x 1080, so it renders again or scales);
+  after MakeScreenshot still framebuffer 3. glGetError $502 (ours or
+  Gorilla's, harmless). RTTI found no fields in TGorillaViewport.
+  StereoCam48, zero copy: bridge export srb_GetDevice (zip SRBridgeDevice1
+  for SRDelphiFMX, which also carries the unpushed SRDemoSnap1 files: the
+  bridge's g.dev, not AddRef'd; README / CLAUDE / SRBridge.h / .Api.pas);
+  Peardox.LeiaSR.Api declares it; TPeardoxLeiaSR.BridgeDevice (nil without
+  the export) and SubmitEyeTextures (srb_CopyEyeTexture x2 +
+  srb_PresentViews, counted by the new CountSubmit as SubmitViews is).
+  src/common/StereoModelGLInterop.pas (new; .dpr + .dproj):
+  TPeardoxGLInterop - two B8G8R8A8 textures made on the bridge's device
+  (own IPdxD3D11Device declaration up to CreateTexture2D, no Delphi D3D
+  headers), wglDXOpenDeviceNV, registered as GL textures (WRITE_DISCARD),
+  each attached to an FBO; CopyEye: lock, bind own FBO as draw, scissor
+  off, clear black if shifted, glBlitFramebuffer from the still-bound read
+  FBO with Y flipped and X shifted, put back draw FBO / scissor / clear
+  colour, unlock; SourceSize reads the read FBO's texture size. Eyes:
+  ZeroCopy (default True, key Z), PrepareZeroCopy after a screenshot-path
+  RenderManual (GL current) makes FInterop at the source size; CanZeroCopy
+  frames: RenderEyeGPU x2 then SubmitEyeTextures (timings: screenshot slot
+  = blit, copy 0, submit = present); a failure falls back to screenshots
+  for that device (a size change just remakes). Main: with
+  ZeroCopyPossible the viewport is sized at the view size in LOGICAL units
+  (Scale 1), so Gorilla3D draws 1920 x 1080. PACKAGE REBUILD and BRIDGE
+  REBUILD. 48b: glIsEnabled returns a Byte (GLboolean) - "<> 0".
+  Owner (21:06): zero copy set up ("two 1920 x 1080 eye textures"), one
+  screenshot frame woven, then the dialog "cannot begin rendering scene for
+  TContextOpenGLWindows: 1282" (GL_INVALID_OPERATION) and 0 frames; on exit
+  "Runtime error 231". FMX's OpenGL context (FMX.Context.GLES, DoBeginScene)
+  raises if ANY glGetError is pending; the probe had already seen $502
+  pending after RenderManual (Gorilla3D's, or ours), and on the screenshot
+  route MakeScreenshot took it. Owner: SRDemoFMX hit the same kind of thing
+  ("needed Delphi's OpenGL context source"). StereoCam49:
+  TPeardoxGLInterop.TakeErrors (glGetError until GL_NO_ERROR, at most 32)
+  after RenderManual and after the blit in RenderEyeGPU, each place's first
+  error logged (NoteGLError), and at the end of Start / Release; Start
+  keeps its HGLRC / HDC and Release makes them current (wglMakeCurrent)
+  when none is, so the GL side is undone; Eyes.ReleaseZeroCopy in FormClose
+  (before SR stops, while the context exists) and in LeiaSRStopped. Program
+  only.
+  Owner (21:10): "Not as bad (but not great either)" - ONE 1282 dialog,
+  then ZERO COPY WORKS: ~9 fps while the modal dialog was up (watchdog
+  frames), after OK 55 fps, then after the usual drop 90-110 fps, render
+  7.2, blit 0.4, copy 0, present 0.2 ms (screenshot route ~65-75 fps).
+  "OpenGL error $502 after the zero-copy blit (ours)" logged; none after
+  RenderManual. The dialog came on the set-up frame: PrepareZeroCopy runs
+  on both eyes' screenshot renders, and on the second its SourceSize (bind
+  the attachment texture to read its size, bind the old one back) left
+  $502 for MakeScreenshot's BeginScene. StereoCam50: SourceSize reads the
+  size by name with glGetTextureLevelParameteriv (GL 4.5, optional, else the
+  old bind) and always ends with TakeErrors.
+  Owner (21:14): no dialog, zero copy 90-109 fps (render 7.2, blit 0.4,
+  present 0.2 ms), no GL error logged - "But also no image". The blit
+  copies nothing without an error if the source's read buffer is GL_NONE
+  (or the colour mask / scissor interfere). StereoCam51: CopyEye sets read
+  buffer COLOR_ATTACHMENT0, colour mask all on, scissor off for the copy
+  and puts each back; once a second (Eyes -> FInterop.CheckNext) it logs
+  "Zero copy check": source FBO, read buffer, colour mask, sRGB writes,
+  scissor, and the middle pixel read back (glReadPixels, skipped if a pack
+  buffer is bound) from the source and from the eye texture after the
+  blit - so the next log says whether the picture reaches the eye texture
+  (GL side) or is lost after (D3D / bridge side).
+  Owner (21:17) log: every check "source framebuffer 3, read buffer $8CE0,
+  colour mask 1111, sRGB writes False, scissor False | middle pixel RGBA
+  source 0 0 0 0, eye texture 0 0 0 0", and $502 after the blit. RGB8 read
+  as RGBA would have alpha 255, so the reads failed too: FBO 3 is
+  MULTISAMPLED (FMX 3D views render with 4 samples; the probe's
+  GL_TEXTURE_2D bind of an MS texture failed - the old $502 - so its
+  "samples 0" was another texture's). A multisampled framebuffer may only
+  be resolved same rect, same format: our flipped / shifted blit into BGRA
+  was GL_INVALID_OPERATION. StereoCam52: Start reads GL_SAMPLES (source FBO
+  bound as draw for a moment) and the source texture's internal format
+  (DSA), and when samples > 1 makes FResolveFBO + FResolveTex (that format,
+  glTexImage2D); CopyEye resolves source -> FResolveFBO (same rect,
+  NEAREST), reads from there for the flipped / shifted blit and the check,
+  and puts read FBO, draw FBO and read buffer back. Logged "the picture has
+  N samples per pixel ... resolved first".
+  Owner (21:20): "4 samples per pixel, internal format $8814" (RGBA32F -
+  a float, likely HDR, target), no GL errors now, but the resolved middle
+  pixel still 0 0 0 0 (alpha 0 too) and no picture. So FBO 3 after
+  RenderManual is probably not where the finished picture is (Gorilla3D
+  may render HDR into FBO 3 and finish - tone-map / post - into another
+  target; texture 29 is bound after RenderManual). StereoCam53: one-off
+  TPeardoxGLInterop.Survey after Start - textures 1..64 (>= 256 px): target,
+  size, format, samples and, for 2D, the middle texel as floats
+  (glGetTextureSubImage); framebuffers 1..16: colour attachment 0 (DSA, so
+  nothing bound).
+  Owner (21:23): "Crash..." after the survey's texture 30 (the next texture
+  or the framebuffer part). The map (all 1920 x 1080): 1 2D RGBA8 (middle
+  0,0,0,1), 2 MS4 RGBA8, 11 and 14-18 2D RGBA8 (0,0,0,0), 19-24 MS4: RGBA8,
+  RG16F $822E, RGBA16F $881A, RGB16F $881B, RGB8 $8051, RGBA32F $8814
+  (= FBO 3's attachment) - a deferred G-buffer + HDR target, with 25-30 2D
+  copies of the same formats. EVERY middle texel was background (normal
+  RG 0, position 0): with the eye camera offset the middle falls between
+  spheres, so the 0 0 0 0 checks proved nothing. StereoCam54: Survey no
+  longer called (kept); the check counts lit pixels of a 3 x 3 grid in
+  the source and in the eye texture. ASKED the owner whether the 21:20
+  run (resolve in place) showed a picture. If FBO 3 (HDR, before tone
+  mapping) is the wrong source, texture 1 (RGBA8, alpha 1) is the likely
+  finished picture.
+  Owner (21:25): "black"; the grid read source 0, eye texture 0 at 90-110
+  fps: FBO 3 holds nothing usable after RenderManual. StereoCam55:
+  FindPicture (in Start) walks framebuffers 1..32 with safe calls only
+  (glIsFramebuffer, DSA attachment and texture queries - no
+  glGetTextureSubImage, the likely survey crash), reads a 3 x 3 grid of
+  every eye-sized 2D one, and of every MS RGBA8 one after resolving it
+  into a temporary RGBA8 target; logs each ("framebuffer N, texture T,
+  ... lit L of 9") and copies from the most lit (FSourceFB), else the
+  bound one. CopyEye binds FSourceFB for reading and puts the bound one
+  back after.
+  Owner (21:31, StereoCam55): "a picture - but the frames are
+  misaligned". FindPicture chose framebuffer 1 (texture 2, FMX's MS4
+  RGBA8, lit 3 of 9; framebuffer 2 = texture 1 its resolve, also 3);
+  FBO 3 (HDR) is not readable, FBO 4 (texture 30) lit 0. Zero copy: 95-106
+  fps, render 7.3 ms, copy 0.5, submit 0.2 (screenshots at the weave
+  size were ~70). The checks show the eye texture matching the source
+  (middle pixels equal bar edge pixels), so the copy is current and
+  whole. StereoCam56: key F (TPeardoxGorillaEyes.ZeroCopyFlip ->
+  TPeardoxGLInterop.FlipRows) turns the row flip off, to test; S, X and
+  Z (screenshots) are the other comparisons. ASKED the owner what the
+  misalignment looks like.
+  Owner (21:37): only Z did anything - "the mis-aligned image again";
+  F, S and X were black. That run's FindPicture found nothing lit at the
+  3 x 3 points (framebuffer 1 lit 0) and fell back to FBO 3 (black); so
+  the misalignment is in the SCREENSHOT path too, not zero copy's.
+  Screenshots there: 2880 x 1620 per eye, ~40 fps (screenshot 5.1, copy
+  4.9, submit 2.0 ms). StereoCam57: FindPicture reads an 8 x 8 grid and,
+  with nothing lit, takes the first MS RGBA8 framebuffer (FMX's), then
+  the first 2D RGBA8, never the HDR target; FormKeyUp only off Windows
+  (H2219). ASKED again what "misaligned" looks like and whether the
+  screenshot picture was right before the zero-copy work.
+  Owner (21:38): the misalignment is the old ghosting (SRDemoFMX too);
+  SRDemoFMX's cure is a per-eye off-axis view (zoom TanRef / TanEye and
+  shear in the view matrix, FMX.SRStereoViewport.pas ~2740), StereoModel
+  still has a fixed 45 deg FOV, camera at the target distance, and a
+  sideways shift. Offered as StereoCam58 (T kept to compare); not yet
+  answered.
+  Owner (21:51, StereoCam57 picked framebuffer 1, 64-point grid lit 7):
+  "T/X fix it in ZeroCopy - basically the reverse of ScreenShots".
+  Screenshots line up at shift sign -1, zero copy at +1 or toe-in.
+  StereoCam58a: zero copy negates the shift (ShiftL/ShiftR := -ShiftFor);
+  the reason is NOT known - the blit and CPU copy both move right for a
+  positive shift, and the picture is not mirrored (toe-in is right).
+  Suspect: FMX's framebuffer picture and MakeScreenshot's bitmap differ
+  in some way the shift sees; to settle with the per-eye view.
 - Later: TPeardoxGorillaEyes into lib as a component (with a design
   package); the true off-axis frustum (Gorilla3D's author: projection
   offset); LensMode (lens off over the controls); an OpenGL weaver path

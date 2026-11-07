@@ -287,8 +287,8 @@ type
     //** switches RenderManual before each screenshot on and off, L steps the weaver's latency
     //** (0 to LATENCY_MAX_FRAMES), [ and ] the eye separation by EYE_SEPARATION_STEP_MM (both
     //** saved), Home puts the view back (the test view for the test scene), P logs a snapshot
-    //** of everything that sets the view (as SRDemoFMX's P does), Esc turns Stereo off (while it
-    //** is on), C turns the bridge's frame cap off and on (the wait for the SR display's vertical blank after each frame; saved,
+    //** of everything that sets the view (as SRDemoFMX's P does), Z switches zero copy off and
+    //** on, F turns zero copy's row flip off and on, Esc turns Stereo off (while it is on), C turns the bridge's frame cap off and on (the wait for the SR display's vertical blank after each frame; saved,
     //** off by default).)
     //**
     //** @param(Sender The form.)
@@ -298,8 +298,10 @@ type
     //** @param(KeyChar The character, if any.)
     //**
     //** @param(Shift The keys and buttons held.)
+    {$IFNDEF MSWINDOWS}
     procedure FormKeyUp(Sender: TObject; var Key: Word; var KeyChar: WideChar;
       Shift: TShiftState);
+    {$ENDIF}
     //** @abstract(Does what a test key does (see FormKeyUp for the keys).)
     //**
     //** @param(AKey The key's virtual key code.)
@@ -517,7 +519,7 @@ begin
     LogLine(Format('Keyboard hook NOT installed (error %d): the test keys will not work',
       [GetLastError]))
   else
-    LogLine('Keyboard hook installed: S T X L [ ] P Home R C');
+    LogLine('Keyboard hook installed: S T X L [ ] P Home R C Z F');
 end;
 
 //** @abstract(Removes the keyboard hook; the form no longer sees keys.)
@@ -846,6 +848,8 @@ begin
   // While FOutput's window, the parent of the bridge's, still exists
   LeaveStereo;
   FEyes.Stop;
+  // While the viewport's OpenGL context still exists
+  FEyes.ReleaseZeroCopy;
   FLeiaSR.Stop;
   {$IFDEF MSWINDOWS}
   RemoveKeyHook;
@@ -1037,8 +1041,11 @@ begin
         FStereoCover.Visible := True;
         FStereoCover.BringToFront;
       end;
+      // Gorilla3D draws at the viewport's size in logical units, which zero
+      // copy hands on as it is (StereoCam47's probe: a 1280 x 720 viewport
+      // drew 1280 x 720 at scale 1.5); MakeScreenshot gives physical pixels
       Scale := 1;
-      if GorillaViewport1.Scene <> nil then
+      if (GorillaViewport1.Scene <> nil) and not FEyes.ZeroCopyPossible then
         Scale := GorillaViewport1.Scene.GetSceneScale;
       ViewLayout.ClipChildren := True;
       GorillaViewport1.Align := TAlignLayout.None;
@@ -1102,6 +1109,7 @@ begin
   if FRestarting then
     Exit;
   LeaveStereo;
+  FEyes.ReleaseZeroCopy;
   btnStereo.Enabled := False;
 end;
 
@@ -1110,6 +1118,8 @@ begin
   ShowStatus(AText);
 end;
 
+{$IFNDEF MSWINDOWS}
+// Windows has the keyboard hook instead (H2219 there, owner 21:37)
 procedure TForm2.FormKeyUp(Sender: TObject; var Key: Word; var KeyChar: WideChar;
   Shift: TShiftState);
 begin
@@ -1117,11 +1127,12 @@ begin
   if IsTestKey(Key) then
     HandleKey(Key);
 end;
+{$ENDIF}
 
 class function TForm2.IsTestKey(AKey: Word): Boolean;
 begin
   case AKey of
-    vkS, vkT, vkX, vkL, vkLeftBracket, vkRightBracket, vkP, vkHome, vkR, vkC:
+    vkS, vkT, vkX, vkL, vkLeftBracket, vkRightBracket, vkP, vkHome, vkR, vkC, vkZ, vkF:
       Result := True;
   else
     Result := False;
@@ -1219,6 +1230,21 @@ begin
         TestView
       else
         ResetView;
+    vkZ:
+      begin
+        // Zero copy against screenshots, to compare (StereoCam48)
+        FEyes.ZeroCopy := not FEyes.ZeroCopy;
+        ShowStatus('Zero copy (OpenGL to Direct3D on the GPU): ' +
+          BoolToStr(FEyes.ZeroCopy, True));
+      end;
+    vkF:
+      begin
+        // Zero copy's rows turned over or not (owner, 21:31: a picture, but
+        // misaligned)
+        FEyes.ZeroCopyFlip := not FEyes.ZeroCopyFlip;
+        ShowStatus('Zero copy rows turned over for Direct3D: ' +
+          BoolToStr(FEyes.ZeroCopyFlip, True));
+      end;
     vkC:
       begin
         // Owner's Release log (19:27): off, submit 8 -> 0.9 ms and 24 -> 32

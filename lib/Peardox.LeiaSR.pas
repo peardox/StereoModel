@@ -256,6 +256,13 @@ type
     //**
     //** @param(AWhy What says so, for the log.)
     procedure SetLensState(AValue: TPeardoxLeiaSRLensState; const AWhy: string);
+    //** @abstract(Counts a weave's result for the once-a-second line, logging the first
+    //** failure.)
+    //**
+    //** @param(AResult The bridge's answer.)
+    //**
+    //** @param(AWhat The call, for the log.)
+    procedure CountSubmit(AResult: Integer; const AWhat: string);
     {$IFDEF MSWINDOWS}
     //** @abstract(Finds the window of the form Control is on.)
     //**
@@ -376,6 +383,26 @@ type
     //**
     //** @returns(The bridge's answer: SRB_OK (woven), SRB_S_2D_FALLBACK, SRB_S_OCCLUDED, or a
     //** negative error; SRB_E_NOT_INITIALIZED while not Weaving.)
+    //** @abstract(Zero copy: weaves two eye textures already on the bridge's device
+    //** (BridgeDevice), copying them on the GPU (srb_CopyEyeTexture, srb_PresentViews); the
+    //** results are counted and logged as SubmitViews's.)
+    //**
+    //** @param(ALeft The left eye's ID3D11Texture2D, AViewWidth x AViewHeight.)
+    //**
+    //** @param(ARight The right eye's.)
+    //**
+    //** @param(AViewWidth Width of each view in pixels.)
+    //**
+    //** @param(AViewHeight Height in pixels.)
+    //**
+    //** @returns(As SubmitViews.)
+    function SubmitEyeTextures(ALeft, ARight: Pointer; AViewWidth, AViewHeight: Integer): Integer;
+    //** @abstract(The bridge's Direct3D 11 device while SR runs, for making eye textures on
+    //** for SubmitEyeTextures; nil when not running or the bridge is older than
+    //** srb_GetDevice. Not AddRef'd: valid until SR stops.)
+    //**
+    //** @returns(An ID3D11Device, or nil.)
+    function BridgeDevice: Pointer;
     function SubmitViews(APixels: Pointer; AViewWidth, AViewHeight, APitch: Integer;
       ARGBA: Boolean = False): Integer;
     //** @abstract(The SR display's properties, while SR runs.)
@@ -981,12 +1008,6 @@ end;
 
 function TPeardoxLeiaSR.SubmitViews(APixels: Pointer; AViewWidth, AViewHeight, APitch: Integer;
   ARGBA: Boolean): Integer;
-const
-  // Slots of FSubmitResults
-  RES_WOVEN = 0;
-  RES_FLAT = 1;
-  RES_HIDDEN = 2;
-  RES_FAILED = 3;
 begin
   Result := SRB_E_NOT_INITIALIZED;
   if not FWeaving then
@@ -996,15 +1017,53 @@ begin
     Result := srb_SubmitViews(APixels, AViewWidth, AViewHeight, APitch, SRB_FMT_RGBA8)
   else
     Result := srb_SubmitViews(APixels, AViewWidth, AViewHeight, APitch, SRB_FMT_BGRA8);
+  CountSubmit(Result, 'srb_SubmitViews');
+  {$ENDIF}
+end;
+
+function TPeardoxLeiaSR.SubmitEyeTextures(ALeft, ARight: Pointer; AViewWidth,
+  AViewHeight: Integer): Integer;
+begin
+  Result := SRB_E_NOT_INITIALIZED;
+  if not FWeaving then
+    Exit;
+  {$IFDEF MSWINDOWS}
+  Result := srb_CopyEyeTexture(0, ALeft, AViewWidth, AViewHeight);
+  if Result = SRB_OK then
+    Result := srb_CopyEyeTexture(1, ARight, AViewWidth, AViewHeight);
+  if Result = SRB_OK then
+    Result := srb_PresentViews(AViewWidth, AViewHeight);
+  CountSubmit(Result, 'srb_CopyEyeTexture / srb_PresentViews');
+  {$ENDIF}
+end;
+
+function TPeardoxLeiaSR.BridgeDevice: Pointer;
+begin
+  Result := nil;
+  {$IFDEF MSWINDOWS}
+  if Running and SRBridgeHasExport('srb_GetDevice') then
+    Result := srb_GetDevice;
+  {$ENDIF}
+end;
+
+procedure TPeardoxLeiaSR.CountSubmit(AResult: Integer; const AWhat: string);
+const
+  // Slots of FSubmitResults
+  RES_WOVEN = 0;
+  RES_FLAT = 1;
+  RES_HIDDEN = 2;
+  RES_FAILED = 3;
+begin
+  {$IFDEF MSWINDOWS}
   Inc(FSubmits);
-  case Result of
+  case AResult of
     SRB_OK: Inc(FSubmitResults[RES_WOVEN]);
     SRB_S_2D_FALLBACK: Inc(FSubmitResults[RES_FLAT]);
     SRB_S_OCCLUDED: Inc(FSubmitResults[RES_HIDDEN]);
   else
     begin
       if FSubmitResults[RES_FAILED] = 0 then
-        Log(Format('srb_SubmitViews failed (%d): %s', [Result, SRBridgeLastError]));
+        Log(Format('%s failed (%d): %s', [AWhat, AResult, SRBridgeLastError]));
       Inc(FSubmitResults[RES_FAILED]);
     end;
   end;

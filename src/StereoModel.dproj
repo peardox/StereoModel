@@ -347,6 +347,8 @@
         </DelphiCompile>
         <DCCReference Include="common\FmxLinuxMenu.pas"/>
         <DCCReference Include="common\StereoModelLog.pas"/>
+        <DCCReference Include="common\StereoModelGLProbe.pas"/>
+        <DCCReference Include="common\StereoModelGLInterop.pas"/>
         <DCCReference Include="common\StereoModelEyes.pas"/>
         <DCCReference Include="ui\StereoModelMain.pas">
             <Form>Form2</Form>

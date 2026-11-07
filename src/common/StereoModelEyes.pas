@@ -69,7 +69,7 @@ uses
   System.Math.Vectors, System.Diagnostics,
   FMX.Types, FMX.Types3D, FMX.Controls3D, FMX.Graphics, FMX.Forms,
   Gorilla.Viewport, Gorilla.Camera, Peardox.OrbitalCamera, Peardox.LeiaSR,
-  Peardox.LeiaSR.Settings, Peardox.LeiaSR.Api;
+  Peardox.LeiaSR.Settings, Peardox.LeiaSR.Api, StereoModelGLProbe, StereoModelGLInterop;
 
 const
   //** @abstract(Milliseconds without a frame after which the watchdog timer draws one.)
@@ -133,6 +133,21 @@ type
     FWatchdogFrames: Integer;
     //** @abstract(Black pixels to fill the strip a shift leaves, kept between frames.)
     FBlack: TBytes;
+    //** @abstract(See ZeroCopy.)
+    FZeroCopy: Boolean;
+    //** @abstract(See ZeroCopyFlip.)
+    FZeroCopyFlip: Boolean;
+    //** @abstract(True once zero copy has failed to start on this device: the screenshot route
+    //** is used until the bridge's device changes.)
+    FZeroCopyFailed: Boolean;
+    //** @abstract(The device zero copy failed on, so a new one is tried again.)
+    FZeroCopyFailedOn: Pointer;
+    //** @abstract(The eye textures OpenGL draws into for zero copy; nil until first used.)
+    FInterop: TPeardoxGLInterop;
+    //** @abstract(OpenGL errors seen so far after RenderManual (Gorilla3D's) and after the
+    //** copy (ours), each logged the first time: they are taken, as FMX's next BeginScene
+    //** fails on any.)
+    FGLErrorsLogged: array[0..1] of Cardinal;
     //** @abstract(The last frame's shifts in pixels: left eye, right eye.)
     FLastShift: array[0..1] of Integer;
     //** @abstract(The widest each eye's view is woven at, in pixels: the display's recommended
@@ -153,6 +168,9 @@ type
     FSavedManual: Boolean;
     //** @abstract(True while a frame is being drawn, so a timer tick cannot start another.)
     FInFrame: Boolean;
+    //** @abstract(True once StereoModelGLProbe has looked around the first eye's render, so it
+    //** does only once per run.)
+    FProbed: Boolean;
     //** @abstract(Frames since the last log line.)
     FFrames: Integer;
     //** @abstract(See WovenFrames.)
@@ -260,6 +278,43 @@ type
     //**
     //** @returns(The picture, for the caller to free; nil if Gorilla3D gave none.)
     function RenderEye(AOX, AOY, ATurnX, ATurnY: Single): TBitmap;
+    //** @abstract(Zero copy: poses the camera for an eye, renders, and blits the picture into
+    //** the eye's texture.)
+    //**
+    //** @param(AEye 0 left, 1 right.)
+    //**
+    //** @param(AOX As RenderEye.)
+    //**
+    //** @param(AOY As RenderEye.)
+    //**
+    //** @param(ATurnX As RenderEye.)
+    //**
+    //** @param(ATurnY As RenderEye.)
+    //**
+    //** @param(AShift The eye's shift in pixels.)
+    //**
+    //** @returns(False if the picture was not where, or the size, the textures expect.)
+    function RenderEyeGPU(AEye: Integer; AOX, AOY, ATurnX, ATurnY: Single;
+      AShift: Integer): Boolean;
+    //** @abstract(Straight after a RenderManual (OpenGL current): makes FInterop for the
+    //** bridge's device and the size Gorilla3D draws at, if zero copy is wanted and not made
+    //** yet or out of date.)
+    procedure PrepareZeroCopy;
+    //** @abstract(True if this frame can go by zero copy: FInterop ready on the bridge's
+    //** current device.)
+    //**
+    //** @returns(Whether to.)
+    function CanZeroCopy: Boolean;
+    //** @abstract(TPeardoxGLInterop's lines, to the log.)
+    //**
+    //** @param(AText The line.)
+    procedure InteropLog(const AText: string);
+    //** @abstract(Logs an OpenGL error the first time it is seen at a place.)
+    //**
+    //** @param(AWhere 0 after RenderManual, 1 after the copy.)
+    //**
+    //** @param(AError The error, 0 for none.)
+    procedure NoteGLError(AWhere: Integer; AError: Cardinal);
     //** @abstract(How far to shift one eye's picture so the target lands in its middle, for
     //** ecShift.)
     //**
@@ -357,6 +412,24 @@ type
     //** @abstract(-1 (the default) or 1: the direction ecShift moves the pictures. -1 since
     //** the owner's test (7 November 2026): 1 doubled the mismatch instead of cancelling it.)
     property ShiftSign: Integer read FShiftSign write FShiftSign;
+    //** @abstract(True (the default) to hand the bridge Gorilla3D's pictures on the GPU
+    //** (TPeardoxGLInterop) where the bridge, the driver and OpenGL allow, instead of
+    //** MakeScreenshot, a copy through the CPU and an upload; False always to take the
+    //** screenshots.)
+    property ZeroCopy: Boolean read FZeroCopy write FZeroCopy;
+    //** @abstract(True (the default): zero copy turns OpenGL's rows over for Direct3D
+    //** (TPeardoxGLInterop.FlipRows). A test switch: False copies them as they are.)
+    property ZeroCopyFlip: Boolean read FZeroCopyFlip write FZeroCopyFlip;
+    //** @abstract(True if zero copy can be tried: wanted, and the bridge gives its device
+    //** (TPeardoxLeiaSR.BridgeDevice). The program then sizes the viewport so that Gorilla3D
+    //** draws at the display's view size in pixels.)
+    //**
+    //** @returns(Whether.)
+    function ZeroCopyPossible: Boolean;
+    //** @abstract(Lets go of zero copy's textures and its OpenGL objects (its context made
+    //** current for it): call while the viewport's OpenGL context still exists, in FormClose
+    //** before SR stops, and when SR has stopped.)
+    procedure ReleaseZeroCopy;
     //** @abstract(Every line of its log: the start, the signs found, and once a second the
     //** frame rate, the time in each stage and the offsets.)
     property OnLog: TPeardoxGorillaEyesLogEvent read FOnLog write FOnLog;
@@ -377,6 +450,8 @@ begin
   // The owner's test (7 November 2026, 17:58): the reversed shift looked
   // right, so the picture's right is the camera's -X here
   FShiftSign := -1;
+  FZeroCopy := True;
+  FZeroCopyFlip := True;
   FYawSign := 1;
   FPitchSign := 1;
   FWatchdog := TTimer.Create(Self);
@@ -388,7 +463,103 @@ end;
 destructor TPeardoxGorillaEyes.Destroy;
 begin
   Stop;
+  FInterop.Free;
   inherited Destroy;
+end;
+
+procedure TPeardoxGorillaEyes.ReleaseZeroCopy;
+begin
+  FreeAndNil(FInterop);
+end;
+
+procedure TPeardoxGorillaEyes.NoteGLError(AWhere: Integer; AError: Cardinal);
+const
+  Places: array[0..1] of string = ('after RenderManual (Gorilla3D''s)',
+    'after the zero-copy blit (ours)');
+begin
+  if (AError = 0) or (FGLErrorsLogged[AWhere] = AError) then
+    Exit;
+  FGLErrorsLogged[AWhere] := AError;
+  Log(Format('OpenGL error $%x %s, taken so FMX''s next BeginScene does not fail on it',
+    [AError, Places[AWhere]]));
+end;
+
+procedure TPeardoxGorillaEyes.InteropLog(const AText: string);
+begin
+  Log(AText);
+end;
+
+function TPeardoxGorillaEyes.ZeroCopyPossible: Boolean;
+begin
+  Result := FZeroCopy and (FLeiaSR <> nil) and (FLeiaSR.BridgeDevice <> nil);
+end;
+
+function TPeardoxGorillaEyes.CanZeroCopy: Boolean;
+begin
+  Result := FZeroCopy and (FInterop <> nil) and FInterop.Ready and
+    (FInterop.Device = FLeiaSR.BridgeDevice) and (FInterop.Device <> nil);
+end;
+
+procedure TPeardoxGorillaEyes.PrepareZeroCopy;
+var
+  Dev: Pointer;
+  W, H: Integer;
+begin
+  if not FZeroCopy then
+    Exit;
+  Dev := FLeiaSR.BridgeDevice;
+  if Dev = nil then
+    Exit;
+  // A failure is not tried again on the same device
+  if FZeroCopyFailed and (FZeroCopyFailedOn = Dev) then
+    Exit;
+  if not TPeardoxGLInterop.SourceSize(W, H) then
+  begin
+    FZeroCopyFailed := True;
+    FZeroCopyFailedOn := Dev;
+    Log('Zero copy: no picture found in OpenGL after RenderManual; screenshots instead');
+    Exit;
+  end;
+  if (FInterop <> nil) and FInterop.Ready and (FInterop.Device = Dev) and
+    (FInterop.Width = W) and (FInterop.Height = H) then
+    Exit;
+  if FInterop = nil then
+    FInterop := TPeardoxGLInterop.Create(InteropLog);
+  if FInterop.Start(Dev, W, H) then
+  begin
+    // StereoCam53's FInterop.Survey crashed after texture 30 (owner,
+    // 21:23); its map is in CLAUDE.md, and it is not called any more
+    FZeroCopyFailed := False;
+  end
+  else
+  begin
+    FZeroCopyFailed := True;
+    FZeroCopyFailedOn := Dev;
+    Log('Zero copy not available; screenshots instead');
+  end;
+end;
+
+function TPeardoxGorillaEyes.RenderEyeGPU(AEye: Integer; AOX, AOY, ATurnX, ATurnY: Single;
+  AShift: Integer): Boolean;
+var
+  Watch: TStopwatch;
+  W, H: Integer;
+begin
+  PoseCamera(AOX, AOY, ATurnX, ATurnY, FYawSign, FPitchSign);
+  Watch := TStopwatch.StartNew;
+  FViewport.RenderManual;
+  FRenderMs := FRenderMs + Watch.Elapsed.TotalMilliseconds;
+  Watch := TStopwatch.StartNew;
+  NoteGLError(0, TPeardoxGLInterop.TakeErrors);
+  // The picture must still be the textures' size (a resize makes them
+  // again, next frame)
+  Result := TPeardoxGLInterop.SourceSize(W, H) and (W = FInterop.Width) and
+    (H = FInterop.Height) and FInterop.CopyEye(AEye, AShift);
+  // Owner (21:06): "cannot begin rendering scene for TContextOpenGLWindows:
+  // 1282" - an OpenGL error left pending fails FMX's next BeginScene; the
+  // screenshot route had MakeScreenshot take it
+  NoteGLError(1, TPeardoxGLInterop.TakeErrors);
+  FShotMs := FShotMs + Watch.Elapsed.TotalMilliseconds;
 end;
 
 procedure TPeardoxGorillaEyes.AppIdle(Sender: TObject; var Done: Boolean);
@@ -760,9 +931,29 @@ begin
   if FRenderBeforeShot then
     FViewport.RenderManual;
   FRenderMs := FRenderMs + Watch.Elapsed.TotalMilliseconds;
+  // OpenGL is current now: the next frame may go by zero copy
+  if FZeroCopy and FRenderBeforeShot then
+    PrepareZeroCopy;
+  // Zero copy, step 1 (owner, 20:45): where Gorilla3D's picture is on the
+  // GPU, once, outside the timings
+  if not FProbed then
+    ProbeGL(FViewport, 'after RenderManual',
+      procedure(const AText: string)
+      begin
+        Log(AText);
+      end);
   Watch := TStopwatch.StartNew;
   Result := FViewport.MakeScreenshot;
   FShotMs := FShotMs + Watch.Elapsed.TotalMilliseconds;
+  if not FProbed then
+  begin
+    FProbed := True;
+    ProbeGL(FViewport, 'after MakeScreenshot',
+      procedure(const AText: string)
+      begin
+        Log(AText);
+      end);
+  end;
 end;
 
 function TPeardoxGorillaEyes.ShiftFor(AOffset: Single; AWidth, AHeight: Integer): Integer;
@@ -914,6 +1105,9 @@ var
   NowTick: UInt64;
   Secs, N: Double;
   ShiftL, ShiftR: Integer;
+  Done: Boolean;
+  Watch2: TStopwatch;
+  W, H: Integer;
 begin
   if FInFrame or not FActive then
     Exit;
@@ -948,45 +1142,102 @@ begin
       Cam := FCamera.Camera;
       SavedPos := Cam.Position.Point;
       SavedRot := Cam.RotationAngle.Point;
-      BL := nil;
-      BR := nil;
-      try
+      if CanZeroCopy then
+      begin
+        ShiftL := 0;
+        ShiftR := 0;
+        if FConvergence = ecShift then
+        begin
+          // The other way to the screenshots' shift: owner (21:51), zero copy
+          // lined up with X (shift sign 1) or T (toe-in, no shift), while the
+          // screenshots line up at -1 - "basically the reverse". Why is not
+          // known yet; the per-eye view from SRDemoFMX is to replace the shift
+          ShiftL := -ShiftFor(OXL - MX, FInterop.Width, FInterop.Height);
+          ShiftR := -ShiftFor(OXR - MX, FInterop.Width, FInterop.Height);
+        end;
         try
+          FInterop.FlipRows := FZeroCopyFlip;
           if FConvergence = ecShift then
-          begin
-            // Both turned alike, from the midpoint: parallel to each other
-            BL := RenderEye(OXL, OYL, MX, MY);
-            BR := RenderEye(OXR, OYR, MX, MY);
-          end
+            Done := RenderEyeGPU(0, OXL, OYL, MX, MY, ShiftL) and
+              RenderEyeGPU(1, OXR, OYR, MX, MY, ShiftR)
           else
-          begin
-            BL := RenderEye(OXL, OYL, OXL, OYL);
-            BR := RenderEye(OXR, OYR, OXR, OYR);
-          end;
+            Done := RenderEyeGPU(0, OXL, OYL, OXL, OYL, 0) and
+              RenderEyeGPU(1, OXR, OYR, OXR, OYR, 0);
         finally
-          // Exactly as it was: the orbit camera knows nothing of this
           Cam.Position.Point := SavedPos;
           Cam.RotationAngle.Point := SavedRot;
         end;
-        if (BL <> nil) and (BR <> nil) then
+        if Done then
         begin
-          ShiftL := 0;
-          ShiftR := 0;
-          if FConvergence = ecShift then
-          begin
-            ShiftL := ShiftFor(OXL - MX, BL.Width, BL.Height);
-            ShiftR := ShiftFor(OXR - MX, BR.Width, BR.Height);
-          end;
-          Submit(BL, BR, ShiftL, ShiftR);
+          FLastShift[0] := ShiftL;
+          FLastShift[1] := ShiftR;
+          FLastViewInfo := Format('%d x %d per eye, zero copy (OpenGL to Direct3D on the GPU)',
+            [FInterop.Width, FInterop.Height]);
+          Watch2 := TStopwatch.StartNew;
+          if FLeiaSR.SubmitEyeTextures(FInterop.LeftTexture, FInterop.RightTexture,
+            FInterop.Width, FInterop.Height) = SRB_OK then
+            Inc(FWovenFrames);
+          FSubmitMs := FSubmitMs + Watch2.Elapsed.TotalMilliseconds;
         end
         else
-          FLastViewInfo := 'MakeScreenshot gave no picture';
-      finally
-        BL.Free;
-        BR.Free;
+        begin
+          // A picture of another size (a resize): made again from the next
+          // frame. Anything else: screenshots on this device from now on
+          if not TPeardoxGLInterop.SourceSize(W, H) or
+            ((W = FInterop.Width) and (H = FInterop.Height)) then
+          begin
+            FZeroCopyFailed := True;
+            FZeroCopyFailedOn := FInterop.Device;
+            Log('Zero copy failed in a frame; screenshots instead');
+          end;
+          FreeAndNil(FInterop);
+          FLastViewInfo := 'zero copy lost the picture';
+        end;
+        Inc(FFrames);
+        FWorstMs := Max(FWorstMs, Watch.Elapsed.TotalMilliseconds);
+      end
+      else
+      begin
+        BL := nil;
+        BR := nil;
+        try
+          try
+            if FConvergence = ecShift then
+            begin
+              // Both turned alike, from the midpoint: parallel to each other
+              BL := RenderEye(OXL, OYL, MX, MY);
+              BR := RenderEye(OXR, OYR, MX, MY);
+            end
+            else
+            begin
+              BL := RenderEye(OXL, OYL, OXL, OYL);
+              BR := RenderEye(OXR, OYR, OXR, OYR);
+            end;
+          finally
+            // Exactly as it was: the orbit camera knows nothing of this
+            Cam.Position.Point := SavedPos;
+            Cam.RotationAngle.Point := SavedRot;
+          end;
+          if (BL <> nil) and (BR <> nil) then
+          begin
+            ShiftL := 0;
+            ShiftR := 0;
+            if FConvergence = ecShift then
+            begin
+              ShiftL := ShiftFor(OXL - MX, BL.Width, BL.Height);
+              ShiftR := ShiftFor(OXR - MX, BR.Width, BR.Height);
+            end;
+            Submit(BL, BR, ShiftL, ShiftR);
+          end
+          else
+            FLastViewInfo := 'MakeScreenshot gave no picture';
+        finally
+          BL.Free;
+          BR.Free;
+        end;
+        Inc(FFrames);
+        FWorstMs := Max(FWorstMs, Watch.Elapsed.TotalMilliseconds);
       end;
-      Inc(FFrames);
-      FWorstMs := Max(FWorstMs, Watch.Elapsed.TotalMilliseconds);
     end;
   finally
     FInFrame := False;
@@ -995,6 +1246,9 @@ begin
   NowTick := TThread.GetTickCount64;
   if NowTick - FLastLogTick >= 1000 then
   begin
+    // Zero copy: a check of the next copy, once a second (StereoCam51)
+    if FInterop <> nil then
+      FInterop.CheckNext;
     Secs := (NowTick - FLastLogTick) / 1000;
     N := Max(FFrames, 1);
     Log(Format('Eyes: %.1f fps (worst %.0f ms) | per frame: render %.1f ms, screenshot %.1f ms, ' +

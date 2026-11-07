@@ -47,6 +47,8 @@ uses
   FMX.Forms,
   FmxLinuxMenu in 'common\FmxLinuxMenu.pas',
   StereoModelLog in 'common\StereoModelLog.pas',
+  StereoModelGLProbe in 'common\StereoModelGLProbe.pas',
+  StereoModelGLInterop in 'common\StereoModelGLInterop.pas',
   StereoModelEyes in 'common\StereoModelEyes.pas',
   StereoModelMain in 'ui\StereoModelMain.pas' {Form2};
 

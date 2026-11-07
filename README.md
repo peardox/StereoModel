@@ -250,7 +250,14 @@ default, from the owner's test), **L** steps the weaver's latency (0, SR's
 own, then 1 to 4 frames: how far ahead SR predicts the eyes; our frames are
 read back through the CPU, so a frame or two behind), **[** and **]** make
 the eye separation 5 mm smaller or larger (both saved in the LeiaSR
-settings), **Home** puts the view back, **C** turns the bridge's frame cap
+settings), **Home** puts the view back, **Z** switches zero copy off and on
+(on, the default, where the bridge has `srb_GetDevice` and OpenGL has
+`WGL_NV_DX_interop2`: each eye Gorilla3D draws is copied on the GPU into a
+Direct3D 11 texture on the bridge's device, the right way up and shifted,
+and woven from there - no screenshot, no copy through the CPU, no upload;
+off, or where it cannot be, the screenshots as before), **F** turns zero
+copy's row flip off and on (a test switch: on, the default, OpenGL's
+bottom-up rows are turned over for Direct3D), **C** turns the bridge's frame cap
 on and off (on: it waits for the SR display's vertical blank after each
 frame, which cost 8 fps here; off, the default, it does not; vsync stays on,
 so no tearing; saved as `FrameCap` in the LeiaSR settings), **P** writes a snapshot to the log
