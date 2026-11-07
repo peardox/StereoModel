@@ -37,8 +37,8 @@ interface
 
 uses
   System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants,
-  System.Math, System.IOUtils,
-  FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs,
+  System.Math, System.Math.Vectors, System.IOUtils,
+  FMX.Types, FMX.Types3D, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs,
   Gorilla.Viewport, Gorilla.Model, Gorilla.GLB.Loader,
   FMX.Controls.Presentation, FMX.StdCtrls, FMX.Menus, FMX.Layouts,
   Peardox.OrbitalCamera;
@@ -102,8 +102,14 @@ type
     //**
     //** @returns(The model's full path, or an empty string if it is in none of them.)
     function FindTestModel(out ATried: string): string;
-    //** @abstract(Loads the test model into the viewport and frames it.)
+    //** @abstract(Loads the test model into the viewport, stands it upright and frames it.)
     procedure LoadTestModel;
+    //** @abstract(Centres the model on its bounds and turns it upright, as Sprite3D's
+    //** PlaceModel does.)
+    //**
+    //** glTF's up is +Y and FMX's is -Y, so a model comes in upside down until it is turned
+    //** MODEL_TURN_X degrees about X.
+    procedure PlaceModel;
     //** @abstract(Frames the model for every angle, then puts the wheel's zoom back on top.)
     procedure FitView;
     //** @abstract(Puts the starting view back: all three angles 0, the fitted size.)
@@ -181,6 +187,9 @@ const
   TEST_MODEL = 'uvcube.glb';
   //** @abstract(How many folders above the executable FindTestModel looks in for MODEL_FOLDER.)
   FOLDERS_UP = 6;
+  //** @abstract(The turn about X, in degrees, that stands a loaded model upright, as
+  //** Sprite3D's MODEL_ROTATION does: glTF's up is +Y, FMX's is -Y.)
+  MODEL_TURN_X = 180;
   //** @abstract(Padding round the model as a fraction of the view, as in VirtualGamepad.)
   VIEW_MARGIN = 0.08;
   //** @abstract(Degrees the camera orbits per pixel of mouse movement, as in Sprite3D.)
@@ -296,10 +305,26 @@ begin
       Exit;
     end;
   end;
+  PlaceModel;
   ResetView;
   ShowStatus(Format('Loaded %s; azimuth %.1f, polar %.1f, distance %.2f, headlight %s',
     [Path, FOrbit.Azimuth, FOrbit.PolarAngle, FOrbit.Distance,
      BoolToStr(FOrbit.Light <> nil, True)]));
+end;
+
+procedure TForm2.PlaceModel;
+var
+  Box: TBoundingBox;
+begin
+  // As Sprite3D's PlaceModel: the model's own bounds, taken before it is
+  // moved or turned, give its position; then the turn that stands it up
+  Box := FModel.GetBoundingBox;
+  FModel.Position.Point := Point3D(Box.TopLeftNear.X + (Box.Width / 2),
+                                   Box.TopLeftNear.Y + (Box.Height / 2),
+                                   Box.TopLeftNear.Z + (Box.Depth / 2));
+  FModel.RotationAngle.X := MODEL_TURN_X;
+  FModel.RotationAngle.Y := 0;
+  FModel.RotationAngle.Z := 0;
 end;
 
 procedure TForm2.FitView;
@@ -355,9 +380,10 @@ begin
     FDragging := False;
     Exit;
   end;
-  // Dragging right turns the camera left round the centre, so the model
-  // seems to follow the mouse; dragging down raises the camera
-  FOrbit.Orbit(-(X - FDragLast.X) * ORBIT_DEGREES_PER_PIXEL,
+  // Dragging right turns the camera right round the centre (owner, 7
+  // November 2026: the other way round felt reversed); dragging down
+  // raises the camera
+  FOrbit.Orbit((X - FDragLast.X) * ORBIT_DEGREES_PER_PIXEL,
     (Y - FDragLast.Y) * ORBIT_DEGREES_PER_PIXEL);
   FDragLast := PointF(X, Y);
 end;

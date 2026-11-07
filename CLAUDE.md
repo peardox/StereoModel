@@ -69,16 +69,32 @@ Keep this file up to date when the rules or the state of the work change.
   `StereoModel_MemoryManager_EventLog.txt` beside the executable.
 - First Win64 run (owner, 7 November 2026): camera made, uvcube.glb loaded
   and framed (distance 4.84), headlight on; then an ACCESS VIOLATION ON
-  EXIT. Zip StereoCam3 holds the most likely fix (below); awaiting the
-  owner's re-test, and the call stack if it still happens.
+  EXIT, still there with StereoCam3. The FastMM5 leak dump of that run
+  located it (see Lessons); StereoCam4 fixes it. The model also came up
+  upside down: StereoCam4 turns it 180 degrees about X as Sprite3D does.
+  Awaiting the owner's re-test.
+- `tools/pasdoc.bat` (+ the two dark .css files), adapted from
+  peardox/SRDelphiFMX: programs are `src\<program>.dpr`, the api run is
+  `lib` without `*.Reg`. Not yet run.
+- peardox/SRDelphiFMX is LeiaSR (Simulated Reality) glasses-free 3D from
+  Delphi; ask the owner whether that is the target display before the
+  stereo work starts.
 - `MainMenu1` is on the form: once it has items, desktop Linux needs
   Sprite3D's `UseFmxMenuBar` swap (see Sprite3D's `CLAUDE.md`, Menus).
 
 ## Lessons learned
 
 - **Gorilla3D teardown**: let the viewport free what is in it. The camera
-  and light are owned by the viewport, as in Sprite3D and VirtualGamepad;
-  while the viewport or its form is being destroyed, the component only
-  lets go of them. Freeing them from the component's destructor, while the
-  viewport still held them, is the most likely cause of the access
-  violation on exit (to be confirmed by the owner's re-test).
+  and light are owned by the viewport, as in Sprite3D and VirtualGamepad.
+  The viewport sends its free notification BEFORE it frees the children
+  and owned components it holds: FastMM5's dump of the leaked component
+  showed FViewport nil, FLight nil, but FCamera still set, so the
+  component's destructor later called into a dead camera. On the
+  viewport's notice the component now lets go of the camera and light at
+  once and never touches them again.
+- **Reading a FastMM5 leak dump**: when an exception aborts shut-down,
+  TApplication, TPlatformWin, the form and its registry entries all show
+  as leaks; they are a symptom. The leaked object of our own class is the
+  clue, and its memory dump gives its fields (64-bit TComponent: VMT at
+  0, FOwner at 8, FFreeNotifies at $28, interface slots at $68 and $70,
+  the class's own fields from $78).

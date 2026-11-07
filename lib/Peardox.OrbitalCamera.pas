@@ -1241,8 +1241,8 @@ type
     //** @abstract(Whether the viewport, or the form it is on, is being freed.)
     //**
     //** While it is, the camera and light are left for the viewport to free, as it frees its
-    //** children, as Sprite3D and VirtualGamepad do: freeing them first, while it still holds
-    //** them, is the most likely cause of an access violation seen on exit.
+    //** children, as Sprite3D and VirtualGamepad do; the component never frees them while the
+    //** viewport still holds them.
     //**
     //** @returns(True if the viewport or its owner is being destroyed.)
     function ViewportClosing: Boolean;
@@ -1308,8 +1308,9 @@ type
     //** @abstract(Forgets the viewport, the camera or the light when one of them is freed by
     //** something else.)
     //**
-    //** The viewport frees its children when it goes, which takes the rig, the camera and the
-    //** light with it; the camera's values are kept first.
+    //** The viewport says it is going before it frees the rig, the camera and the light it holds,
+    //** so on that notice the component keeps the camera's values and lets go of the camera and
+    //** light at once, and never touches them again: the viewport frees them.
     //**
     //** @param(AComponent The component being freed or added.)
     //**
@@ -2391,8 +2392,8 @@ begin
     begin
       // The form is closing: the viewport frees the rig, camera and light
       // itself, after this, as Sprite3D and VirtualGamepad leave it to.
-      // Freeing them here, while the viewport still holds them, is the
-      // most likely cause of an access violation on exit (7 November 2026)
+      // Freeing them here, while the viewport still holds them, is not
+      // safe
       FCamera.RemoveFreeNotification(Self);
       if FLight <> nil then
         FLight.RemoveFreeNotification(Self);
@@ -2542,10 +2543,20 @@ begin
     FLight := nil
   else if AComponent = FViewport then
   begin
-    // By now the viewport has freed its children, the rig and camera
-    // among them, and the camera's own notification has come; keep the
-    // values anyway in case it has not
-    KeepCameraValues;
+    // The viewport tells us it is going BEFORE it frees the rig, camera
+    // and light it holds (FastMM5's dump of the exit crash, 7 November
+    // 2026: viewport and light gone, FCamera still set). Let go of them now
+    // and never touch them again: the viewport frees them. The camera's own
+    // notification has not come, so it is still sound here
+    if FCamera <> nil then
+    begin
+      KeepCameraValues;
+      FCamera.RemoveFreeNotification(Self);
+      if FLight <> nil then
+        FLight.RemoveFreeNotification(Self);
+      FCamera := nil;
+      FLight := nil;
+    end;
     FViewport := nil;
   end;
 end;

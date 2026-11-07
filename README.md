@@ -13,8 +13,9 @@ orbital camera, as the first step towards showing it on a glasses-free
 | `lib/` | The Peardox components, kept apart because other projects reuse them |
 | `lib/icons/` | Their palette icons (`.ico`, and the `.svg` sources in `svg/`) |
 | `models/` | Test models: `uvcube.glb` (a cube with a UV test texture) and `Mage.glb` |
-| `tools/` | Python scripts for the icons |
+| `tools/` | Scripts: the palette icons, and the PasDoc reference |
 | `delphi-neon/` | Neon, the JSON library (submodule) |
+| `FastMM5/` | FastMM5, the memory manager on Windows (submodule); Debug builds report leaks |
 
 ## Peardox components
 
@@ -63,12 +64,30 @@ and `rsvg-convert`); `python3 tools/gen_icon_res.py` packages them into
 The runtime and design packages are still to come; until then the
 component is created in code.
 
+## The reference (PasDoc, optional)
+
+`tools\pasdoc.bat` (run from anywhere, Windows) writes the PasDoc reference
+as HTML in `docs\html\` and as HTML Help in `docs\chm\`, each with `api\`
+(the Peardox components in `lib`, without the design-time `Peardox.Reg`)
+and one folder per program (`StereoModel`: its `.dpr`, its forms and the
+`lib` units it uses). Programs are found, not listed: every
+`src\<program>.dpr` gets its own reference. It needs `pasdoc` on the PATH
+(or `PASDOC` set to its full path; releases at
+<https://github.com/pasdoc/pasdoc/releases/>), and, for the `.chm` files,
+Microsoft HTML Help Workshop's `hhc.exe` (or `HHC` set to its full path).
+`docs\html` and `docs\chm` are deleted first, and git ignores both. The view
+is Windows 64-bit, Release. `tools/pasdoc-dark.css` (HTML, dark when the
+system is) and `tools/pasdoc-chm-dark.css` (`.chm`, always dark) are
+appended to PasDoc's own stylesheet; `set PASDOC_DARK=0` leaves them out.
+Adapted from peardox/SRDelphiFMX.
+
 ## Running the test
 
 Build and run `src/StereoModel.dproj`. The form makes the orbital camera
 in code, with its headlight, and once it is showing loads
-`models/uvcube.glb` and frames it. It looks for the model in a `models`
-folder beside the program, in the bundle's `Resources` on macOS, in the
+`models/uvcube.glb`, centres it, turns it 180 degrees about X so it stands
+upright (glTF's up is +Y, FMX's -Y; Sprite3D does the same) and frames it.
+It looks for the model in a `models` folder beside the program, in the bundle's `Resources` on macOS, in the
 documents folder on Android and iOS, then in the folders above the program,
 which finds the repository's `models` folder when run from the IDE on
 Windows. The status line at the bottom says which file it loaded, or every

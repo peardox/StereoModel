@@ -80,3 +80,8 @@ __recovery/
 
 # FastMM5 leak report, written beside the executable
 *_MemoryManager_EventLog.txt
+
+# PasDoc output (tools/pasdoc.bat) and a log of it redirected to the root
+docs/html/
+docs/chm/
+/pasdoc.log
