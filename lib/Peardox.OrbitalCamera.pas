@@ -1566,8 +1566,9 @@ type
     //**
     //** The picture is unchanged; what changes is the point the camera orbits, and so Distance,
     //** which is ADepth afterwards. For the stereo pair this depth will be the one that sits on
-    //** the display's surface. Kept at 0.001 or more. Does nothing while there is no camera, or
-    //** while Locked.
+    //** the display's surface. Kept between 0.001 and the viewport's far plane (or
+    //** PEARDOX_ORBITAL_MAX_TARGET_DEPTH without one): beyond that single precision moves the
+    //** camera. Does nothing while there is no camera, or while Locked.
     //**
     //** @param(ADepth The target's distance from the camera along its view direction, in scene
     //** units.)
@@ -1692,6 +1693,13 @@ const
   //** The near plane is a rectangle in front of the camera whose corners reach farther than its
   //** middle, so a gap of one near plane would let them clip a face seen at an angle.
   PEARDOX_ORBITAL_NEAR_GAP = 2;
+  //** @abstract(The deepest SetTargetDepth puts the target when the viewport has no far plane
+  //** to go by, in scene units.)
+  //**
+  //** The camera's position is worked out from the target in single precision, so a target
+  //** millions of units away moves the camera: the owner's log had the model drift from depth
+  //** 4.84 to 13.48 after a right drag took the target past 4 000 000.
+  PEARDOX_ORBITAL_MAX_TARGET_DEPTH = 10000;
 
 implementation
 
@@ -3253,6 +3261,12 @@ begin
   if (FCamera = nil) or FCamera.Locked then
     Exit;
   Depth := Max(ADepth, 0.001);
+  // Single precision: the camera's position is the target less Distance
+  // along the view, so a target far beyond the far plane drags the camera
+  if (FViewport <> nil) and (FViewport.FarPlane > 0) then
+    Depth := Min(Depth, FViewport.FarPlane)
+  else
+    Depth := Min(Depth, PEARDOX_ORBITAL_MAX_TARGET_DEPTH);
   // The camera stays where it is: the orbit centre slides along the view
   // direction to the new depth, and Distance becomes that depth, so the
   // camera's position (centre minus the view direction times Distance) is

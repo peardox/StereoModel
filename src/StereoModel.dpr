@@ -2,7 +2,8 @@
 //**
 //** The model is shown in a Gorilla3D viewport through TPeardoxOrbitalCamera, the Peardox
 //** orbital camera component, which comes from the Peardox runtime package's DCUs in Delphi's
-//** Dcp folder, so the program lists no lib unit and needs no path to it. TForm2, in
+//** Dcp folder, so the program lists no lib unit and needs no path to it; TPeardoxLeiaSR
+//** (glasses-free 3D) comes the same way from PeardoxLeiaSR's. TForm2, in
 //** StereoModelMain, holds the view. Leaks still
 //** allocated at shut-down are reported, as ReportMemoryLeaksOnShutdown is set in Debug
 //** builds. On Windows FastMM5 is the memory manager and also writes them, in full, to
@@ -10,8 +11,10 @@
 //**
 //** @preformatted(
 //** src/ui/      the forms
-//** src/common/  helpers shared with other projects (FmxLinuxMenu, from TSteamAPI)
-//** lib/         the Peardox components' sources, built by packages/Peardox.dpk
+//** src/common/  helpers: FmxLinuxMenu (from TSteamAPI, shared), StereoModelLog (the log file),
+//**              StereoModelEyes (first light: the two eyes drawn for LeiaSR)
+//** lib/         the Peardox components' sources, built by packages/Peardox.dpk and
+//**              packages/PeardoxLeiaSR.dpk (LeiaSR, glasses-free 3D)
 //** )
 program StereoModel;
 
@@ -28,8 +31,10 @@ program StereoModel;
   StereoModel_MemoryManager_EventLog.txt beside the executable.
 
     src/ui/      the forms
-    src/common/  helpers shared with other projects (FmxLinuxMenu, from TSteamAPI)
-    lib/         the Peardox components' sources, built by packages/Peardox.dpk
+    src/common/  helpers: FmxLinuxMenu (from TSteamAPI, shared), StereoModelLog (the log file),
+                 StereoModelEyes (first light: the two eyes drawn for LeiaSR)
+    lib/         the Peardox components' sources, built by packages/Peardox.dpk and
+                 packages/PeardoxLeiaSR.dpk (LeiaSR, glasses-free 3D)
 }
 
 uses
@@ -41,6 +46,10 @@ uses
   System.StartUpCopy,
   FMX.Forms,
   FmxLinuxMenu in 'common\FmxLinuxMenu.pas',
+  StereoModelLog in 'common\StereoModelLog.pas',
+  StereoModelGLProbe in 'common\StereoModelGLProbe.pas',
+  StereoModelGLInterop in 'common\StereoModelGLInterop.pas',
+  StereoModelEyes in 'common\StereoModelEyes.pas',
   StereoModelMain in 'ui\StereoModelMain.pas' {Form2};
 
 {$R *.res}

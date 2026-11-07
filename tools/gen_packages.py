@@ -3,25 +3,34 @@
 
     python3 tools/gen_packages.py [--force]
 
-Standard library only. Two packages, as G3DGames/TSteamAPI builds its own
-(this is a cut-down copy of its tools/gen_projects.py):
+Standard library only. The packages, as G3DGames/TSteamAPI builds its own
+(this began as a cut-down copy of its tools/gen_projects.py):
 
-  Peardox     runtime: every component unit in lib (not *.Reg). Its DCUs go
-              to Delphi's Dcp folder, $(BDSCOMMONDIR)\\Dcp\\<platform>
-              (\\Dcp alone for Win32), next to Peardox.dcp on the IDE's
-              default Library path, so a program that uses a Peardox
-              component needs no search path at all.
-  dclPeardox  design time: lib/Peardox.Reg.pas, which registers the
-              components on the Peardox page of the palette. Win32 and Win64
-              (the owner's IDE is the 32-bit one); install it in the IDE.
+  Peardox       runtime: the camera components (Gorilla3D).
+  PeardoxLeiaSR runtime: the LeiaSR (glasses-free 3D) components, their
+                settings and the Neon units those are read and written
+                with. Separate from Peardox (owner, 7 November 2026); it
+                needs neither Gorilla3D nor Peardox.
+  dclPeardox    design time: lib/Peardox.Reg.pas, which registers the
+                components on the Peardox page of the palette. Win32 and
+                Win64 (the owner's IDE is the 32-bit one); install it in the
+                IDE. (The LeiaSR components are made in code for now; they
+                get a design package when they go on forms.)
+
+A runtime package's DCUs go to Delphi's Dcp folder,
+$(BDSCOMMONDIR)\\Dcp\\<platform> (\\Dcp alone for Win32), next to its .dcp
+on the IDE's default Library path, so a program that uses a Peardox
+component needs no search path at all. That includes Neon's DCUs, so a
+program must not also compile Neon from source (no delphi-neon path), or
+the compiler may find two different builds of one unit.
 
 The .dpk files are always rewritten from the tables below; edit this
 script, not them. A .dproj is written only when it is missing, because the
 IDE re-saves .dproj files and that copy is then the one that counts;
 --force overwrites them too (discarding the IDE's changes - check them in
-the IDE afterwards). Every unit lib/Peardox.<Name>.pas other than the
-registration unit must be in RUNTIME_UNITS: the script stops if one is
-missing, so a new component cannot be left out of the package.
+the IDE afterwards). Every unit lib/Peardox.<Name>.pas must be in exactly
+one package (the *.Reg units in a design package): the script stops if one
+is missing or listed twice, so a new component cannot be left out.
 """
 import os
 import re
@@ -40,34 +49,54 @@ RUNTIME_PLATFORMS = ["Win32", "Win64", "OSX64", "OSXARM64", "Linux64",
 DESIGN_PLATFORMS = ["Win32", "Win64"]
 ALL_PLATFORMS = RUNTIME_PLATFORMS + ["WinARM64EC"]
 
-RUNTIME_UNITS = ["Peardox.OrbitalCamera"]
+CAMERA_UNITS = ["Peardox.OrbitalCamera"]
+LEIASR_UNITS = ["Peardox.Storage", "Peardox.LeiaSR.Settings", "Peardox.LeiaSR.Api",
+                "Peardox.LeiaSR"]
 REG_UNIT = "Peardox.Reg"
+
+# Neon (the delphi-neon submodule, never changed), compiled into
+# PeardoxLeiaSR: only the units its settings need, which use Data.DB
+# (Neon.Core.Utils), hence dbrtl. (unit, path from packages/)
+NEON_UNITS = [(u, "..\\delphi-neon\\Source\\" + u + ".pas") for u in [
+    "Neon.Core.Types", "Neon.Core.Tags", "Neon.Core.Attributes", "Neon.Core.Utils",
+    "Neon.Core.DynamicTypes", "Neon.Core.Persistence", "Neon.Core.Persistence.JSON"]]
 
 NS_BASE = "System;Xml;Data;Datasnap;Web;Soap"
 NS_WIN = "Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win"
 
 PACKAGES = [
     dict(name="Peardox", kind="runtime", platforms=RUNTIME_PLATFORMS, default="Win64",
-         requires=["rtl", "fmx", GORILLA], units=RUNTIME_UNITS,
+         requires=["rtl", "fmx", GORILLA], units=CAMERA_UNITS, extra=[],
          description="Peardox components for FireMonkey and Gorilla3D - runtime"),
+    dict(name="PeardoxLeiaSR", kind="runtime", platforms=RUNTIME_PLATFORMS, default="Win64",
+         requires=["rtl", "dbrtl", "fmx"], units=LEIASR_UNITS, extra=NEON_UNITS,
+         description="Peardox LeiaSR glasses-free 3D components for FireMonkey - runtime"),
     dict(name="dclPeardox", kind="design", platforms=DESIGN_PLATFORMS, default="Win32",
-         requires=["rtl", "fmx", "designide", "Peardox"], units=[REG_UNIT],
+         requires=["rtl", "fmx", "designide", "Peardox"], units=[REG_UNIT], extra=[],
          description="Peardox components for FireMonkey and Gorilla3D - design time"),
 ]
 
 
 def check_units():
-    """Every lib/Peardox.*.pas but the registration unit is in the runtime package."""
+    """Every lib/Peardox.*.pas is in exactly one package, the *.Reg units in a design one."""
     found = sorted(f[:-4] for f in os.listdir(os.path.join(ROOT, "lib"))
                    if f.startswith("Peardox.") and f.endswith(".pas"))
-    missing = [u for u in found if u != REG_UNIT and u not in RUNTIME_UNITS]
-    gone = [u for u in RUNTIME_UNITS + [REG_UNIT] if u not in found]
-    if missing or gone:
-        msg = []
-        if missing:
-            msg.append("in lib but not in RUNTIME_UNITS: " + ", ".join(missing))
-        if gone:
-            msg.append("listed but not in lib: " + ", ".join(gone))
+    listed = [u for p in PACKAGES for u in p["units"]]
+    msg = []
+    missing = [u for u in found if u not in listed]
+    if missing:
+        msg.append("in lib but in no package: " + ", ".join(missing))
+    twice = sorted({u for u in listed if listed.count(u) > 1})
+    if twice:
+        msg.append("in more than one package: " + ", ".join(twice))
+    gone = [u for u in listed if u not in found]
+    if gone:
+        msg.append("listed but not in lib: " + ", ".join(gone))
+    misplaced = [u for p in PACKAGES for u in p["units"]
+                 if u.endswith(".Reg") != (p["kind"] == "design")]
+    if misplaced:
+        msg.append("registration units belong in design packages only: " + ", ".join(misplaced))
+    if msg:
         sys.exit("gen_packages.py: " + "; ".join(msg))
 
 
@@ -98,8 +127,9 @@ def dpk(p):
              "{$IMPLICITBUILD ON}", "", "requires"]
     lines += [f"  {r}{',' if i < len(p['requires']) - 1 else ';'}" for i, r in enumerate(p["requires"])]
     lines += ["", "contains"]
-    lines += [f"  {u} in '..\\lib\\{u}.pas'{',' if i < len(p['units']) - 1 else ';'}"
-              for i, u in enumerate(p["units"])]
+    entries = [(u, f"..\\lib\\{u}.pas") for u in p["units"]] + p["extra"]
+    lines += [f"  {u} in '{path}'{',' if i < len(entries) - 1 else ';'}"
+              for i, (u, path) in enumerate(entries)]
     lines += ["", "end."]
     write(os.path.join(PKG_DIR, p["name"] + ".dpk"), "\n".join(lines) + "\n", bom=False)
 
@@ -192,6 +222,8 @@ def dproj(p, force):
         a(f'        <DCCReference Include="{r}.dcp"/>')
     for u in p["units"]:
         a(f'        <DCCReference Include="..\\lib\\{u}.pas"/>')
+    for _, src in p["extra"]:
+        a(f'        <DCCReference Include="{src}"/>')
     a('        <BuildConfiguration Include="Base">')
     a('            <Key>Base</Key>')
     a('        </BuildConfiguration>')

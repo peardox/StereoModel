@@ -4,7 +4,7 @@
         <ProjectVersion>20.5</ProjectVersion>
         <FrameworkType>FMX</FrameworkType>
         <Base>True</Base>
-        <Config Condition="'$(Config)'==''">Debug</Config>
+        <Config Condition="'$(Config)'==''">Release</Config>
         <Platform Condition="'$(Platform)'==''">Win64</Platform>
         <ProjectName Condition="'$(ProjectName)'==''">StereoModel</ProjectName>
         <TargetedPlatforms>2790547</TargetedPlatforms>
@@ -111,7 +111,7 @@
         <Base>true</Base>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
-        <DCC_UnitSearchPath>..\delphi-neon\Source;..\FastMM5;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_UnitSearchPath>..\FastMM5;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <DCC_DcuOutput>.\$(Platform)\$(Config)</DCC_DcuOutput>
         <DCC_ExeOutput>.\$(Platform)\$(Config)</DCC_ExeOutput>
         <DCC_E>false</DCC_E>
@@ -318,6 +318,8 @@
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_Win64)'!=''">
         <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>
+        <PostBuildEvent><![CDATA[(copy /Y "$(PROJECTDIR)\..\SRDelphiFMX\dll\SRBridge.dll" "$(OUTPUTDIR)" || echo warning: SRDelphiFMX\dll\SRBridge.dll not copied - run git submodule update --init, see README)]]></PostBuildEvent>
+        <PostBuildEventIgnoreExitCode>False</PostBuildEventIgnoreExitCode>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_WinARM64EC)'!=''">
         <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>
@@ -333,6 +335,8 @@
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Win64)'!=''">
         <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>
+        <PostBuildEvent><![CDATA[(copy /Y "$(PROJECTDIR)\..\SRDelphiFMX\dll\SRBridge.dll" "$(OUTPUTDIR)" || echo warning: SRDelphiFMX\dll\SRBridge.dll not copied - run git submodule update --init, see README)]]></PostBuildEvent>
+        <PostBuildEventIgnoreExitCode>False</PostBuildEventIgnoreExitCode>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_WinARM64EC)'!=''">
         <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>
@@ -342,6 +346,10 @@
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
         <DCCReference Include="common\FmxLinuxMenu.pas"/>
+        <DCCReference Include="common\StereoModelLog.pas"/>
+        <DCCReference Include="common\StereoModelGLProbe.pas"/>
+        <DCCReference Include="common\StereoModelGLInterop.pas"/>
+        <DCCReference Include="common\StereoModelEyes.pas"/>
         <DCCReference Include="ui\StereoModelMain.pas">
             <Form>Form2</Form>
             <FormType>fmx</FormType>
@@ -1370,4 +1378,20 @@
     <Import Project="$(BDS)\Bin\CodeGear.Delphi.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')"/>
     <Import Project="$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj" Condition="Exists('$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj')"/>
     <Import Project="$(MSBuildProjectName).deployproj" Condition="Exists('$(MSBuildProjectName).deployproj')"/>
+    <PropertyGroup Condition="'$(Config)'=='Debug' And '$(Platform)'=='Win64'">
+        <PreBuildEvent/>
+        <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
+        <PreLinkEvent/>
+        <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
+        <PostBuildEvent>(copy /Y &quot;$(PROJECTDIR)\..\SRDelphiFMX\dll\SRBridge.dll&quot; &quot;$(OUTPUTDIR)&quot; || echo warning: SRDelphiFMX\dll\SRBridge.dll not copied - run git submodule update --init, see README)</PostBuildEvent>
+        <PostBuildEventIgnoreExitCode>False</PostBuildEventIgnoreExitCode>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Release' And '$(Platform)'=='Win64'">
+        <PreBuildEvent/>
+        <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
+        <PreLinkEvent/>
+        <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
+        <PostBuildEvent>(copy /Y &quot;$(PROJECTDIR)\..\SRDelphiFMX\dll\SRBridge.dll&quot; &quot;$(OUTPUTDIR)&quot; || echo warning: SRDelphiFMX\dll\SRBridge.dll not copied - run git submodule update --init, see README)</PostBuildEvent>
+        <PostBuildEventIgnoreExitCode>False</PostBuildEventIgnoreExitCode>
+    </PropertyGroup>
 </Project>

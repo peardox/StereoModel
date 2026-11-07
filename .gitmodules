@@ -4,3 +4,6 @@
 [submodule "FastMM5"]
 	path = FastMM5
 	url = https://github.com/pleriche/FastMM5.git
+[submodule "SRDelphiFMX"]
+	path = SRDelphiFMX
+	url = https://github.com/peardox/SRDelphiFMX
