@@ -4,7 +4,7 @@
 //** SRBridge.dll is peardox/SRDelphiFMX's (its bridge folder, C++ built with MSVC, the
 //** compiled DLL in its dll folder): the SR weaver is C++ only, so the bridge wraps it behind
 //** a flat C API. These declarations are copied from SRDelphiFMX's lib/SRBridge.Api.pas
-//** (commit 9530011) and keep the bridge's own C names (srb_..., TSRB...), as Winapi units
+//** (commit 9530011, plus srb_GetLensState of 7 November 2026) and keep the bridge's own C names (srb_..., TSRB...), as Winapi units
 //** keep Windows' names; keep them in step with that unit when the bridge changes. The
 //** bridge's demo scene (srb_RenderScene) is left out.
 //**
@@ -288,6 +288,13 @@ procedure srb_SetVSync(enabled: Int32); cdecl; external SRBridgeDll delayed;
 procedure srb_SetLatencyInFrames(frames: UInt64); cdecl; external SRBridgeDll delayed;
 //** Asks for the lens to be on (1) or off (0).
 procedure srb_SetLens(enabled: Int32); cdecl; external SRBridgeDll delayed;
+//** The lens as it actually is (SR's isLensEnabled), not as asked. Not in
+//** bridges built before 7 November 2026, 17:00: check with
+//** @link(SRBridgeHasExport). Called before srb_Initialize, srb_SetLens also sets the
+//** lens the SR context starts with, in those bridges.
+//** @returns(1 on, 0 off, -1 not known: not initialised, or a runtime without
+//** isLensEnabled)
+function srb_GetLensState: Int32; cdecl; external SRBridgeDll delayed;
 //** Takes the oldest queued system event.
 //** @returns(1 if one was written to @code(ev), 0 if none)
 function srb_PollSystemEvent(ev: PSRBSystemEvent): Int32; cdecl; external SRBridgeDll delayed;

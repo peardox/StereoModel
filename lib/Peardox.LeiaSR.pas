@@ -16,9 +16,10 @@
 //**   @item(The user's settings, kept by Settings, shared by every Peardox program.)
 //** )
 //**
-//** Nothing is woven yet: the bridge's window stays hidden and the display's lens off, so
-//** Control shows what it always shows. Drawing the two eyes' views comes next, in a component
-//** of its own.
+//** It weaves nothing itself: a renderer draws the two eyes' views, sets Weaving (the bridge's
+//** window then covers Control and the lens comes on) and hands each frame to SubmitViews.
+//** Until then the window stays hidden and the lens off, so Control shows what it always
+//** shows.
 //**
 //** LeiaSR is Windows 64-bit only. The unit compiles everywhere so the package and the
 //** programs using it stay cross-platform; elsewhere Installed is False and Start does nothing.
@@ -38,7 +39,8 @@ unit Peardox.LeiaSR;
   view's place on it in millimetres, the tracked eyes and SR's events; and
   the user's settings, shared by every Peardox program.
 
-  Nothing is woven yet: the bridge's window stays hidden and the lens off.
+  It weaves nothing itself: a renderer sets Weaving and hands each frame to
+  SubmitViews; until then the bridge's window stays hidden and the lens off.
 
   LeiaSR is Windows 64-bit only; the unit compiles everywhere, and
   elsewhere Installed is False and Start does nothing. It needs
@@ -56,6 +58,8 @@ uses
   Peardox.LeiaSR.Api, Peardox.LeiaSR.Settings;
 
 const
+  //** @abstract(TPeardoxLeiaSR.DisplayName while the display's own name is not known.)
+  PEARDOX_LEIASR_DISPLAY_NAME = 'the SR display';
   //** @abstract(The platforms the LeiaSR components are offered for in the IDE: all of them,
   //** so a form using one compiles everywhere; SR itself runs on Windows 64-bit only.)
   PEARDOX_LEIASR_PLATFORMS = pidAllPlatforms;
@@ -169,6 +173,8 @@ type
     FWindowCenterMM: TPointF;
     //** @abstract(See WindowSizeMM.)
     FWindowSizeMM: TSizeF;
+    //** @abstract(See DisplayName.)
+    FDisplayName: string;
     //** @abstract(Control's rectangle last given to the bridge, in physical pixels in the
     //** form's client area; empty until set.)
     FBounds: TRect;
@@ -190,6 +196,15 @@ type
     FLensState: TPeardoxLeiaSRLensState;
     //** @abstract(See OnLensChange.)
     FOnLensChange: TNotifyEvent;
+    //** @abstract(True when the bridge has srb_GetLensState, so the lens is read, not only
+    //** followed through SR's events.)
+    FCanReadLens: Boolean;
+    //** @abstract(See Weaving.)
+    FWeaving: Boolean;
+    //** @abstract(SubmitViews calls since the last periodic log line.)
+    FSubmits: Integer;
+    //** @abstract(Of FSubmits: woven, shown flat (SR unavailable), hidden window, failed.)
+    FSubmitResults: array[0..3] of Integer;
     {$IFDEF MSWINDOWS}
     //** @abstract(A hidden window the background check posts its answer to: posted messages
     //** come ahead of paints, while a queued call waits until FMX is idle.)
@@ -230,6 +245,11 @@ type
     //**
     //** @param(ATell Whether to raise OnProblem; False for lspNotInstalled.)
     procedure Fail(AProblem: TPeardoxLeiaSRProblem; const AMessage: string; ATell: Boolean);
+    //** @abstract(Sets Weaving: shows or hides the bridge's window over Control, with the
+    //** lens on or off.)
+    //**
+    //** @param(AValue True to weave.)
+    procedure SetWeaving(const AValue: Boolean);
     //** @abstract(Sets LensState, logging and raising OnLensChange when it changes.)
     //**
     //** @param(AValue The lens's new state.)
@@ -243,7 +263,7 @@ type
     //**
     //** @param(AWhy Set to why there is none, for the log.)
     //**
-    //** @returns(True if Control is on a form that is showing.)
+    //** @returns(True if Control is on a form that has its window, shown or hidden.)
     function FindFormWindow(out AWnd: HWND; out AWhy: string): Boolean;
     //** @abstract(FMsgWnd's window procedure: takes the background check's answer.)
     //**
@@ -265,6 +285,9 @@ type
     //** @abstract(Logs every SR system event waiting in the bridge, and follows the lens's
     //** state from its LensOn and LensOff events.)
     procedure PollEvents;
+    //** @abstract(Reads the lens's actual state from the bridge (srb_GetLensState), where it
+    //** can.)
+    procedure ReadLens;
     //** @abstract(Reads the tracked eyes, logs when tracking is found or lost, and raises
     //** OnEyes.)
     procedure ReadEyes;
@@ -313,12 +336,61 @@ type
     procedure Stop;
     //** @abstract(Saves Settings, logging where to or why not.)
     procedure SaveSettings;
+    //** @abstract(Sets Settings.LatencyFrames and, while running, tells the weaver at once.)
+    //**
+    //** The weaver predicts where the eyes will be when a frame reaches the display, this many
+    //** frames after it was drawn; a renderer that reads its pictures back through the CPU is
+    //** a frame or two behind. 0 keeps whatever was told last (SR's own until then). Not saved:
+    //** call SaveSettings for that.
+    //**
+    //** @param(AFrames Frames of latency, 0 to 10.)
+    procedure SetLatencyFrames(AFrames: Integer);
+    //** @abstract(Sets Settings.FrameCap and, while running, tells the bridge at once.)
+    //**
+    //** Not saved: call SaveSettings for that.
+    //**
+    //** @param(AOn True to wait for the SR display's vertical blank after each frame, False
+    //** not to.)
+    procedure SetFrameCap(AOn: Boolean);
+    //** @abstract(Reads the tracked eyes now, rather than waiting for the next poll; for a
+    //** renderer about to draw a frame. Raises OnEyes.)
+    //**
+    //** @returns(True if SR is running and the bridge answered.)
+    function UpdateEyes: Boolean;
+    //** @abstract(Weaves and presents one frame: a side-by-side image, the left eye's view in
+    //** the left half, the right eye's in the right.)
+    //**
+    //** Only while Weaving. The bridge stretches each view to its window over Control. The
+    //** results are counted and summed up in the periodic log line.
+    //**
+    //** @param(APixels The image: AViewHeight rows of 2 * AViewWidth pixels, 4 bytes each.)
+    //**
+    //** @param(AViewWidth Width of ONE eye's view in pixels.)
+    //**
+    //** @param(AViewHeight Height in pixels.)
+    //**
+    //** @param(APitch Bytes from one row to the next.)
+    //**
+    //** @param(ARGBA True if the bytes are red, green, blue, alpha; False (the default) for
+    //** blue, green, red, alpha, as FMX bitmaps on Windows.)
+    //**
+    //** @returns(The bridge's answer: SRB_OK (woven), SRB_S_2D_FALLBACK, SRB_S_OCCLUDED, or a
+    //** negative error; SRB_E_NOT_INITIALIZED while not Weaving.)
+    function SubmitViews(APixels: Pointer; AViewWidth, AViewHeight, APitch: Integer;
+      ARGBA: Boolean = False): Integer;
     //** @abstract(The SR display's properties, while SR runs.)
     //**
     //** @param(AInfo Set to the display's resolutions, size and recommended view size.)
     //**
     //** @returns(True if SR is running and the bridge answered.)
     function DisplayInfo(out AInfo: TSRBDisplayInfo): Boolean;
+    //** @abstract(Where the SR display is on the desktop, while SR runs.)
+    //**
+    //** @param(ARect Set to the display's rectangle in physical (desktop) pixels; empty if
+    //** not known.)
+    //**
+    //** @returns(True if SR is running and the bridge knows where the display is.)
+    function DisplayRect(out ARect: TRect): Boolean;
     //** @abstract(Where the component is: off, checking or running.)
     property State: TPeardoxLeiaSRState read FState;
     //** @abstract(True while SR is running.)
@@ -333,21 +405,31 @@ type
     //** @abstract(True while the tracker has the viewer's eyes; False before it finds them,
     //** when SR reports both eyes at one point.)
     property EyesTracked: Boolean read FEyesTracked;
-    //** @abstract(The display's lens as SR last reported it (its LensOn and LensOff events);
-    //** lslUnknown while SR is not running and until SR says. OnLensChange tells of each
-    //** change.)
+    //** @abstract(The display's lens: read from SR at every poll (srb_GetLensState, in bridges
+    //** from 7 November 2026, 17:00), else as SR last reported it in its LensOn and LensOff
+    //** events; lslUnknown while SR is not running and until it is known. OnLensChange
+    //** tells of each change.)
     property LensState: TPeardoxLeiaSRLensState read FLensState;
     //** @abstract(Control's centre on the SR display, in millimetres from the display's centre,
     //** x right and y up, as last read while SR ran.)
     property WindowCenterMM: TPointF read FWindowCenterMM;
     //** @abstract(Control's size on the SR display, in millimetres.)
     property WindowSizeMM: TSizeF read FWindowSizeMM;
+    //** @abstract(The SR display's make and model as Windows names it from the monitor's EDID
+    //** (as Settings, Display shows it), with the maker put in front from its EDID code where
+    //** the name leaves it out; PEARDOX_LEIASR_DISPLAY_NAME until SR has started, or where
+    //** Windows does not say.)
+    property DisplayName: string read FDisplayName;
     //** @abstract(The user's saved LeiaSR settings, read when the component is made at run
     //** time; change them and call SaveSettings.)
     property Settings: TPeardoxLeiaSRSettings read FSettings;
     //** @abstract(What happened when Settings were read, for the program's log: the file read,
     //** or why the defaults are used.)
     property SettingsStatus: string read FSettingsStatus;
+    //** @abstract(True while frames are woven: the bridge's window covers Control and the
+    //** display's lens is on. Set it when a renderer starts handing frames to SubmitViews, and
+    //** clear it when it stops; only possible while Running, and cleared by Stop.)
+    property Weaving: Boolean read FWeaving write SetWeaving;
   published
     //** @abstract(The view SR is for: the bridge's window is put over it, and its place on the
     //** display is what the eyes will look through. Normally the Gorilla3D viewport.)
@@ -399,6 +481,188 @@ var
   //** one SR view per process, so there is one.)
   GBridgeLogOwner: TPeardoxLeiaSR = nil;
 
+// Windows' display configuration API, for the monitor's own name: declared
+// here, laid out as in wingdi.h, as not every Delphi declares them
+const
+  //** @abstract(QueryDisplayConfig: the paths in use.)
+  PDX_QDC_ONLY_ACTIVE_PATHS = $00000002;
+  //** @abstract(DisplayConfigGetDeviceInfo: a source's GDI name (\\.\DISPLAYn).)
+  PDX_DC_GET_SOURCE_NAME = 1;
+  //** @abstract(DisplayConfigGetDeviceInfo: a target's (monitor's) names.)
+  PDX_DC_GET_TARGET_NAME = 2;
+  //** @abstract(DISPLAYCONFIG_TARGET_DEVICE_NAME flags: the EDID maker and product are valid.)
+  PDX_DC_EDID_IDS_VALID = $4;
+  //** @abstract(MonitorFromPoint: nil where no monitor holds the point.)
+  PDX_MONITOR_DEFAULTTONULL = 0;
+
+type
+  //** @abstract(LUID.)
+  TPdxDCLuid = record
+    LowPart: DWORD;
+    HighPart: Longint;
+  end;
+  //** @abstract(DISPLAYCONFIG_PATH_SOURCE_INFO, 20 bytes.)
+  TPdxDCPathSource = record
+    AdapterId: TPdxDCLuid;
+    Id: Cardinal;
+    ModeInfoIdx: Cardinal;
+    StatusFlags: Cardinal;
+  end;
+  //** @abstract(DISPLAYCONFIG_PATH_TARGET_INFO, 48 bytes.)
+  TPdxDCPathTarget = record
+    AdapterId: TPdxDCLuid;
+    Id: Cardinal;
+    ModeInfoIdx: Cardinal;
+    OutputTechnology: Cardinal;
+    Rotation: Cardinal;
+    Scaling: Cardinal;
+    RefreshNumerator: Cardinal;
+    RefreshDenominator: Cardinal;
+    ScanLineOrdering: Cardinal;
+    TargetAvailable: LongBool;
+    StatusFlags: Cardinal;
+  end;
+  //** @abstract(DISPLAYCONFIG_PATH_INFO, 72 bytes.)
+  TPdxDCPath = record
+    Source: TPdxDCPathSource;
+    Target: TPdxDCPathTarget;
+    Flags: Cardinal;
+  end;
+  //** @abstract(DISPLAYCONFIG_MODE_INFO, 64 bytes, not looked into.)
+  TPdxDCMode = array[0..63] of Byte;
+  //** @abstract(DISPLAYCONFIG_DEVICE_INFO_HEADER, 20 bytes.)
+  TPdxDCHeader = record
+    InfoType: Cardinal;
+    Size: Cardinal;
+    AdapterId: TPdxDCLuid;
+    Id: Cardinal;
+  end;
+  //** @abstract(DISPLAYCONFIG_SOURCE_DEVICE_NAME, 84 bytes.)
+  TPdxDCSourceName = record
+    Header: TPdxDCHeader;
+    GdiName: array[0..31] of WideChar;
+  end;
+  //** @abstract(DISPLAYCONFIG_TARGET_DEVICE_NAME, 420 bytes.)
+  TPdxDCTargetName = record
+    Header: TPdxDCHeader;
+    Flags: Cardinal;
+    OutputTechnology: Cardinal;
+    EdidManufactureId: Word;
+    EdidProductCodeId: Word;
+    ConnectorInstance: Cardinal;
+    FriendlyName: array[0..63] of WideChar;
+    DevicePath: array[0..127] of WideChar;
+  end;
+  //** @abstract(MONITORINFOEXW.)
+  TPdxMonitorInfoEx = record
+    Size: DWORD;
+    Monitor: TRect;
+    Work: TRect;
+    Flags: DWORD;
+    Device: array[0..31] of WideChar;
+  end;
+
+function PdxGetDisplayConfigBufferSizes(Flags: Cardinal; out NumPaths, NumModes: Cardinal): Longint;
+  stdcall; external user32 name 'GetDisplayConfigBufferSizes';
+function PdxQueryDisplayConfig(Flags: Cardinal; var NumPaths: Cardinal; Paths: Pointer;
+  var NumModes: Cardinal; Modes: Pointer; TopologyId: Pointer): Longint; stdcall;
+  external user32 name 'QueryDisplayConfig';
+function PdxDisplayConfigGetDeviceInfo(Packet: Pointer): Longint; stdcall;
+  external user32 name 'DisplayConfigGetDeviceInfo';
+function PdxMonitorFromPoint(Pt: TPoint; Flags: DWORD): THandle; stdcall;
+  external user32 name 'MonitorFromPoint';
+function PdxGetMonitorInfo(Monitor: THandle; Info: Pointer): BOOL; stdcall;
+  external user32 name 'GetMonitorInfoW';
+
+//** @abstract(A maker's name from its three-letter EDID (PnP) code, for the makers of SR
+//** displays and a few others.)
+//**
+//** @param(ACode The code, as SAM.)
+//**
+//** @returns(The maker, or the code itself for one not known here.)
+function MakerName(const ACode: string): string;
+const
+  Codes: array[0..9, 0..1] of string = (('SAM', 'Samsung'), ('SEC', 'Samsung'),
+    ('ACR', 'Acer'), ('LEN', 'Lenovo'), ('AUS', 'ASUS'), ('ASU', 'ASUS'), ('DEL', 'Dell'),
+    ('LGD', 'LG'), ('GSM', 'LG'), ('BOE', 'BOE'));
+var
+  I: Integer;
+begin
+  for I := Low(Codes) to High(Codes) do
+    if Codes[I, 0] = ACode then
+      Exit(Codes[I, 1]);
+  Result := ACode;
+end;
+
+//** @abstract(The make and model of the monitor at a point of the desktop, as Windows names
+//** it from the monitor's EDID.)
+//**
+//** @param(APoint A point on the monitor, desktop pixels.)
+//**
+//** @returns(Its name, with the maker in front where the name leaves it out; empty if
+//** Windows does not say.)
+function MonitorNameAt(const APoint: TPoint): string;
+var
+  Mon: THandle;
+  MI: TPdxMonitorInfoEx;
+  NumPaths, NumModes: Cardinal;
+  Paths: TArray<TPdxDCPath>;
+  Modes: TArray<TPdxDCMode>;
+  I: Integer;
+  SrcName: TPdxDCSourceName;
+  TgtName: TPdxDCTargetName;
+  Id: Word;
+  Maker: string;
+begin
+  Result := '';
+  Mon := PdxMonitorFromPoint(APoint, PDX_MONITOR_DEFAULTTONULL);
+  if Mon = 0 then
+    Exit;
+  FillChar(MI, SizeOf(MI), 0);
+  MI.Size := SizeOf(MI);
+  if not PdxGetMonitorInfo(Mon, @MI) then
+    Exit;
+  if (PdxGetDisplayConfigBufferSizes(PDX_QDC_ONLY_ACTIVE_PATHS, NumPaths, NumModes) <> 0) or
+    (NumPaths = 0) or (NumModes = 0) then
+    Exit;
+  SetLength(Paths, NumPaths);
+  SetLength(Modes, NumModes);
+  if PdxQueryDisplayConfig(PDX_QDC_ONLY_ACTIVE_PATHS, NumPaths, @Paths[0], NumModes,
+    @Modes[0], nil) <> 0 then
+    Exit;
+  for I := 0 to Integer(NumPaths) - 1 do
+  begin
+    FillChar(SrcName, SizeOf(SrcName), 0);
+    SrcName.Header.InfoType := PDX_DC_GET_SOURCE_NAME;
+    SrcName.Header.Size := SizeOf(SrcName);
+    SrcName.Header.AdapterId := Paths[I].Source.AdapterId;
+    SrcName.Header.Id := Paths[I].Source.Id;
+    if (PdxDisplayConfigGetDeviceInfo(@SrcName) <> 0) or
+      not SameText(string(PWideChar(@SrcName.GdiName[0])), string(PWideChar(@MI.Device[0]))) then
+      Continue;
+    FillChar(TgtName, SizeOf(TgtName), 0);
+    TgtName.Header.InfoType := PDX_DC_GET_TARGET_NAME;
+    TgtName.Header.Size := SizeOf(TgtName);
+    TgtName.Header.AdapterId := Paths[I].Target.AdapterId;
+    TgtName.Header.Id := Paths[I].Target.Id;
+    if PdxDisplayConfigGetDeviceInfo(@TgtName) <> 0 then
+      Exit;
+    Result := Trim(string(PWideChar(@TgtName.FriendlyName[0])));
+    if (TgtName.Flags and PDX_DC_EDID_IDS_VALID) <> 0 then
+    begin
+      // Three letters of five bits each, A = 1, the bytes swapped
+      Id := Swap(TgtName.EdidManufactureId);
+      Maker := MakerName(Char(Ord('A') - 1 + ((Id shr 10) and 31)) +
+        Char(Ord('A') - 1 + ((Id shr 5) and 31)) + Char(Ord('A') - 1 + (Id and 31)));
+      if Result = '' then
+        Result := Maker
+      else if not ContainsText(Result, Maker) then
+        Result := Maker + ' ' + Result;
+    end;
+    Exit;
+  end;
+end;
+
 //** @abstract(Receives the bridge's log lines, on any thread, and passes them to the main
 //** thread's log.)
 //**
@@ -437,6 +701,7 @@ constructor TPeardoxLeiaSR.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   FInitTimeout := PEARDOX_LEIASR_INIT_TIMEOUT;
+  FDisplayName := PEARDOX_LEIASR_DISPLAY_NAME;
   FPollInterval := PEARDOX_LEIASR_POLL_INTERVAL;
   FLogInterval := PEARDOX_LEIASR_LOG_INTERVAL;
   FSettings := TPeardoxLeiaSRSettings.Create;
@@ -641,6 +906,7 @@ begin
     Log('Glasses-free 3D turned off during the LeiaSR check: its answer will be ignored');
   FState := lssOff;
   FEyesTracked := False;
+  FWeaving := False;
   if not WasRunning then
     Exit;
   {$IFDEF MSWINDOWS}
@@ -655,6 +921,96 @@ begin
     FOnStopped(Self);
 end;
 
+procedure TPeardoxLeiaSR.SetWeaving(const AValue: Boolean);
+begin
+  if (AValue = FWeaving) or (AValue and not Running) then
+    Exit;
+  FWeaving := AValue;
+  {$IFDEF MSWINDOWS}
+  // The window over Control shows the woven frames; the lens makes them 3D
+  // (and blurs everything else on the panel)
+  srb_SetVisible(Ord(AValue));
+  srb_SetLens(Ord(AValue));
+  {$ENDIF}
+  FSubmits := 0;
+  FillChar(FSubmitResults, SizeOf(FSubmitResults), 0);
+  if AValue then
+    Log('Weaving: the bridge''s window covers the view and the lens is asked to come on')
+  else
+    Log('Not weaving: the bridge''s window is hidden and the lens asked off');
+end;
+
+procedure TPeardoxLeiaSR.SetFrameCap(AOn: Boolean);
+begin
+  FSettings.FrameCap := AOn;
+  {$IFDEF MSWINDOWS}
+  if Running then
+    srb_SetFrameCap(Ord(AOn));
+  {$ENDIF}
+  if AOn then
+    Log('Frame cap on: one frame per vertical blank of the SR display')
+  else
+    Log('Frame cap off: no wait for the SR display''s vertical blank after each frame ' +
+      '(vsync still on)');
+end;
+
+procedure TPeardoxLeiaSR.SetLatencyFrames(AFrames: Integer);
+begin
+  AFrames := EnsureRange(AFrames, 0, 10);
+  FSettings.LatencyFrames := AFrames;
+  {$IFDEF MSWINDOWS}
+  if Running and (AFrames > 0) then
+    srb_SetLatencyInFrames(AFrames);
+  {$ENDIF}
+  if AFrames > 0 then
+    Log(Format('Weaver latency %d frames', [AFrames]))
+  else
+    Log('Weaver latency 0: the weaver keeps the latency it was last told (SR''s own until then)');
+end;
+
+function TPeardoxLeiaSR.UpdateEyes: Boolean;
+begin
+  Result := False;
+  if not Running then
+    Exit;
+  {$IFDEF MSWINDOWS}
+  ReadEyes;
+  Result := True;
+  {$ENDIF}
+end;
+
+function TPeardoxLeiaSR.SubmitViews(APixels: Pointer; AViewWidth, AViewHeight, APitch: Integer;
+  ARGBA: Boolean): Integer;
+const
+  // Slots of FSubmitResults
+  RES_WOVEN = 0;
+  RES_FLAT = 1;
+  RES_HIDDEN = 2;
+  RES_FAILED = 3;
+begin
+  Result := SRB_E_NOT_INITIALIZED;
+  if not FWeaving then
+    Exit;
+  {$IFDEF MSWINDOWS}
+  if ARGBA then
+    Result := srb_SubmitViews(APixels, AViewWidth, AViewHeight, APitch, SRB_FMT_RGBA8)
+  else
+    Result := srb_SubmitViews(APixels, AViewWidth, AViewHeight, APitch, SRB_FMT_BGRA8);
+  Inc(FSubmits);
+  case Result of
+    SRB_OK: Inc(FSubmitResults[RES_WOVEN]);
+    SRB_S_2D_FALLBACK: Inc(FSubmitResults[RES_FLAT]);
+    SRB_S_OCCLUDED: Inc(FSubmitResults[RES_HIDDEN]);
+  else
+    begin
+      if FSubmitResults[RES_FAILED] = 0 then
+        Log(Format('srb_SubmitViews failed (%d): %s', [Result, SRBridgeLastError]));
+      Inc(FSubmitResults[RES_FAILED]);
+    end;
+  end;
+  {$ENDIF}
+end;
+
 procedure TPeardoxLeiaSR.SaveSettings;
 begin
   try
@@ -665,6 +1021,22 @@ begin
       Log(Format('LeiaSR settings NOT saved to %s: %s: %s',
         [FSettings.FileName, E.ClassName, E.Message]));
   end;
+end;
+
+function TPeardoxLeiaSR.DisplayRect(out ARect: TRect): Boolean;
+{$IFDEF MSWINDOWS}
+var
+  DR: TSRBRect;
+{$ENDIF}
+begin
+  ARect := TRect.Empty;
+  {$IFDEF MSWINDOWS}
+  Result := Running and (srb_GetDisplayRect(DR) = SRB_OK);
+  if Result then
+    ARect := TRect.Create(DR[0], DR[1], DR[2], DR[3]);
+  {$ELSE}
+  Result := False;
+  {$ENDIF}
 end;
 
 function TPeardoxLeiaSR.DisplayInfo(out AInfo: TSRBDisplayInfo): Boolean;
@@ -687,6 +1059,7 @@ begin
     Exit;
   {$IFDEF MSWINDOWS}
   PollEvents;
+  ReadLens;
   UpdateBounds;
   ReadEyes;
   NowTick := TThread.GetTickCount64;
@@ -697,6 +1070,14 @@ begin
       '%.1f x %.1f mm', [FmtMM(FLeftEyeMM), FmtMM(FRightEyeMM),
       FLeftEyeMM.Distance(FRightEyeMM), IfThen(FEyesTracked, '', ' NOT TRACKED'),
       FWindowCenterMM.X, FWindowCenterMM.Y, FWindowSizeMM.Width, FWindowSizeMM.Height]));
+    if FWeaving then
+    begin
+      Log(Format('  submitted %d frames: woven %d, flat %d, hidden %d, failed %d',
+        [FSubmits, FSubmitResults[0], FSubmitResults[1], FSubmitResults[2],
+         FSubmitResults[3]]));
+      FSubmits := 0;
+      FillChar(FSubmitResults, SizeOf(FSubmitResults), 0);
+    end;
   end;
   {$ENDIF}
 end;
@@ -720,9 +1101,13 @@ begin
     Exit;
   end;
   Form := TCommonCustomForm(FControl.Root.GetObject);
-  if (Form.Handle = nil) or not Form.Visible then
+  // A hidden form will do: a program can start SR on a form it shows only
+  // while weaving (StereoModel's full-screen form, owner, 7 November 2026),
+  // so that showing it is quick; the bridge's window, a child of the form's,
+  // stays hidden until Weaving
+  if Form.Handle = nil then
   begin
-    AWhy := Format('the form %s is not showing yet', [Form.Name]);
+    AWhy := Format('the form %s has no window yet', [Form.Name]);
     Exit;
   end;
   AWnd := FormToHWND(Form);
@@ -831,7 +1216,16 @@ begin
   srb_SetVisible(0);
   if FSettings.LatencyFrames > 0 then
     srb_SetLatencyInFrames(FSettings.LatencyFrames);
+  // The bridge waits by default; the settings say whether to
+  srb_SetFrameCap(Ord(FSettings.FrameCap));
   FState := lssRunning;
+  FCanReadLens := SRBridgeHasExport('srb_GetLensState');
+  if FCanReadLens then
+    Log('The lens is read from SR (srb_GetLensState)')
+  else
+    Log('This SRBridge.dll has no srb_GetLensState (older than 7 November 2026, 17:00): ' +
+      'the lens is known only from SR''s LensOn / LensOff events');
+  ReadLens;
   FBounds := TRect.Empty;
   FEyesTracked := False;
   FWindowCenterMM := PointF(0, 0);
@@ -864,7 +1258,22 @@ begin
   if srb_GetDisplayRect(DR) = SRB_OK then
   begin
     Log(Format('SR display on the desktop at (%d, %d)-(%d, %d)', [DR[0], DR[1], DR[2], DR[3]]));
-    if GetWindowRect(FFormWnd, Shown) then
+    // Owner (20:29): name the display, not just "the SR display"
+    try
+      FDisplayName := MonitorNameAt(TRect.Create(DR[0], DR[1], DR[2], DR[3]).CenterPoint);
+    except
+      FDisplayName := '';
+    end;
+    if FDisplayName = '' then
+    begin
+      FDisplayName := PEARDOX_LEIASR_DISPLAY_NAME;
+      Log('The SR display''s name: Windows does not say');
+    end
+    else
+      Log('The SR display is ' + FDisplayName);
+    if not IsWindowVisible(FFormWnd) then
+      Log('The form is hidden for now: where it goes is up to the program')
+    else if GetWindowRect(FFormWnd, Shown) then
     begin
       Centre := Shown.CenterPoint;
       if TRect.Create(DR[0], DR[1], DR[2], DR[3]).Contains(Centre) then
@@ -877,10 +1286,13 @@ begin
   else
     Log('SR display''s place on the desktop not known');
   Log(Format('Settings: eye separation %.1f mm (0 = tracked), look-around %s, latency %d ' +
-    'frames (0 = SR''s), lens mode %d (0 off over controls, 1 on, 2 off), full screen %s',
+    'frames (0 = SR''s), lens mode %d (0 off over controls, 1 on, 2 off), full screen %s, ' +
+    'frame cap %s',
     [FSettings.EyeSeparationMM, BoolToStr(FSettings.LookAround, True), FSettings.LatencyFrames,
-     FSettings.LensMode, BoolToStr(FSettings.FullScreen, True)]));
-  Log('Nothing is woven yet: the bridge''s window is hidden and the lens off');
+     FSettings.LensMode, BoolToStr(FSettings.FullScreen, True),
+     BoolToStr(FSettings.FrameCap, True)]));
+  Log('Nothing woven until a renderer sets Weaving: the bridge''s window is hidden and the ' +
+    'lens off');
 end;
 
 procedure TPeardoxLeiaSR.UpdateBounds;
@@ -934,6 +1346,16 @@ begin
       SetLensState(lslOn, 'SR event LensOn')
     else if Ev.eventType = SRB_EVENT_LENS_OFF then
       SetLensState(lslOff, 'SR event LensOff');
+  end;
+end;
+
+procedure TPeardoxLeiaSR.ReadLens;
+begin
+  if not FCanReadLens then
+    Exit;
+  case srb_GetLensState of
+    1: SetLensState(lslOn, 'read from SR');
+    0: SetLensState(lslOff, 'read from SR');
   end;
 end;
 

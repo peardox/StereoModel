@@ -55,6 +55,8 @@ type
     FLensMode: Integer;
     //** @abstract(See FullScreen.)
     FFullScreen: Boolean;
+    //** @abstract(See FrameCap.)
+    FFrameCap: Boolean;
   public
     //** @abstract(Creates the settings with their defaults, for the file DefaultFileName
     //** names.)
@@ -86,6 +88,14 @@ type
     property LensMode: Integer read FLensMode write FLensMode;
     //** @abstract(Whether the 3D view was last full screen on the SR display; default False.)
     property FullScreen: Boolean read FFullScreen write FFullScreen;
+    //** @abstract(True to have the bridge wait for the SR display's vertical blank after each
+    //** frame it presents; False (the default) not to. Vsync stays on either way, so there is
+    //** no tearing.)
+    //**
+    //** With the wait, a renderer whose own work takes over one refresh misses the next blank
+    //** and drops to half the refresh rate or below: StereoModel went from 24 to 32 fps with
+    //** it off, and looked no different (owner, 7 November 2026).
+    property FrameCap: Boolean read FFrameCap write FFrameCap;
   end;
 
 implementation
@@ -104,6 +114,7 @@ begin
   FLatencyFrames := 0;
   FLensMode := 0;
   FFullScreen := False;
+  FFrameCap := False;
 end;
 
 class function TPeardoxLeiaSRSettings.DefaultFileName: string;

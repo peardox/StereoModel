@@ -12,7 +12,7 @@ orbital camera, as the first step towards showing it on a glasses-free
 | `src/` | The program: `StereoModel.dpr` / `.dproj`, forms in `src/ui/`, helpers in `src/common/` (`FmxLinuxMenu`, an unchanged copy from G3DGames/TSteamAPI: the main menu as an FMX menu bar on desktop Linux) |
 | `lib/` | The Peardox components, kept apart because other projects reuse them |
 | `lib/icons/` | Their palette icons (`.ico`, and the `.svg` sources in `svg/`) |
-| `models/` | Test models: `uvcube.glb` (a cube with a UV test texture) and `Mage.glb` |
+| `models/` | Test models: `uvcube.glb` (a cube with a UV test texture), `Mage.glb`, and `SRDemoScene.glb` / `SRDemoSceneNoWall.glb` (SRDelphiFMX's demo scene, written by `tools/gen_srdemo_scene.py`) |
 | `packages/` | The Peardox packages: `Peardox` (runtime) and `dclPeardox` (design time) |
 | `tools/` | Scripts: the packages, the palette icons, and the PasDoc reference |
 | `delphi-neon/` | Neon, the JSON library (submodule), compiled into the PeardoxLeiaSR package |
@@ -93,7 +93,7 @@ executable: StereoModel's Win64 post-build step copies it from the
 
 | Unit | |
 |---|---|
-| `Peardox.LeiaSR` | `TPeardoxLeiaSR` (made in code for now): `Installed` (Win64 and the LeiaSR runtime present; where it is not, `Start` does nothing and raises no event, so a program can hide everything to do with glasses-free 3D), `Start` (checks for the SR service and display on a background thread, so the window never freezes, then starts SR with the bridge's window over `Control`), `Stop`. While running it logs the SR platform, the display, where `Control` lies on it in millimetres, SR's events and the tracked eyes (`OnLog`, `OnEyes`). `OnProblem` says why it could not start (no service, no display, no bridge). Nothing is woven yet: the bridge's window stays hidden and the lens off |
+| `Peardox.LeiaSR` | `TPeardoxLeiaSR` (made in code for now): `Installed` (Win64 and the LeiaSR runtime present; where it is not, `Start` does nothing and raises no event, so a program can hide everything to do with glasses-free 3D), `Start` (checks for the SR service and display on a background thread, so the window never freezes, then starts SR with the bridge's window over `Control`), `Stop`. While running it logs the SR platform, the display, where `Control` lies on it in millimetres, SR's events and the tracked eyes (`OnLog`, `OnEyes`). `OnProblem` says why it could not start (no service, no display, no bridge). It weaves nothing itself: a renderer sets `Weaving` (the bridge's window over `Control`, the lens on) and hands it each side-by-side frame with `SubmitViews`; `UpdateEyes` reads the eyes just before a frame |
 | `Peardox.LeiaSR.Settings` | `TPeardoxLeiaSRSettings`: the viewer's and display's settings, as SRDemoFMX keeps them (use glasses-free 3D, eye separation, look-around, latency, lens mode, full screen), in `LeiaSR.json` in the `Peardox` folder of the user's application data (`%APPDATA%\Peardox` on Windows), shared by every Peardox program |
 | `Peardox.LeiaSR.Api` | The bridge's imports, copied from SRDelphiFMX's `SRBridge.Api` (keep them in step), declared on Windows only |
 | `Peardox.Storage` | `AppDataFolder` and `TPeardoxJsonSettings` (published properties to and from a JSON file with Neon), from Sprite3D's `Sprite3DStorage` |
@@ -195,17 +195,77 @@ mobile), flushed line by line; a run that ended normally finishes with
 (timings under one are far slower). The previous run's log is kept as
 `StereoModel.prev.log`.
 
+At start the program loads `models/SRDemoSceneNoWall.glb` and shows it
+from the owner's test view: azimuth 52, inclination 75, roll 0, the camera
+42 from the target (`TEST_VIEW_*` in `StereoModelMain`); Home goes back to
+it. `models/SRDemoScene.glb` is SRDelphiFMX's demo scene as a model, for
+File, Open: the 11 x 11 grid of spheres, coloured by depth (red nearest, white on
+the middle row, blue furthest, the centre one green), the two columns of
+three cubes, which spin a turn every 8 s (the model's first animation,
+started when it loads, if Gorilla3D plays glTF node animations), and the
+back wall. `SRDemoSceneNoWall.glb` leaves the wall out, so the framed view
+is not made big enough to hold it. `python3 tools/gen_srdemo_scene.py`
+writes both (standard library only).
+
+The window's title always shows the view as numbers: the camera's azimuth,
+inclination (0 level, +90 above looking down) and roll in degrees, the target
+depth and the model centre's Z against the glass (below 0: in front of it),
+and each drag writes them to the status line and the log when it ends
+(`View: ...`), to note down for a test scene.
+
+A model with animations plays its first once loaded; the box left of
+**Stereo** lists them (as Gorilla3D sorts them, as Sprite3D does) and plays
+the one chosen, or none; it is hidden for a model without animations.
+
 Glasses-free 3D: where LeiaSR is installed (a Win64 build on a computer
-with the LeiaSR runtime) the **Stereo** button is shown; pressed, it starts
-LeiaSR, released it stops it, and the choice is saved in the shared LeiaSR
-settings. If they say so, it starts by itself once the model has loaded.
-For now it only starts SR and logs, in the status line, FMX's `Log.d` and
-`StereoModel.log`,
+with the LeiaSR runtime) the **Stereo** button is shown. SR starts once the model has loaded, on a
+hidden borderless 3D window, with the lens off; the button is enabled once
+it has. Pressed, it shows the 3D window full screen on the SR display, on
+top, and weaves the view there (the lens comes on); if the main window is on
+the SR display it hides until Stereo is off, on any other monitor it stays
+(the button shows pressed). **Esc**, the button again, or Alt+F4 on the 3D
+window turn Stereo off: the 3D window hides, the lens goes off, and SR stays
+running so the next time is quick. While Stereo is on, the viewport is the
+size the display weaves each eye at (its recommended view, 1920 x 1080 on
+the owner's display), centred and clipped in the main window, and the drags
+and wheel work on the 3D window as on the viewport. Once Stereo is on, the
+view is woven (first light,
+`src/common/StereoModelEyes.pas`, `TPeardoxGorillaEyes`): each frame the
+orbital camera's Gorilla3D camera is moved once per eye, sideways and up or
+down by the eye's offset from the view's centre times target depth / eye
+distance, turned (both alike, from the midpoint between the eyes), rendered
+(`RenderManual`) and captured (`MakeScreenshot`); each picture is shifted
+sideways by its eye's half of the separation, which is the off-axis frustum
+built from Gorilla3D's symmetric one (a thin black strip at the outer
+edges), and the pair goes side by side to `TPeardoxLeiaSR.SubmitViews`; the
+camera is put back. The target's depth is the plane on the glass. Frames
+are drawn whenever the program is idle, paced by the display's vertical
+blank. Each eye is woven no wider than the display's recommended view (1920
+pixels on the owner's 4K display): a full-screen 3840-wide picture is
+halved as it is copied, a quarter of the bytes to copy and upload. Keys
+(once per press, however long the key is held; on Windows through a thread keyboard hook, as SRDelphiFMX's SRDemoFMX does, and only while the main window or the 3D window is active) while testing: **S** swaps the eyes (if near things look far),
+**T** switches to toe-in (each camera turned to the target, no strip but
+mismatched corners) and back, **X** reverses the shift (reversed is now the
+default, from the owner's test), **L** steps the weaver's latency (0, SR's
+own, then 1 to 4 frames: how far ahead SR predicts the eyes; our frames are
+read back through the CPU, so a frame or two behind), **[** and **]** make
+the eye separation 5 mm smaller or larger (both saved in the LeiaSR
+settings), **Home** puts the view back, **C** turns the bridge's frame cap
+on and off (on: it waits for the SR display's vertical blank after each
+frame, which cost 8 fps here; off, the default, it does not; vsync stays on,
+so no tearing; saved as `FrameCap` in the LeiaSR settings), **P** writes a snapshot to the log
+(one block between `=== SNAPSHOT ===` lines, in the same terms as
+SRDelphiFMX's SRDemoFMX writes with its own P: the display, the view on it,
+the eyes, the settings, the camera, the world-to-mm scale, the frame rate),
+for comparing a view that looks right there with this one, **R** switches
+`RenderManual` before each screenshot on and off (the log's timings show
+whether `MakeScreenshot` renders by itself). The log gives, once a second,
+the frame rate, the time each stage takes, the view size and the offsets.
+SR's own lines also log,
 the SR platform, the display, where the view lies on it, SR's events and
-the eyes once a second; the view is not yet woven. Left of the button the
-lens indicator shows **LENS ON** in red while the display's lens is on
-(everything on the SR display not woven looks blurred then), *Lens off* in
-grey while it is off, and nothing while SR is not running; it follows SR's
-own LensOn and LensOff events (`TPeardoxLeiaSR.LensState`, `OnLensChange`). Where LeiaSR is not
+the eyes once a second. The lens is on exactly while Stereo is, so there is
+no lens indicator any more; the log still has SR's LensOn and LensOff.
+The target's depth stops at the viewport's far plane: further out, single
+precision moves the camera. Where LeiaSR is not
 installed the button is hidden. `SRBridge.dll` must be beside the
 executable (the Win64 build copies it from `SRDelphiFMX\dll`).

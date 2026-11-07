@@ -4,7 +4,7 @@
         <ProjectVersion>20.5</ProjectVersion>
         <FrameworkType>FMX</FrameworkType>
         <Base>True</Base>
-        <Config Condition="'$(Config)'==''">Debug</Config>
+        <Config Condition="'$(Config)'==''">Release</Config>
         <Platform Condition="'$(Platform)'==''">Win64</Platform>
         <ProjectName Condition="'$(ProjectName)'==''">StereoModel</ProjectName>
         <TargetedPlatforms>2790547</TargetedPlatforms>
@@ -347,6 +347,7 @@
         </DelphiCompile>
         <DCCReference Include="common\FmxLinuxMenu.pas"/>
         <DCCReference Include="common\StereoModelLog.pas"/>
+        <DCCReference Include="common\StereoModelEyes.pas"/>
         <DCCReference Include="ui\StereoModelMain.pas">
             <Form>Form2</Form>
             <FormType>fmx</FormType>

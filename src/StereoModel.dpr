@@ -11,7 +11,8 @@
 //**
 //** @preformatted(
 //** src/ui/      the forms
-//** src/common/  helpers: FmxLinuxMenu (from TSteamAPI, shared), StereoModelLog (the log file)
+//** src/common/  helpers: FmxLinuxMenu (from TSteamAPI, shared), StereoModelLog (the log file),
+//**              StereoModelEyes (first light: the two eyes drawn for LeiaSR)
 //** lib/         the Peardox components' sources, built by packages/Peardox.dpk and
 //**              packages/PeardoxLeiaSR.dpk (LeiaSR, glasses-free 3D)
 //** )
@@ -30,7 +31,8 @@ program StereoModel;
   StereoModel_MemoryManager_EventLog.txt beside the executable.
 
     src/ui/      the forms
-    src/common/  helpers: FmxLinuxMenu (from TSteamAPI, shared), StereoModelLog (the log file)
+    src/common/  helpers: FmxLinuxMenu (from TSteamAPI, shared), StereoModelLog (the log file),
+                 StereoModelEyes (first light: the two eyes drawn for LeiaSR)
     lib/         the Peardox components' sources, built by packages/Peardox.dpk and
                  packages/PeardoxLeiaSR.dpk (LeiaSR, glasses-free 3D)
 }
@@ -45,6 +47,7 @@ uses
   FMX.Forms,
   FmxLinuxMenu in 'common\FmxLinuxMenu.pas',
   StereoModelLog in 'common\StereoModelLog.pas',
+  StereoModelEyes in 'common\StereoModelEyes.pas',
   StereoModelMain in 'ui\StereoModelMain.pas' {Form2};
 
 {$R *.res}
