@@ -1,0 +1,36 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{E4A81B96-BCDC-4076-A6C7-328B5CAF303B}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="src\StereoModel.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="StereoModel">
+        <MSBuild Projects="src\StereoModel.dproj"/>
+    </Target>
+    <Target Name="StereoModel:Clean">
+        <MSBuild Projects="src\StereoModel.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="StereoModel:Make">
+        <MSBuild Projects="src\StereoModel.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="StereoModel"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="StereoModel:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="StereoModel:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>
