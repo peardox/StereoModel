@@ -15,7 +15,8 @@ orbital camera, as the first step towards showing it on a glasses-free
 | `models/` | Test models: `uvcube.glb` (a cube with a UV test texture) and `Mage.glb` |
 | `packages/` | The Peardox packages: `Peardox` (runtime) and `dclPeardox` (design time) |
 | `tools/` | Scripts: the packages, the palette icons, and the PasDoc reference |
-| `delphi-neon/` | Neon, the JSON library (submodule) |
+| `delphi-neon/` | Neon, the JSON library (submodule), compiled into the PeardoxLeiaSR package |
+| `SRDelphiFMX/` | peardox/SRDelphiFMX (submodule, never changed here): LeiaSR from Delphi, with the C++ bridge, `SRBridge.dll` in its `dll` folder |
 | `FastMM5/` | FastMM5, the memory manager on Windows (submodule); Debug builds report leaks |
 
 ## Peardox components
@@ -80,6 +81,23 @@ The camera came from Sprite3D's `Sprite3DCamera` unit
 (<https://github.com/peardox/Sprite3D>), renamed so both can be used in one
 program.
 
+### LeiaSR, glasses-free 3D (package PeardoxLeiaSR)
+
+The components for LeiaSR (Simulated Reality) eye-tracked displays, after
+peardox/SRDelphiFMX, in a package of their own. LeiaSR is Windows 64-bit
+only, but the units compile everywhere, so the package and the programs
+using it stay cross-platform; elsewhere nothing is offered. A program needs
+`SRBridge.dll` (SRDelphiFMX's C++ bridge to the SR weaver) beside its
+executable: StereoModel's Win64 post-build step copies it from the
+`SRDelphiFMX` submodule.
+
+| Unit | |
+|---|---|
+| `Peardox.LeiaSR` | `TPeardoxLeiaSR` (made in code for now): `Installed` (Win64 and the LeiaSR runtime present; where it is not, `Start` does nothing and raises no event, so a program can hide everything to do with glasses-free 3D), `Start` (checks for the SR service and display on a background thread, so the window never freezes, then starts SR with the bridge's window over `Control`), `Stop`. While running it logs the SR platform, the display, where `Control` lies on it in millimetres, SR's events and the tracked eyes (`OnLog`, `OnEyes`). `OnProblem` says why it could not start (no service, no display, no bridge). Nothing is woven yet: the bridge's window stays hidden and the lens off |
+| `Peardox.LeiaSR.Settings` | `TPeardoxLeiaSRSettings`: the viewer's and display's settings, as SRDemoFMX keeps them (use glasses-free 3D, eye separation, look-around, latency, lens mode, full screen), in `LeiaSR.json` in the `Peardox` folder of the user's application data (`%APPDATA%\Peardox` on Windows), shared by every Peardox program |
+| `Peardox.LeiaSR.Api` | The bridge's imports, copied from SRDelphiFMX's `SRBridge.Api` (keep them in step), declared on Windows only |
+| `Peardox.Storage` | `AppDataFolder` and `TPeardoxJsonSettings` (published properties to and from a JSON file with Neon), from Sprite3D's `Sprite3DStorage` |
+
 ### Palette icons
 
 `python3 tools/gen_icons.py` draws `lib/icons/<Class>.ico` (needs Pillow
@@ -93,20 +111,22 @@ The components are built into two packages, like G3DGames/TSteamAPI's:
 | Package | What it is |
 |---|---|
 | `packages/Peardox` | Runtime: every component unit in `lib`. It requires `rtl`, `fmx` and Gorilla3D's runtime package (`Gorilla3D_Delphi_13_2_0_Florence`). Its DCUs go to Delphi's Dcp folder, `$(BDSCOMMONDIR)\Dcp\<platform>` (`\Dcp` alone for Win32), beside `Peardox.dcp`, which is on the IDE's default Library path, so **a program that uses a Peardox component needs no search path**. Win32, Win64, macOS (x64, ARM64), Linux64, Android (32 and 64-bit), iOS device and simulator; not WinARM64EC, for which Gorilla3D is not installed |
+| `packages/PeardoxLeiaSR` | Runtime: the LeiaSR units in `lib` and the Neon units they need. It requires `rtl`, `dbrtl` and `fmx`, not Gorilla3D or Peardox. Its DCUs, Neon's included, go to the same Dcp folders, so a program needs no path to Neon either; a program must then not also compile Neon from source (no `delphi-neon` search path), or the compiler can find two builds of one unit. Same platforms as Peardox |
 | `packages/dclPeardox` | Design time: `lib/Peardox.Reg.pas`, which puts the components on the **Peardox** palette page with their icons. Win32 (the 32-bit IDE) and Win64 |
 
 To install, in `StereoGroup.groupproj`:
 
-1. Build **Peardox** for every platform you compile programs for, and
-   always for **Win32**, which the 32-bit IDE's design package needs.
-   Debug and Release write to the same Dcp folder: the last build wins.
+1. Build **Peardox** and **PeardoxLeiaSR** for every platform you compile
+   programs for, and always for **Win32**, which the 32-bit IDE's design
+   package needs. Debug and Release write to the same Dcp folder: the last
+   build wins.
 2. Build **dclPeardox** (Win32) and **Install** it (right-click in the
    Projects window). The Peardox page appears on the palette.
 3. Build `StereoModel`. It lists no `lib` unit and has no path to `lib`:
-   `Peardox.OrbitalCamera` comes from the Dcp folder.
+   `Peardox.OrbitalCamera` and `Peardox.LeiaSR` come from the Dcp folder.
 
-After a change in `lib`, rebuild Peardox for each platform used before
-building a program; after a change to `lib/Peardox.Reg.pas` or the icons,
+After a change in `lib`, rebuild the package holding it (Peardox or
+PeardoxLeiaSR) for each platform used before building a program; after a change to `lib/Peardox.Reg.pas` or the icons,
 rebuild and reinstall dclPeardox too. A program failing with *F2613 Unit
 'Peardox.OrbitalCamera' not found* has not got Peardox built for the
 platform it is compiling for (new projects start on Win32).
@@ -159,3 +179,13 @@ shows the depth; orbit afterwards to see the new centre); the wheel zooms
 (stopping at the cube's nearest face, never inside it). A click on its own
 does nothing. A window resize refits the view, putting the target back on
 the cube.
+
+Glasses-free 3D: where LeiaSR is installed (a Win64 build on a computer
+with the LeiaSR runtime) the **Stereo** button is shown; pressed, it starts
+LeiaSR, released it stops it, and the choice is saved in the shared LeiaSR
+settings. If they say so, it starts by itself once the model has loaded.
+For now it only starts SR and logs, in the status line and FMX's `Log.d`,
+the SR platform, the display, where the view lies on it, SR's events and
+the eyes once a second; the view is not yet woven. Where LeiaSR is not
+installed the button is hidden. `SRBridge.dll` must be beside the
+executable (the Win64 build copies it from `SRDelphiFMX\dll`).

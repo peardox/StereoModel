@@ -8,10 +8,14 @@
 //** Mouse, on the viewport: a left drag orbits (Azimuth and PolarAngle); a right drag up or
 //** down moves the target, the point the camera orbits, deeper or nearer along the line of
 //** sight without moving the camera (SetTargetDepth); the wheel brings the view nearer or
-//** takes it farther, stopping at the model's nearest face. A click on its own does nothing. Status and problems are shown in the strip at the
-//** bottom and logged with FMX's Log.d.
+//** takes it farther, stopping at the model's nearest face. A click on its own does nothing.
+//** Status and problems are shown in the strip at the bottom and logged with FMX's Log.d.
 //**
-//** The Stereo button is not wired up yet.
+//** Glasses-free 3D (step 0): a TPeardoxLeiaSR, from the PeardoxLeiaSR package, made in code
+//** for now. Where LeiaSR is installed the Stereo button turns it on and off, and the choice
+//** is saved in the shared LeiaSR settings; it starts by itself when the settings say so.
+//** Nothing is woven yet: it only starts SR and logs the display and the eyes. Where LeiaSR
+//** is not installed the button is hidden.
 unit StereoModelMain;
 
 {
@@ -27,10 +31,16 @@ unit StereoModelMain;
   right drag up or down moves the target, the point the camera orbits,
   deeper or nearer along the line of sight without moving the camera
   (SetTargetDepth); the wheel brings the view nearer or takes it farther,
-  stopping at the model's nearest face. A click on its own does nothing. Status and problems are shown in the strip at the bottom and
-  logged with FMX's Log.d.
+  stopping at the model's nearest face. A click on its own does nothing.
+  Status and problems are shown in the strip at the bottom and logged with
+  FMX's Log.d.
 
-  The Stereo button is not wired up yet.
+  Glasses-free 3D (step 0): a TPeardoxLeiaSR, made in code for now. Where
+  LeiaSR is installed the Stereo button turns it on and off, and the
+  choice is saved in the shared LeiaSR settings; it starts by itself when
+  the settings say so. Nothing is woven yet: it only starts SR and logs
+  the display and the eyes. Where LeiaSR is not installed the button is
+  hidden.
 }
 
 interface
@@ -49,7 +59,7 @@ uses
   Gorilla.DAE.Loader, Gorilla.STL.Loader, Gorilla.PLY.Loader, Gorilla.USD.Loader,
   Gorilla.Babylon.Loader, Gorilla.G3D.Loader,
   FMX.Controls.Presentation, FMX.StdCtrls, FMX.Menus, FMX.Layouts,
-  Peardox.OrbitalCamera, FmxLinuxMenu;
+  Peardox.OrbitalCamera, Peardox.LeiaSR, Peardox.LeiaSR.Settings, FmxLinuxMenu;
 
 type
   //** @abstract(The main form: the 3D view and the control strip below it.)
@@ -67,7 +77,8 @@ type
     //** @abstract(File, Open: picks a model file and loads it in place of the one shown;
     //** desktop only.)
     OpenMenuItem: TMenuItem;
-    //** @abstract(Will switch stereo output on and off; not wired up yet.)
+    //** @abstract(Turns glasses-free 3D on (pressed) and off; hidden where LeiaSR is not
+    //** installed.)
     btnStereo: TButton;
     //** @abstract(Holds the viewport inside MainViewLayout.)
     ViewLayout: TLayout;
@@ -91,6 +102,17 @@ type
     //**
     //** @param(Sender OpenMenuItem.)
     procedure OpenMenuItemClick(Sender: TObject);
+    //** @abstract(Stops glasses-free 3D while the window still exists.)
+    //**
+    //** @param(Sender The form.)
+    //**
+    //** @param(Action Left as it is: the form closes.)
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    //** @abstract(The Stereo button: starts glasses-free 3D when pressed, stops it when
+    //** released, and saves the choice.)
+    //**
+    //** @param(Sender btnStereo.)
+    procedure btnStereoClick(Sender: TObject);
   private
     //** @abstract(The model shown, owned by the viewport; nil until one has loaded.)
     FModel: TGorillaModel;
@@ -112,6 +134,9 @@ type
     //** @abstract(How far the wheel has zoomed from the fitted view: 1 is the fit, below 1
     //** nearer; kept between ZOOM_MIN and ZOOM_MAX.)
     FZoom: Single;
+    //** @abstract(Glasses-free 3D: LeiaSR for GorillaViewport1, made in code for now; owned by
+    //** the form.)
+    FLeiaSR: TPeardoxLeiaSR;
     //** @abstract(Shows a line in the status strip and logs it.)
     //**
     //** @param(AText The line.)
@@ -129,6 +154,35 @@ type
     function FindTestModel(out ATried: string): string;
     //** @abstract(Finds the test model and loads it; see LoadModel.)
     procedure LoadTestModel;
+    //** @abstract(Runs once the form is first showing: loads the test model, then starts
+    //** glasses-free 3D if LeiaSR is installed and the settings ask for it.)
+    procedure FirstShown;
+    //** @abstract(Makes FLeiaSR, hooks up its events and shows or hides btnStereo.)
+    procedure CreateLeiaSR;
+    //** @abstract(FLeiaSR's log: every line to the status strip and Log.d.)
+    //**
+    //** @param(Sender FLeiaSR.)
+    //**
+    //** @param(AText The line.)
+    procedure LeiaSRLog(Sender: TObject; const AText: string);
+    //** @abstract(FLeiaSR has started: btnStereo shows pressed.)
+    //**
+    //** @param(Sender FLeiaSR.)
+    procedure LeiaSRStarted(Sender: TObject);
+    //** @abstract(FLeiaSR has stopped: btnStereo shows released.)
+    //**
+    //** @param(Sender FLeiaSR.)
+    procedure LeiaSRStopped(Sender: TObject);
+    //** @abstract(Glasses-free 3D could not start: btnStereo is released, without changing
+    //** the saved choice, and the reason goes to the status strip.)
+    //**
+    //** @param(Sender FLeiaSR.)
+    //**
+    //** @param(AProblem What went wrong.)
+    //**
+    //** @param(AMessage The details.)
+    procedure LeiaSRProblem(Sender: TObject; AProblem: TPeardoxLeiaSRProblem;
+      const AMessage: string);
     //** @abstract(Loads a model file into the viewport in place of the one shown, stands it
     //** upright and frames it.)
     //**
@@ -294,6 +348,85 @@ begin
   GorillaViewport1.OnMouseMove := ViewMouseMove;
   GorillaViewport1.OnMouseUp := ViewMouseUp;
   GorillaViewport1.OnMouseWheel := ViewMouseWheel;
+  CreateLeiaSR;
+end;
+
+procedure TForm2.CreateLeiaSR;
+begin
+  // Made in code for now (owner, 7 November 2026); a component on the form
+  // later
+  FLeiaSR := TPeardoxLeiaSR.Create(Self);
+  FLeiaSR.Control := GorillaViewport1;
+  FLeiaSR.OnLog := LeiaSRLog;
+  FLeiaSR.OnStarted := LeiaSRStarted;
+  FLeiaSR.OnStopped := LeiaSRStopped;
+  FLeiaSR.OnProblem := LeiaSRProblem;
+  ShowStatus(FLeiaSR.SettingsStatus);
+  // No LeiaSR here: nothing about glasses-free 3D is shown
+  btnStereo.Visible := TPeardoxLeiaSR.Installed;
+  btnStereo.IsPressed := False;
+  if not btnStereo.Visible then
+    ShowStatus('LeiaSR not installed (or not a Windows 64-bit build): Stereo hidden')
+  else if FLeiaSR.Settings.UseGlassesFree3D then
+    ShowStatus('LeiaSR installed; glasses-free 3D is on in the settings')
+  else
+    ShowStatus('LeiaSR installed; glasses-free 3D is off in the settings');
+end;
+
+procedure TForm2.FirstShown;
+begin
+  LoadTestModel;
+  if TPeardoxLeiaSR.Installed and FLeiaSR.Settings.UseGlassesFree3D then
+  begin
+    btnStereo.IsPressed := True;
+    if not FLeiaSR.Start then
+      btnStereo.IsPressed := False;
+  end;
+end;
+
+procedure TForm2.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  // While the form's window, the parent of the bridge's, still exists
+  FLeiaSR.Stop;
+end;
+
+procedure TForm2.btnStereoClick(Sender: TObject);
+begin
+  if btnStereo.IsPressed then
+  begin
+    if not FLeiaSR.Start then
+      btnStereo.IsPressed := False;
+  end
+  else
+    FLeiaSR.Stop;
+  // The user's choice, kept even when the start fails (as in SRDelphiFMX)
+  if FLeiaSR.Settings.UseGlassesFree3D <> btnStereo.IsPressed then
+  begin
+    FLeiaSR.Settings.UseGlassesFree3D := btnStereo.IsPressed;
+    FLeiaSR.SaveSettings;
+  end;
+end;
+
+procedure TForm2.LeiaSRLog(Sender: TObject; const AText: string);
+begin
+  ShowStatus(AText);
+end;
+
+procedure TForm2.LeiaSRStarted(Sender: TObject);
+begin
+  btnStereo.IsPressed := True;
+end;
+
+procedure TForm2.LeiaSRStopped(Sender: TObject);
+begin
+  btnStereo.IsPressed := False;
+end;
+
+procedure TForm2.LeiaSRProblem(Sender: TObject; AProblem: TPeardoxLeiaSRProblem;
+  const AMessage: string);
+begin
+  btnStereo.IsPressed := False;
+  ShowStatus('Glasses-free 3D not started: ' + AMessage);
 end;
 
 procedure TForm2.FormShow(Sender: TObject);
@@ -302,7 +435,8 @@ begin
     Exit;
   FLoadQueued := True;
   // After this event has finished, so the window is drawn before the load
-  TThread.ForceQueue(nil, LoadTestModel);
+  // and before glasses-free 3D starts
+  TThread.ForceQueue(nil, FirstShown);
 end;
 
 procedure TForm2.ShowStatus(const AText: string);

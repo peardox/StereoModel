@@ -111,7 +111,7 @@
         <Base>true</Base>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
-        <DCC_UnitSearchPath>..\delphi-neon\Source;..\FastMM5;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_UnitSearchPath>..\FastMM5;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <DCC_DcuOutput>.\$(Platform)\$(Config)</DCC_DcuOutput>
         <DCC_ExeOutput>.\$(Platform)\$(Config)</DCC_ExeOutput>
         <DCC_E>false</DCC_E>
@@ -318,6 +318,8 @@
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_Win64)'!=''">
         <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>
+        <PostBuildEvent>(copy /Y &quot;$(PROJECTDIR)\..\SRDelphiFMX\dll\SRBridge.dll&quot; &quot;$(OUTPUTDIR)&quot; || echo warning: SRDelphiFMX\dll\SRBridge.dll not copied - run git submodule update --init, see README)</PostBuildEvent>
+        <PostBuildEventIgnoreExitCode>False</PostBuildEventIgnoreExitCode>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_WinARM64EC)'!=''">
         <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>
@@ -333,6 +335,8 @@
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Win64)'!=''">
         <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>
+        <PostBuildEvent>(copy /Y &quot;$(PROJECTDIR)\..\SRDelphiFMX\dll\SRBridge.dll&quot; &quot;$(OUTPUTDIR)&quot; || echo warning: SRDelphiFMX\dll\SRBridge.dll not copied - run git submodule update --init, see README)</PostBuildEvent>
+        <PostBuildEventIgnoreExitCode>False</PostBuildEventIgnoreExitCode>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_WinARM64EC)'!=''">
         <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>

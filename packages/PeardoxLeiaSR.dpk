@@ -1,0 +1,27 @@
+package PeardoxLeiaSR;
+
+{ Peardox LeiaSR glasses-free 3D components for FireMonkey - runtime. Written by tools/gen_packages.py - edit the script, not this file. }
+
+{$DESCRIPTION 'Peardox LeiaSR glasses-free 3D components for FireMonkey - runtime'}
+{$RUNONLY}
+{$IMPLICITBUILD ON}
+
+requires
+  rtl,
+  dbrtl,
+  fmx;
+
+contains
+  Peardox.Storage in '..\lib\Peardox.Storage.pas',
+  Peardox.LeiaSR.Settings in '..\lib\Peardox.LeiaSR.Settings.pas',
+  Peardox.LeiaSR.Api in '..\lib\Peardox.LeiaSR.Api.pas',
+  Peardox.LeiaSR in '..\lib\Peardox.LeiaSR.pas',
+  Neon.Core.Types in '..\delphi-neon\Source\Neon.Core.Types.pas',
+  Neon.Core.Tags in '..\delphi-neon\Source\Neon.Core.Tags.pas',
+  Neon.Core.Attributes in '..\delphi-neon\Source\Neon.Core.Attributes.pas',
+  Neon.Core.Utils in '..\delphi-neon\Source\Neon.Core.Utils.pas',
+  Neon.Core.DynamicTypes in '..\delphi-neon\Source\Neon.Core.DynamicTypes.pas',
+  Neon.Core.Persistence in '..\delphi-neon\Source\Neon.Core.Persistence.pas',
+  Neon.Core.Persistence.JSON in '..\delphi-neon\Source\Neon.Core.Persistence.JSON.pas';
+
+end.

@@ -1,0 +1,114 @@
+//** @abstract(The user's saved LeiaSR (glasses-free 3D) settings, shared by every Peardox
+//** program.)
+//**
+//** Kept as LeiaSR.json in the Peardox folder of the user's application data (see
+//** AppDataFolder in Peardox.Storage), read and written with Neon. The settings are the
+//** viewer's and the display's, not one program's, so every Peardox program on the computer
+//** shares them. They are those SRDelphiFMX's SRDemoFMX keeps (its TSRSettings), apart from
+//** the demo's own choices; its own file, %APPDATA%\SRDelphiFMX\settings.json, is not
+//** touched, since saving a file another program also writes would drop its other members.
+unit Peardox.LeiaSR.Settings;
+
+{
+  The user's saved LeiaSR (glasses-free 3D) settings, shared by every
+  Peardox program.
+
+  Kept as LeiaSR.json in the Peardox folder of the user's application data
+  (see AppDataFolder in Peardox.Storage), read and written with Neon. The
+  settings are the viewer's and the display's, not one program's, so every
+  Peardox program on the computer shares them. They are those SRDelphiFMX's
+  SRDemoFMX keeps (its TSRSettings), apart from the demo's own choices; its
+  own file, %APPDATA%\SRDelphiFMX\settings.json, is not touched, since
+  saving a file another program also writes would drop its other members.
+}
+
+interface
+
+uses
+  System.SysUtils, System.Classes, Peardox.Storage;
+
+const
+  //** @abstract(The folder, in the user's application data, the settings file is kept in.)
+  PEARDOX_SETTINGS_FOLDER = 'Peardox';
+  //** @abstract(The settings file's name inside PEARDOX_SETTINGS_FOLDER.)
+  PEARDOX_LEIASR_SETTINGS_FILE = 'LeiaSR.json';
+  //** @abstract(Default for TPeardoxLeiaSRSettings.EyeSeparationMM: the usual adult separation,
+  //** as in SRDelphiFMX.)
+  PEARDOX_DEFAULT_EYE_SEPARATION_MM = 63.0;
+
+type
+  //** @abstract(The saved LeiaSR settings.)
+  //**
+  //** Create one with Create, which names the shared file, call Load, and Save after each
+  //** change. Every published property is saved, under its camel-case name.
+  TPeardoxLeiaSRSettings = class(TPeardoxJsonSettings)
+  private
+    //** @abstract(See UseGlassesFree3D.)
+    FUseGlassesFree3D: Boolean;
+    //** @abstract(See EyeSeparationMM.)
+    FEyeSeparationMM: Double;
+    //** @abstract(See LookAround.)
+    FLookAround: Boolean;
+    //** @abstract(See LatencyFrames.)
+    FLatencyFrames: Integer;
+    //** @abstract(See LensMode.)
+    FLensMode: Integer;
+    //** @abstract(See FullScreen.)
+    FFullScreen: Boolean;
+  public
+    //** @abstract(Creates the settings with their defaults, for the file DefaultFileName
+    //** names.)
+    constructor Create; reintroduce; overload;
+    //** @abstract(The shared settings file.)
+    //**
+    //** @returns(LeiaSR.json in the Peardox folder of the user's application data.)
+    class function DefaultFileName: string; static;
+  published
+    //** @abstract(True (the default) to start glasses-free 3D when a program starts, on a
+    //** computer with the LeiaSR runtime; False to leave it off until the user turns it on.)
+    //**
+    //** Ignored where LeiaSR is not installed: there a program behaves as if it had no SR
+    //** support.
+    property UseGlassesFree3D: Boolean read FUseGlassesFree3D write FUseGlassesFree3D;
+    //** @abstract(The eye separation in millimetres used instead of the eye tracker's
+    //** measurement, which wanders, keeping the tracked head position; 0 uses the tracked eyes
+    //** as they are. Default PEARDOX_DEFAULT_EYE_SEPARATION_MM.)
+    property EyeSeparationMM: Double read FEyeSeparationMM write FEyeSeparationMM;
+    //** @abstract(True (the default) to draw from where the head is, so the model can be
+    //** looked around; False to draw from a fixed viewer in front of the view: depth, but no
+    //** motion with the head.)
+    property LookAround: Boolean read FLookAround write FLookAround;
+    //** @abstract(Frames of rendering latency told to the weaver for its eye prediction; 0
+    //** (the default) leaves SR's own.)
+    property LatencyFrames: Integer read FLatencyFrames write FLatencyFrames;
+    //** @abstract(When the display's lens is on: 0 (the default) off while the pointer is over
+    //** anything but the 3D view, 1 always on, 2 always off.)
+    property LensMode: Integer read FLensMode write FLensMode;
+    //** @abstract(Whether the 3D view was last full screen on the SR display; default False.)
+    property FullScreen: Boolean read FFullScreen write FFullScreen;
+  end;
+
+implementation
+
+uses
+  System.IOUtils;
+
+{ TPeardoxLeiaSRSettings }
+
+constructor TPeardoxLeiaSRSettings.Create;
+begin
+  inherited Create(DefaultFileName);
+  FUseGlassesFree3D := True;
+  FEyeSeparationMM := PEARDOX_DEFAULT_EYE_SEPARATION_MM;
+  FLookAround := True;
+  FLatencyFrames := 0;
+  FLensMode := 0;
+  FFullScreen := False;
+end;
+
+class function TPeardoxLeiaSRSettings.DefaultFileName: string;
+begin
+  Result := TPath.Combine(AppDataFolder(PEARDOX_SETTINGS_FOLDER), PEARDOX_LEIASR_SETTINGS_FILE);
+end;
+
+end.

@@ -57,6 +57,9 @@ Keep this file up to date when the rules or the state of the work change.
 - PasDoc on everything (`//**` comments, private members too), ASCII-only
   sources, two-space indent, as in Sprite3D. Check changed files with
   Sprite3D's checker: `python3 <Sprite3D>/tools/pasdoc_check.py <files>`.
+  It looks for @link targets in Sprite3D's own sources only, so here run a
+  copy with ROOT set to this repository and its project files taken from
+  lib, src/common, src/ui and src/*.dpr, or every @link is reported.
 - A new unit goes in both the `.dpr` and the `.dproj` (UTF-8 with BOM).
 
 ## Where the work is
@@ -144,8 +147,46 @@ Keep this file up to date when the rules or the state of the work change.
   run), one Gorilla.Imaging.TGA.TTargaFileFormat, and two TStringList
   holding shader source (vertPos, return vec4). For Gorilla3D's author,
   with the projection-offset and field-of-view questions.
-- Next: the stereo rendering (target display still to be named by the
-  owner).
+- Glasses-free 3D (owner, 7 November 2026, 15:53): the target is LeiaSR,
+  through peardox/SRDelphiFMX's bridge. Step 0 (StereoCam22): a NEW
+  PACKAGE, PeardoxLeiaSR, separate from the camera package (requires rtl,
+  dbrtl, fmx; not Gorilla3D, not Peardox), for "a few" LeiaSR components,
+  made in code first and put on forms soon after (then they get a design
+  package and icons). Persistent data as SRDemoFMX keeps it, with Neon.
+  Units: Peardox.Storage (Sprite3D's Sprite3DStorage, renamed:
+  AppDataFolder, TPeardoxJsonSettings), Peardox.LeiaSR.Settings
+  (TPeardoxLeiaSRSettings: UseGlassesFree3D, EyeSeparationMM, LookAround,
+  LatencyFrames, LensMode, FullScreen; %APPDATA%\Peardox\LeiaSR.json,
+  shared by all Peardox programs; SRDelphiFMX's own settings.json is NOT
+  shared, as saving it would drop its other members), Peardox.LeiaSR.Api
+  (SRDelphiFMX's SRBridge.Api at 9530011, comments as //**, imports under
+  {$IFDEF MSWINDOWS} so it compiles everywhere, srb_RenderScene left out;
+  keeps the bridge's C names srb_*/TSRB*, like Winapi - keep in step with
+  SRDelphiFMX), Peardox.LeiaSR (TPeardoxLeiaSR: Installed, Start with
+  srb_Probe on a thread and the answer posted to an AllocateHWnd window,
+  srb_Initialize with the bridge's own DX11 device (Gorilla3D is OpenGL,
+  so no zero copy), bridge window hidden and lens off since nothing is
+  woven yet, then a TTimer polls events, bounds, window mm and eyes, logs
+  once a second; Stop; OnLog/OnStarted/OnStopped/OnProblem/OnEyes).
+  Neon's 7 units the settings need are compiled into PeardoxLeiaSR (so
+  their DCUs are in the Dcp folders), and StereoModel's search path no
+  longer has delphi-neon (two builds of one unit otherwise). ONLY ONE
+  PACKAGE MAY CONTAIN NEON: if the camera package ever needs settings,
+  move Peardox.Storage and Neon into a shared base package. SRDelphiFMX is
+  a submodule at the root (the owner adds it:
+  `git submodule add https://github.com/peardox/SRDelphiFMX SRDelphiFMX`),
+  for its dll\SRBridge.dll, copied beside StereoModel's Win64 exe by its
+  post-build step; never change it here. Test form: FLeiaSR made in
+  FormCreate (Control = GorillaViewport1), Stereo button (StaysPressed)
+  hidden unless Installed, pressed = Start, released = Stop, choice saved;
+  auto-start after the first model load when UseGlassesFree3D; Stop in
+  FormClose. NOT YET BUILT. To see in the owner's log: whether eye
+  positions and SR events come while nothing is presented.
+- Next, step 1: first light - Gorilla3D renders each eye (off-axis in the
+  view matrix as SRDelphiFMX does, else toe-in), pixels read back and
+  uploaded with srb_SubmitViews; convergence = the camera's target depth
+  (SetTargetDepth). Later: an OpenGL weaver path in the bridge
+  (SR::CreateGLWeaver) for zero copy.
 - FastMM5 (submodule, owner 7 November 2026) is the memory manager on
   Windows, first in the `.dpr`; Debug builds report leaks, in full, to
   `StereoModel_MemoryManager_EventLog.txt` beside the executable.
@@ -164,9 +205,6 @@ Keep this file up to date when the rules or the state of the work change.
 - `tools/pasdoc.bat` (+ the two dark .css files), adapted from
   peardox/SRDelphiFMX: programs are `src\<program>.dpr`, the api run is
   `lib` without `*.Reg`. Not yet run.
-- peardox/SRDelphiFMX is LeiaSR (Simulated Reality) glasses-free 3D from
-  Delphi; ask the owner whether that is the target display before the
-  stereo work starts.
 - `MainMenu1` is on the form: once it has items, desktop Linux needs
   Sprite3D's `UseFmxMenuBar` swap (see Sprite3D's `CLAUDE.md`, Menus).
 
