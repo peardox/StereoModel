@@ -1,65 +1,57 @@
-//** @abstract(First light for glasses-free 3D: TPeardoxGorillaEyes draws the Gorilla3D view
-//** once per eye and hands the pair to TPeardoxLeiaSR to weave.)
+//** @abstract(Glasses-free 3D for a Gorilla3D view: TPeardoxGorillaEyes draws it once per eye,
+//** from where each eye really is, and hands the pair to TPeardoxLeiaSR to weave.)
 //**
-//** A first try, kept in the program until it works; then it becomes a component in lib. Each
-//** frame it:
+//** Kept in the program until it is settled; then it becomes a component in lib. Each frame
+//** it:
 //**
 //** @orderedList(
 //**   @item(reads the tracked eyes (millimetres from the display's centre) from
 //**     TPeardoxLeiaSR, or uses a fixed viewer in front of the view when the eyes are not
 //**     tracked or LookAround is off, with the saved eye separation;)
-//**   @item(for each eye, moves the orbital camera's own Gorilla3D camera sideways and up or
-//**     down from where it sits, turns it, renders the viewport (ManualRendering,
-//**     RenderManual) and takes the picture (MakeScreenshot);)
+//**   @item(for each eye, puts the orbital camera's own Gorilla3D camera where that eye is,
+//**     looking straight ahead (parallel to the orbit camera), renders the viewport
+//**     (ManualRendering, RenderManual), and takes the part of the picture where the display's
+//**     glass is, scaled to the view the display weaves;)
 //**   @item(puts the camera back exactly as it was;)
-//**   @item(copies the two pictures side by side, left eye on the left, shifted sideways
-//**     where Convergence says, and passes them to TPeardoxLeiaSR.SubmitViews, which weaves
-//**     them in the bridge's window over the view.)
+//**   @item(hands the two views to the bridge: on the GPU (zero copy, TPeardoxGLInterop) where
+//**     the bridge and OpenGL allow, otherwise through screenshots copied side by side.)
 //** )
+//**
+//** The geometry is the per-eye off-axis view of SRDelphiFMX's TSRStereoRenderer (Kooima's
+//** generalised perspective projection). The orbit centre, the target, is at the target depth
+//** D in front of the orbit camera, and that plane is the glass: the view's rectangle on the
+//** display fills the orbit camera's vertical field of view there, which sets the scale, scene
+//** units per millimetre. An eye at (dx, dy, dz) mm from the view's centre goes to
+//** (dx, -dy, -dz) times the scale in the orbit camera's own frame (FMX's Y is down, the
+//** display's up). Seen from there the glass is off to one side and smaller than the picture;
+//** that part of the picture, cut out and scaled to fill the view, is exactly what the eye
+//** would see through the glass. SRDemoFMX builds the cut and the zoom into FMX's view matrix;
+//** Gorilla3D 1.5.3 takes no matrix of ours and draws no change of field of view made while
+//** running, so here the cut is made when the picture is copied, and the picture is rendered
+//** RenderScale times the view's size each way so the part is still sharp.
+//**
+//** Three of the LeiaSR settings change this (TPeardoxLeiaSRSettings): PerEyeView off puts
+//** each eye at the orbit camera's distance in the direction the real eye is, so the glass
+//** fills the picture (no zoom, rendered at the view's size: full speed, the depth
+//** exaggerated); RenderScale sets how much larger than the view the picture is rendered;
+//** Weave off draws one view from between the eyes for both, with the lens off
+//** (TPeardoxLeiaSR.Flat), for screen recordings.
 //**
 //** Frames are drawn whenever the program is idle (Application.OnIdle, any handler already
 //** there still called), so they come as fast as they can be drawn while mouse, keyboard,
-//** paints and timers are still handled in between; the bridge waits for the display's
-//** vertical blank when it presents, which keeps them to its refresh rate. A timer draws one if
-//** none has come for PEARDOX_EYES_WATCHDOG_MS, in case something keeps the program from
-//** going idle.
-//**
-//** The geometry. The orbit centre, the target, is at the target depth D in front of the
-//** camera: that plane lies on the display's glass. An eye at (dx, dy, dz) mm from the view's
-//** centre on the display is put at (dx, dy) * D / dz in the camera's own plane, so it sees
-//** the view's centre at the same angle as the real eye does, and keeps the field of view
-//** (Gorilla3D does not draw a field-of-view change made while running).
-//**
-//** Convergence, making the target land on the same place in both pictures:
-//** @unorderedList(
-//**   @item(ecShift (the default): both cameras are turned alike, towards the target from the
-//**     midpoint between the eyes, so they stay parallel to each other, and each picture is
-//**     shifted sideways by its eye's half of the separation, which brings the target back to
-//**     the middle. This is the off-axis frustum a stereo pair needs, made from Gorilla3D's
-//**     symmetric one; it leaves a thin black strip at the outer edge of each picture.)
-//**   @item(ecToeIn: each camera is turned to look at the target itself. No strip, but the two
-//**     pictures are keystoned differently, so the corners do not line up vertically and look
-//**     double.)
-//** )
-//**
-//** The turn's signs are not assumed: Start tries the four combinations on a test offset and
-//** keeps the one whose view direction (AbsoluteDirection) points at the orbit centre, and logs
-//** it. SwapEyes swaps the two views, for when depth comes out inverted; ShiftSign reverses the
-//** shift, for when ecShift makes things worse rather than better.
+//** paints and timers are still handled in between. A timer draws one if none has come for
+//** PEARDOX_EYES_WATCHDOG_MS, in case something keeps the program from going idle.
 unit StereoModelEyes;
 
 {
-  First light for glasses-free 3D: TPeardoxGorillaEyes draws the Gorilla3D
-  view once per eye and hands the pair to TPeardoxLeiaSR to weave.
-
-  Kept in the program until it works; then it becomes a component in lib.
-  Each frame: read the eyes; per eye, move and turn the orbital camera's
-  Gorilla3D camera, RenderManual and MakeScreenshot; put the camera back;
-  copy the pair side by side, shifted (ecShift) or not (ecToeIn), and pass
-  it to TPeardoxLeiaSR.SubmitViews. Frames are drawn whenever the program
-  is idle, with a timer as a watchdog.
-  An eye (dx, dy, dz) mm from the view's centre goes to (dx, dy) * D / dz
-  in the camera's plane, D the target depth (the plane on the glass).
+  Glasses-free 3D for a Gorilla3D view: per eye, the orbital camera's
+  Gorilla3D camera goes where the tracked eye is (scaled so the view fills
+  the field of view at the target depth, the glass), parallel to the orbit
+  camera; RenderManual; the glass's part of the picture is cut out and
+  scaled to the woven view - on the GPU (TPeardoxGLInterop) or from a
+  screenshot. The per-eye off-axis view of SRDelphiFMX, made in the copy as
+  Gorilla3D takes no projection of ours. Frames when idle, a timer as
+  watchdog.
 }
 
 interface
@@ -68,8 +60,8 @@ uses
   System.SysUtils, System.Classes, System.Types, System.UITypes, System.Math,
   System.Math.Vectors, System.Diagnostics,
   FMX.Types, FMX.Types3D, FMX.Controls3D, FMX.Graphics, FMX.Forms,
-  Gorilla.Viewport, Gorilla.Camera, Peardox.OrbitalCamera, Peardox.LeiaSR,
-  Peardox.LeiaSR.Settings, Peardox.LeiaSR.Api, StereoModelGLProbe, StereoModelGLInterop;
+  Gorilla.Viewport, Gorilla.Camera, Gorilla.Model, Peardox.OrbitalCamera, Peardox.LeiaSR,
+  Peardox.LeiaSR.Settings, Peardox.LeiaSR.Api, StereoModelGLInterop;
 
 const
   //** @abstract(Milliseconds without a frame after which the watchdog timer draws one.)
@@ -80,22 +72,28 @@ const
   //** @abstract(The nearest an eye is taken to be to the glass, in millimetres, so a bad reading
   //** cannot throw the camera far out.)
   PEARDOX_EYES_MIN_EYE_DISTANCE_MM = 100;
+  //** @abstract(The view size used when the display does not give its recommended one.)
+  PEARDOX_EYES_DEFAULT_VIEW_WIDTH = 1920;
+  //** @abstract(See PEARDOX_EYES_DEFAULT_VIEW_WIDTH.)
+  PEARDOX_EYES_DEFAULT_VIEW_HEIGHT = 1080;
 
 type
-  //** @abstract(How the two pictures are made to converge on the target; see the unit
-  //** description.)
-  TPeardoxEyesConvergence = (
-    //** @abstract(Parallel cameras, pictures shifted: the off-axis frustum.)
-    ecShift,
-    //** @abstract(Each camera turned to the target.)
-    ecToeIn);
-
   //** @abstract(A line for the log.)
   //**
   //** @param(Sender The TPeardoxGorillaEyes.)
   //**
   //** @param(AText The line.)
   TPeardoxGorillaEyesLogEvent = procedure(Sender: TObject; const AText: string) of object;
+
+  //** @abstract(Where one eye is drawn from and what of its picture is kept.)
+  TPeardoxEyeView = record
+    //** @abstract(The eye's camera, in the orbit camera's own frame (its parent's
+    //** coordinates), scene units.)
+    Camera: TPoint3D;
+    //** @abstract(The glass's part of the picture, as fractions of its width and height from
+    //** its top-left corner; it may reach outside 0..1, where the picture has nothing.)
+    Part: TRectF;
+  end;
 
   //** @abstract(Draws the Gorilla3D view once per eye and hands the pair to TPeardoxLeiaSR to
   //** weave; see the unit description.)
@@ -112,14 +110,6 @@ type
     FViewport: TGorillaViewport;
     //** @abstract(See Active.)
     FActive: Boolean;
-    //** @abstract(See SwapEyes.)
-    FSwapEyes: Boolean;
-    //** @abstract(See RenderBeforeShot.)
-    FRenderBeforeShot: Boolean;
-    //** @abstract(See Convergence.)
-    FConvergence: TPeardoxEyesConvergence;
-    //** @abstract(See ShiftSign.)
-    FShiftSign: Integer;
     //** @abstract(Draws a frame when none has come from the idle loop for a while.)
     FWatchdog: TTimer;
     //** @abstract(The Application.OnIdle handler there before Start, called first and put back
@@ -131,12 +121,8 @@ type
     FLastFrameTick: UInt64;
     //** @abstract(Frames drawn by the watchdog since the last log line.)
     FWatchdogFrames: Integer;
-    //** @abstract(Black pixels to fill the strip a shift leaves, kept between frames.)
-    FBlack: TBytes;
     //** @abstract(See ZeroCopy.)
     FZeroCopy: Boolean;
-    //** @abstract(See ZeroCopyFlip.)
-    FZeroCopyFlip: Boolean;
     //** @abstract(True once zero copy has failed to start on this device: the screenshot route
     //** is used until the bridge's device changes.)
     FZeroCopyFailed: Boolean;
@@ -148,53 +134,58 @@ type
     //** copy (ours), each logged the first time: they are taken, as FMX's next BeginScene
     //** fails on any.)
     FGLErrorsLogged: array[0..1] of Cardinal;
-    //** @abstract(The last frame's shifts in pixels: left eye, right eye.)
-    FLastShift: array[0..1] of Integer;
-    //** @abstract(The widest each eye's view is woven at, in pixels: the display's recommended
-    //** view width, read at Start; 0 for no limit.)
-    FMaxViewWidth: Integer;
+    //** @abstract(Each eye's view as the display weaves it, in pixels: its recommended view,
+    //** read at Start.)
+    FViewWidth: Integer;
+    //** @abstract(See FViewWidth.)
+    FViewHeight: Integer;
     //** @abstract(See OnLog.)
     FOnLog: TPeardoxGorillaEyesLogEvent;
-    //** @abstract(The side-by-side image handed to the bridge, kept between frames.)
+    //** @abstract(The side-by-side image handed to the bridge on the screenshot route, kept
+    //** between frames.)
     FBuffer: TBytes;
-    //** @abstract(The sign of the turn about the camera's Y axis that looks back at the orbit
-    //** centre, found by Calibrate.)
-    FYawSign: Integer;
-    //** @abstract(The sign of the turn about the camera's X axis, likewise.)
-    FPitchSign: Integer;
+    //** @abstract(The source column for each column of a view on the screenshot route, -1 for
+    //** none, kept between frames.)
+    FColumns: TArray<Integer>;
     //** @abstract(The viewport's UseFixedFrameRate before Start, put back by Stop.)
     FSavedFixedRate: Boolean;
     //** @abstract(The viewport's ManualRendering before Start, put back by Stop.)
     FSavedManual: Boolean;
     //** @abstract(True while a frame is being drawn, so a timer tick cannot start another.)
     FInFrame: Boolean;
-    //** @abstract(True once StereoModelGLProbe has looked around the first eye's render, so it
-    //** does only once per run.)
-    FProbed: Boolean;
     //** @abstract(Frames since the last log line.)
     FFrames: Integer;
     //** @abstract(See WovenFrames.)
     FWovenFrames: Int64;
     //** @abstract(Milliseconds spent since the last log line in RenderManual, both eyes.)
     FRenderMs: Double;
-    //** @abstract(Milliseconds spent in MakeScreenshot, both eyes.)
-    FShotMs: Double;
-    //** @abstract(Milliseconds spent copying the pair side by side.)
+    //** @abstract(Milliseconds spent getting the glass's part into the views: the GPU copy, or
+    //** MakeScreenshot and the copy through the CPU.)
     FCopyMs: Double;
-    //** @abstract(Milliseconds spent in SubmitViews.)
+    //** @abstract(Milliseconds spent handing the views to the bridge.)
     FSubmitMs: Double;
     //** @abstract(The longest whole frame since the last log line, in milliseconds.)
     FWorstMs: Double;
     //** @abstract(When the last log line was written (TThread.GetTickCount64).)
     FLastLogTick: UInt64;
-    //** @abstract(The last frame's camera offsets: left eye X, Y, right eye X, Y, scene units.)
-    FLastOffsets: array[0..3] of Single;
-    //** @abstract(The last frame's view size and pixel format, for the log.)
+    //** @abstract(The last frame's scale, scene units per millimetre.)
+    FLastScale: Single;
+    //** @abstract(The depth the scale is worked out at, scene units along the line of sight:
+    //** the model's (ModelDepth), set by ViewScale each frame.)
+    FScaleDepth: Single;
+    //** @abstract(The orbit camera's projection, read by ViewScale each frame: 1 / tan(half the
+    //** field of view) across.)
+    FProjX: Single;
+    //** @abstract(The same up and down.)
+    FProjY: Single;
+    //** @abstract(The last frame's views: left, right.)
+    FLastViews: array[0..1] of TPeardoxEyeView;
+    //** @abstract(The last frame's view size and route, for the log.)
     FLastViewInfo: string;
     //** @abstract(Where the last frame's eyes came from, for the log.)
     FLastEyesFrom: string;
-    //** @abstract(The eyes the last frame was drawn from (after the saved separation and
-    //** SwapEyes), millimetres: left, right.)
+    //** @abstract(The eyes the last frame was drawn from (after the saved separation),
+    //** millimetres: left, right.)
     FLastEyes: array[0..1] of TPoint3D;
     //** @abstract(The last frame's rate and timings, as logged once a second, for LogSnapshot.)
     FLastRateText: string;
@@ -233,69 +224,56 @@ type
     //**
     //** @param(ARight Set to the right eye.)
     procedure EyePair(out ALeft, ARight: TPoint3D);
-    //** @abstract(Where the camera goes for one eye, in its own plane.)
+    //** @abstract(The scale of this frame: the view's height on the display over the height
+    //** the orbit camera's field of view takes in at the model's depth (ModelDepth), so a
+    //** right drag of the target, the glass, moves the glass and the viewer together without
+    //** sliding the model across the view.)
+    //**
+    //** The field of view is read through the camera's own projection
+    //** (TPeardoxOrbitalGorillaCamera.ProjectToView), into FProjX and FProjY, so Gorilla3D's
+    //** convention and the viewport's shape are as Gorilla3D draws them.
+    //**
+    //** @param(AScale Set to scene units per millimetre.)
+    //**
+    //** @returns(False if the view's place on the display or the viewport's size is not known
+    //** yet.)
+    function ViewScale(out AScale: Single): Boolean;
+    //** @abstract(How far the model's middle is in front of the orbit camera, along its line of
+    //** sight: Camera.Subject's box; the target depth if there is no Subject, or it is behind
+    //** the camera or round it.)
+    //**
+    //** @returns(The depth in scene units.)
+    function ModelDepth: Single;
+    //** @abstract(Where one eye is drawn from and the glass's part of its picture.)
     //**
     //** @param(AEyeMM The eye, millimetres from the display's centre.)
     //**
-    //** @param(ADepth The target depth D.)
+    //** @param(AScale The frame's scale (ViewScale).)
     //**
-    //** @param(AOX Set to the sideways offset, scene units, camera X (right).)
+    //** @param(AView Set to the camera's place and the part.)
     //**
-    //** @param(AOY Set to the up or down offset, scene units, camera Y (FMX's down).)
+    //** @returns(False if the glass cannot be seen from there.)
+    function EyeView(const AEyeMM: TPoint3D; AScale: Single; out AView: TPeardoxEyeView): Boolean;
+    //** @abstract(Renders the view from one eye: the camera put there, parallel to the orbit
+    //** camera, and RenderManual.)
     //**
-    //** @returns(False if the view's place on the display is not known yet.)
-    function EyeOffset(const AEyeMM: TPoint3D; ADepth: Single; out AOX, AOY: Single): Boolean;
-    //** @abstract(Puts the camera at an offset in its own plane, turned as if it stood at
-    //** another offset looking at the orbit centre, with the given signs.)
-    //**
-    //** @param(AOX Sideways offset.)
-    //**
-    //** @param(AOY Up or down offset.)
-    //**
-    //** @param(ATurnX The sideways offset the turn is worked out for: AOX for toe-in, the
-    //** midpoint between the eyes for ecShift.)
-    //**
-    //** @param(ATurnY The up or down offset the turn is worked out for.)
-    //**
-    //** @param(AYawSign Sign of the turn about Y.)
-    //**
-    //** @param(APitchSign Sign of the turn about X.)
-    procedure PoseCamera(AOX, AOY, ATurnX, ATurnY: Single; AYawSign, APitchSign: Integer);
-    //** @abstract(Finds FYawSign and FPitchSign: tries the four, keeps the one whose view
-    //** direction points at the orbit centre, and puts the camera back.)
-    //**
-    //** @returns(True if one matched closely.)
-    function Calibrate: Boolean;
+    //** @param(ACamera The camera's place (TPeardoxEyeView.Camera).)
+    procedure RenderFrom(const ACamera: TPoint3D);
     //** @abstract(Renders one eye's view and takes its picture.)
     //**
-    //** @param(AOX Sideways offset.)
-    //**
-    //** @param(AOY Up or down offset.)
-    //**
-    //** @param(ATurnX Sideways offset the turn is worked out for.)
-    //**
-    //** @param(ATurnY Up or down offset the turn is worked out for.)
+    //** @param(ACamera The camera's place.)
     //**
     //** @returns(The picture, for the caller to free; nil if Gorilla3D gave none.)
-    function RenderEye(AOX, AOY, ATurnX, ATurnY: Single): TBitmap;
-    //** @abstract(Zero copy: poses the camera for an eye, renders, and blits the picture into
-    //** the eye's texture.)
+    function RenderEye(const ACamera: TPoint3D): TBitmap;
+    //** @abstract(Zero copy: renders one eye's view and copies the glass's part into the eye's
+    //** texture.)
     //**
     //** @param(AEye 0 left, 1 right.)
     //**
-    //** @param(AOX As RenderEye.)
-    //**
-    //** @param(AOY As RenderEye.)
-    //**
-    //** @param(ATurnX As RenderEye.)
-    //**
-    //** @param(ATurnY As RenderEye.)
-    //**
-    //** @param(AShift The eye's shift in pixels.)
+    //** @param(AView The eye's view.)
     //**
     //** @returns(False if the picture was not where, or the size, the textures expect.)
-    function RenderEyeGPU(AEye: Integer; AOX, AOY, ATurnX, ATurnY: Single;
-      AShift: Integer): Boolean;
+    function RenderEyeGPU(AEye: Integer; const AView: TPeardoxEyeView): Boolean;
     //** @abstract(Straight after a RenderManual (OpenGL current): makes FInterop for the
     //** bridge's device and the size Gorilla3D draws at, if zero copy is wanted and not made
     //** yet or out of date.)
@@ -315,47 +293,29 @@ type
     //**
     //** @param(AError The error, 0 for none.)
     procedure NoteGLError(AWhere: Integer; AError: Cardinal);
-    //** @abstract(How far to shift one eye's picture so the target lands in its middle, for
-    //** ecShift.)
+    //** @abstract(Copies the glass's part of one picture into its half of FBuffer, scaled to
+    //** the view (the nearest pixel), black where the part reaches outside the picture.)
     //**
-    //** @param(AOffset The eye's sideways offset from the midpoint between the eyes, scene
-    //** units.)
+    //** @param(AData The picture, mapped for reading.)
     //**
     //** @param(AWidth The picture's width in pixels.)
     //**
     //** @param(AHeight The picture's height in pixels.)
     //**
-    //** @returns(Pixels to move the picture right (negative: left).)
-    function ShiftFor(AOffset: Single; AWidth, AHeight: Integer): Integer;
-    //** @abstract(Copies one picture's rows into its half of FBuffer, moved right by AShift
-    //** pixels (left when negative), the uncovered strip black, taking every AStep-th pixel of
-    //** every AStep-th row.)
-    //**
-    //** @param(AData The picture, mapped for reading.)
+    //** @param(APart The part, as fractions of the picture (TPeardoxEyeView.Part).)
     //**
     //** @param(AX0 Byte offset of its half within each row of FBuffer.)
     //**
-    //** @param(AWidth Width in pixels of one eye's view in FBuffer.)
-    //**
-    //** @param(AHeight Height in pixels in FBuffer.)
-    //**
     //** @param(APitch Bytes per row of FBuffer.)
-    //**
-    //** @param(AShift Pixels (of FBuffer) to move it right.)
-    //**
-    //** @param(AStep 1 to copy the picture as it is, 2 to halve it, and so on.)
-    procedure CopyEye(const AData: TBitmapData; AX0, AWidth, AHeight, APitch, AShift,
-      AStep: Integer);
-    //** @abstract(Copies the two pictures side by side into FBuffer, shifted, and submits them.)
+    procedure CopyPart(const AData: TBitmapData; AWidth, AHeight: Integer; const APart: TRectF;
+      AX0, APitch: Integer);
+    //** @abstract(Copies the glass's parts of the two pictures side by side into FBuffer and
+    //** submits them.)
     //**
     //** @param(ALeft The left eye's picture.)
     //**
     //** @param(ARight The right eye's picture.)
-    //**
-    //** @param(AShiftL Pixels to move the left picture right.)
-    //**
-    //** @param(AShiftR Pixels to move the right picture right.)
-    procedure Submit(ALeft, ARight: TBitmap; AShiftL, AShiftR: Integer);
+    procedure Submit(ALeft, ARight: TBitmap);
   protected
     //** @abstract(Forgets a linked component when it is freed, stopping first.)
     //**
@@ -370,8 +330,8 @@ type
     constructor Create(AOwner: TComponent); override;
     //** @abstract(Stops and frees it.)
     destructor Destroy; override;
-    //** @abstract(Starts drawing: the viewport to manual rendering, the turn's signs found,
-    //** LeiaSR set Weaving, the frames begun.)
+    //** @abstract(Starts drawing: the viewport to manual rendering, LeiaSR set Weaving, the
+    //** frames begun.)
     //**
     //** @returns(True if it started; False, with the reason logged, if LeiaSR is not running or
     //** something is not set.)
@@ -382,56 +342,49 @@ type
     //** SNAPSHOT, in the same terms as SRDelphiFMX's TSRStereoRenderer.LogSnapshot, so a view
     //** that looks right there can be compared with this one.)
     //**
-    //** The world-to-millimetre scale is the one the geometry implies: the view's height on
-    //** the display over the height the field of view takes in at the target depth. From it
-    //** come the glass's distance from the camera and the eyes' true distance and separation
-    //** in scene units, beside the distance and separation the cameras are really put at.
-    //**
     //** @param(ANote A line from the program to head the block (the view's angles, say); empty
     //** for none.)
     procedure LogSnapshot(const ANote: string);
     //** @abstract(True while frames are drawn.)
     property Active: Boolean read FActive;
-    //** @abstract(Frames the bridge has woven (SubmitViews answered SRB_OK) since Start.)
+    //** @abstract(Frames the bridge has woven (it answered SRB_OK) since Start.)
     property WovenFrames: Int64 read FWovenFrames;
     //** @abstract(The LeiaSR component the frames are woven by.)
     property LeiaSR: TPeardoxLeiaSR read FLeiaSR write SetLeiaSR;
     //** @abstract(The orbital camera: its Gorilla3D camera is the one moved for each eye, and its
-    //** Distance is the target depth.)
+    //** Distance is the target depth, the glass.)
     property Camera: TPeardoxOrbitalCamera read FCamera write SetCamera;
     //** @abstract(The viewport drawn.)
     property Viewport: TGorillaViewport read FViewport write SetViewport;
-    //** @abstract(Swaps the two views, for when depth comes out inverted (near things behind the
-    //** glass).)
-    property SwapEyes: Boolean read FSwapEyes write FSwapEyes;
-    //** @abstract(True (the default) to call RenderManual before each MakeScreenshot; False to
-    //** rely on MakeScreenshot rendering by itself. The log's timings show what each costs.)
-    property RenderBeforeShot: Boolean read FRenderBeforeShot write FRenderBeforeShot;
-    //** @abstract(How the pictures converge on the target: ecShift (the default) or ecToeIn.)
-    property Convergence: TPeardoxEyesConvergence read FConvergence write FConvergence;
-    //** @abstract(-1 (the default) or 1: the direction ecShift moves the pictures. -1 since
-    //** the owner's test (7 November 2026): 1 doubled the mismatch instead of cancelling it.)
-    property ShiftSign: Integer read FShiftSign write FShiftSign;
     //** @abstract(True (the default) to hand the bridge Gorilla3D's pictures on the GPU
     //** (TPeardoxGLInterop) where the bridge, the driver and OpenGL allow, instead of
     //** MakeScreenshot, a copy through the CPU and an upload; False always to take the
     //** screenshots.)
     property ZeroCopy: Boolean read FZeroCopy write FZeroCopy;
-    //** @abstract(True (the default): zero copy turns OpenGL's rows over for Direct3D
-    //** (TPeardoxGLInterop.FlipRows). A test switch: False copies them as they are.)
-    property ZeroCopyFlip: Boolean read FZeroCopyFlip write FZeroCopyFlip;
     //** @abstract(True if zero copy can be tried: wanted, and the bridge gives its device
-    //** (TPeardoxLeiaSR.BridgeDevice). The program then sizes the viewport so that Gorilla3D
-    //** draws at the display's view size in pixels.)
+    //** (TPeardoxLeiaSR.BridgeDevice). The program then sizes the viewport in logical units,
+    //** as Gorilla3D draws it in those.)
     //**
     //** @returns(Whether.)
     function ZeroCopyPossible: Boolean;
+    //** @abstract(How many times the woven view's size, each way, the program should make the
+    //** viewport while weaving: the LeiaSR setting RenderScale, kept to
+    //** PEARDOX_MIN_RENDER_SCALE .. PEARDOX_MAX_RENDER_SCALE, with PerEyeView; 1 without it,
+    //** as the whole picture is then woven.)
+    //**
+    //** The glass takes up only part of each eye's picture with PerEyeView: about half its
+    //** height with a 45 degree field of view and the viewer some 85 cm away, so at 2 that
+    //** part is about the view's size and stays sharp (owner, 7 November 2026: sharp rather
+    //** than fast; 46-48 fps against about 100 at 1).
+    //**
+    //** @returns(The scale.)
+    function RenderScale: Single;
     //** @abstract(Lets go of zero copy's textures and its OpenGL objects (its context made
     //** current for it): call while the viewport's OpenGL context still exists, in FormClose
     //** before SR stops, and when SR has stopped.)
     procedure ReleaseZeroCopy;
-    //** @abstract(Every line of its log: the start, the signs found, and once a second the
-    //** frame rate, the time in each stage and the offsets.)
+    //** @abstract(Every line of its log: the start, and once a second the frame rate, the time
+    //** in each stage, the scale and each eye's part of the picture.)
     property OnLog: TPeardoxGorillaEyesLogEvent read FOnLog write FOnLog;
   end;
 
@@ -445,15 +398,9 @@ uses
 constructor TPeardoxGorillaEyes.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
-  FRenderBeforeShot := True;
-  FConvergence := ecShift;
-  // The owner's test (7 November 2026, 17:58): the reversed shift looked
-  // right, so the picture's right is the camera's -X here
-  FShiftSign := -1;
   FZeroCopy := True;
-  FZeroCopyFlip := True;
-  FYawSign := 1;
-  FPitchSign := 1;
+  FViewWidth := PEARDOX_EYES_DEFAULT_VIEW_WIDTH;
+  FViewHeight := PEARDOX_EYES_DEFAULT_VIEW_HEIGHT;
   FWatchdog := TTimer.Create(Self);
   FWatchdog.Enabled := False;
   FWatchdog.Interval := PEARDOX_EYES_WATCHDOG_MS;
@@ -489,6 +436,14 @@ begin
   Log(AText);
 end;
 
+function TPeardoxGorillaEyes.RenderScale: Single;
+begin
+  Result := 1;
+  if (FLeiaSR <> nil) and FLeiaSR.Settings.PerEyeView then
+    Result := EnsureRange(FLeiaSR.Settings.RenderScale, PEARDOX_MIN_RENDER_SCALE,
+      PEARDOX_MAX_RENDER_SCALE);
+end;
+
 function TPeardoxGorillaEyes.ZeroCopyPossible: Boolean;
 begin
   Result := FZeroCopy and (FLeiaSR <> nil) and (FLeiaSR.BridgeDevice <> nil);
@@ -521,16 +476,13 @@ begin
     Exit;
   end;
   if (FInterop <> nil) and FInterop.Ready and (FInterop.Device = Dev) and
-    (FInterop.Width = W) and (FInterop.Height = H) then
+    (FInterop.SourceWidth = W) and (FInterop.SourceHeight = H) and
+    (FInterop.Width = FViewWidth) and (FInterop.Height = FViewHeight) then
     Exit;
   if FInterop = nil then
     FInterop := TPeardoxGLInterop.Create(InteropLog);
-  if FInterop.Start(Dev, W, H) then
-  begin
-    // StereoCam53's FInterop.Survey crashed after texture 30 (owner,
-    // 21:23); its map is in CLAUDE.md, and it is not called any more
-    FZeroCopyFailed := False;
-  end
+  if FInterop.Start(Dev, W, H, FViewWidth, FViewHeight) then
+    FZeroCopyFailed := False
   else
   begin
     FZeroCopyFailed := True;
@@ -539,27 +491,47 @@ begin
   end;
 end;
 
-function TPeardoxGorillaEyes.RenderEyeGPU(AEye: Integer; AOX, AOY, ATurnX, ATurnY: Single;
-  AShift: Integer): Boolean;
+procedure TPeardoxGorillaEyes.RenderFrom(const ACamera: TPoint3D);
+var
+  Watch: TStopwatch;
+begin
+  // Parallel to the orbit camera: only its place changes (Frame keeps and
+  // puts back the rest)
+  FCamera.Camera.Position.Point := ACamera;
+  Watch := TStopwatch.StartNew;
+  FViewport.RenderManual;
+  FRenderMs := FRenderMs + Watch.Elapsed.TotalMilliseconds;
+end;
+
+function TPeardoxGorillaEyes.RenderEyeGPU(AEye: Integer; const AView: TPeardoxEyeView): Boolean;
 var
   Watch: TStopwatch;
   W, H: Integer;
 begin
-  PoseCamera(AOX, AOY, ATurnX, ATurnY, FYawSign, FPitchSign);
-  Watch := TStopwatch.StartNew;
-  FViewport.RenderManual;
-  FRenderMs := FRenderMs + Watch.Elapsed.TotalMilliseconds;
+  RenderFrom(AView.Camera);
   Watch := TStopwatch.StartNew;
   NoteGLError(0, TPeardoxGLInterop.TakeErrors);
-  // The picture must still be the textures' size (a resize makes them
-  // again, next frame)
-  Result := TPeardoxGLInterop.SourceSize(W, H) and (W = FInterop.Width) and
-    (H = FInterop.Height) and FInterop.CopyEye(AEye, AShift);
+  // The picture must still be the size the textures were made for (a
+  // resize makes them again, next frame)
+  Result := TPeardoxGLInterop.SourceSize(W, H) and (W = FInterop.SourceWidth) and
+    (H = FInterop.SourceHeight) and FInterop.CopyEye(AEye, AView.Part.Left * W,
+    AView.Part.Top * H, AView.Part.Right * W, AView.Part.Bottom * H);
   // Owner (21:06): "cannot begin rendering scene for TContextOpenGLWindows:
-  // 1282" - an OpenGL error left pending fails FMX's next BeginScene; the
-  // screenshot route had MakeScreenshot take it
+  // 1282" - an OpenGL error left pending fails FMX's next BeginScene
   NoteGLError(1, TPeardoxGLInterop.TakeErrors);
-  FShotMs := FShotMs + Watch.Elapsed.TotalMilliseconds;
+  FCopyMs := FCopyMs + Watch.Elapsed.TotalMilliseconds;
+end;
+
+function TPeardoxGorillaEyes.RenderEye(const ACamera: TPoint3D): TBitmap;
+var
+  Watch: TStopwatch;
+begin
+  RenderFrom(ACamera);
+  // OpenGL is current now: the next frame may go by zero copy
+  PrepareZeroCopy;
+  Watch := TStopwatch.StartNew;
+  Result := FViewport.MakeScreenshot;
+  FCopyMs := FCopyMs + Watch.Elapsed.TotalMilliseconds;
 end;
 
 procedure TPeardoxGorillaEyes.AppIdle(Sender: TObject; var Done: Boolean);
@@ -649,7 +621,8 @@ begin
     Log('Eyes NOT started: LeiaSR is not running');
     Exit;
   end;
-  if (FCamera = nil) or (FCamera.Camera = nil) or (FViewport = nil) then
+  if (FCamera = nil) or (FCamera.Camera = nil) or (FViewport = nil) or
+    not (FCamera.Camera.Parent is TControl3D) then
   begin
     Log('Eyes NOT started: the camera or the viewport is not set');
     Exit;
@@ -661,24 +634,24 @@ begin
   FSavedManual := FViewport.ManualRendering;
   FViewport.UseFixedFrameRate := False;
   FViewport.ManualRendering := True;
-  if not Calibrate then
-    Log('Eyes: no turn matched the orbit centre closely; using the best found');
   FFrames := 0;
   FWovenFrames := 0;
   FRenderMs := 0;
-  FShotMs := 0;
   FCopyMs := 0;
   FSubmitMs := 0;
   FWorstMs := 0;
   FLastLogTick := TThread.GetTickCount64;
-  // The display weaves each eye at its recommended view size; anything
-  // larger is wasted copying and uploading
-  if FLeiaSR.DisplayInfo(Info) and (Info.recommendedViewWidth > 0) then
-    FMaxViewWidth := Info.recommendedViewWidth
-  else
-    FMaxViewWidth := 0;
-  Log(Format('Eyes: each eye woven at most %d pixels wide (the display''s recommended view; ' +
-    '0 = no limit)', [FMaxViewWidth]));
+  // Each eye is woven at the display's recommended view size
+  FViewWidth := PEARDOX_EYES_DEFAULT_VIEW_WIDTH;
+  FViewHeight := PEARDOX_EYES_DEFAULT_VIEW_HEIGHT;
+  if FLeiaSR.DisplayInfo(Info) and (Info.recommendedViewWidth > 0) and
+    (Info.recommendedViewHeight > 0) then
+  begin
+    FViewWidth := Info.recommendedViewWidth;
+    FViewHeight := Info.recommendedViewHeight;
+  end;
+  // Flat first, so the lens never comes on when it is not wanted
+  FLeiaSR.Flat := not FLeiaSR.Settings.Weave;
   FLeiaSR.Weaving := True;
   FActive := True;
   FWatchdogFrames := 0;
@@ -687,10 +660,12 @@ begin
   Application.OnIdle := AppIdle;
   FIdleHooked := True;
   FWatchdog.Enabled := True;
-  Log(Format('Eyes started: %s at the target depth %.3f, shift sign %d, RenderManual before ' +
-    'each screenshot %s, eyes swapped %s', [IfThen(FConvergence = ecShift,
-    'parallel cameras + shift', 'toe-in'), FCamera.Distance, FShiftSign,
-    BoolToStr(FRenderBeforeShot, True), BoolToStr(FSwapEyes, True)]));
+  Log(Format('Eyes started: %s, woven at %d x %d (the display''s view), rendered at %.2f ' +
+    'times it, target depth %.3f (the glass)%s', [IfThen(FLeiaSR.Settings.PerEyeView,
+    'each eye drawn from where it is (per-eye view)',
+    'each eye drawn from the orbit camera''s distance (full speed)'), FViewWidth, FViewHeight,
+    RenderScale, FCamera.Distance, IfThen(FLeiaSR.Settings.Weave, '',
+    '; flat (weave off): one view from between the eyes, the lens off')]));
   Result := True;
 end;
 
@@ -763,54 +738,114 @@ begin
   end;
 end;
 
-function TPeardoxGorillaEyes.EyeOffset(const AEyeMM: TPoint3D; ADepth: Single;
-  out AOX, AOY: Single): Boolean;
+function TPeardoxGorillaEyes.ViewScale(out AScale: Single): Boolean;
 var
-  DX, DY, DZ: Single;
+  D, PX, PY: Single;
 begin
-  AOX := 0;
-  AOY := 0;
-  Result := FLeiaSR.WindowSizeMM.Height > 0;
-  if not Result then
+  AScale := 0;
+  Result := False;
+  D := FCamera.Distance;
+  if (FLeiaSR.WindowSizeMM.Height <= 0) or (FViewport.Width <= 0) or (FViewport.Height <= 0) or
+    (D <= 0) then
     Exit;
-  DX := AEyeMM.X - FLeiaSR.WindowCenterMM.X;
-  DY := AEyeMM.Y - FLeiaSR.WindowCenterMM.Y;
-  DZ := Max(AEyeMM.Z, PEARDOX_EYES_MIN_EYE_DISTANCE_MM);
-  // The eye sees the view's centre at the angle the real eye does; FMX's
-  // Y is down, the display's up
-  AOX := DX * ADepth / DZ;
-  AOY := -DY * ADepth / DZ;
+  // The point one unit right, one down and one ahead of the orbit camera,
+  // in its own axes: it falls SX of the half width right of the middle and
+  // SY of the half height below, SX and SY being the projection's
+  // 1 / tan(half the field of view) across and up
+  if not FCamera.Camera.ProjectToView(FCamera.Camera.CameraPosition +
+    FCamera.Camera.Orientation.Rotate(Point3D(1, 1, 1)), nil, FViewport.Width,
+    FViewport.Height, PX, PY) then
+    Exit;
+  FProjX := Abs(2 * PX / FViewport.Width - 1);
+  FProjY := Abs(2 * PY / FViewport.Height - 1);
+  if (FProjX <= 0) or (FProjY <= 0) then
+    Exit;
+  // The field of view takes in 2 D / SY units at depth D: at the model's
+  // depth, that is the view's height on the display. Not at the target's:
+  // a right drag moves the target (the glass) with the camera still, and
+  // a scale that followed it moved every eye's camera sideways - the model
+  // slid across the SR view (owner, 22:59 and 23:10: "it still moves").
+  // With the scale kept, the glass and the viewer move along the line of
+  // sight together and the model only comes out of the screen or goes in
+  FScaleDepth := ModelDepth;
+  AScale := 2 * FScaleDepth / (FProjY * FLeiaSR.WindowSizeMM.Height);
+  Result := True;
 end;
 
-procedure TPeardoxGorillaEyes.PoseCamera(AOX, AOY, ATurnX, ATurnY: Single;
-  AYawSign, APitchSign: Integer);
+function TPeardoxGorillaEyes.ModelDepth: Single;
 var
-  D, Yaw, Pitch: Single;
+  Box: TBoundingBox;
+  Centre, Eye: TPoint3D;
+  Depth: Single;
 begin
-  D := FCamera.Distance;
-  // In the camera's own plane, D in front of the orbit centre, turned as
-  // if it stood at (ATurnX, ATurnY) looking back at it
-  Yaw := RadToDeg(ArcTan2(ATurnX, D));
-  Pitch := RadToDeg(ArcTan2(ATurnY, Sqrt(Sqr(ATurnX) + Sqr(D))));
-  FCamera.Camera.Position.Point := Point3D(AOX, AOY, -D);
-  FCamera.Camera.RotationAngle.Point := Point3D(APitchSign * Pitch, AYawSign * Yaw, 0);
+  Result := FCamera.Distance;
+  if FCamera.Subject = nil then
+    Exit;
+  Box := FCamera.Subject.GetAbsoluteBoundingBox;
+  Centre := Point3D(Box.TopLeftNear.X + (Box.Width / 2), Box.TopLeftNear.Y + (Box.Height / 2),
+    Box.TopLeftNear.Z + (Box.Depth / 2));
+  Eye := FCamera.Camera.CameraPosition;
+  // Along the line of sight, as the glass is square to it
+  Depth := (Centre - Eye).DotProduct(FCamera.Camera.Orientation.Rotate(Point3D(0, 0, 1)));
+  // A model behind the camera, or the camera inside it: the target's
+  if Depth > FCamera.Distance * 0.05 then
+    Result := Depth;
+end;
+
+function TPeardoxGorillaEyes.EyeView(const AEyeMM: TPoint3D; AScale: Single;
+  out AView: TPeardoxEyeView): Boolean;
+var
+  Z, HalfW, HalfH: Single;
+  E: TPoint3D;
+begin
+  // In the orbit camera's own frame (its parent's, the camera having no
+  // turn of its own there): X right, Y down, Z the view direction, the glass
+  // through the orbit centre (Z = 0), the orbit camera at Z = -D. FMX's Y is
+  // down, the display's up
+  Z := Max(AEyeMM.Z, PEARDOX_EYES_MIN_EYE_DISTANCE_MM);
+  if FLeiaSR.Settings.PerEyeView then
+    E := Point3D((AEyeMM.X - FLeiaSR.WindowCenterMM.X) * AScale,
+      -(AEyeMM.Y - FLeiaSR.WindowCenterMM.Y) * AScale, -Z * AScale)
+  else
+  begin
+    // Full speed: at the orbit camera's distance, in the direction the real
+    // eye is, so the glass fills the picture (no zoom) and only its offset
+    // remains
+    E := Point3D((AEyeMM.X - FLeiaSR.WindowCenterMM.X) / Z, -(AEyeMM.Y -
+      FLeiaSR.WindowCenterMM.Y) / Z, -1) * FScaleDepth;
+  end;
+  AView.Camera := E;
+  // The glass's corners from there, the eye's camera looking the same way
+  // as the orbit camera: X / Z and Y / Z through the projection, as
+  // fractions of the picture from its top-left corner
+  Z := -E.Z;
+  HalfW := FLeiaSR.WindowSizeMM.Width / 2 * AScale;
+  HalfH := FLeiaSR.WindowSizeMM.Height / 2 * AScale;
+  AView.Part := RectF((1 + (-HalfW - E.X) / Z * FProjX) / 2,
+    (1 + (-HalfH - E.Y) / Z * FProjY) / 2, (1 + (HalfW - E.X) / Z * FProjX) / 2,
+    (1 + (HalfH - E.Y) / Z * FProjY) / 2);
+  Result := (Z > 0) and (AView.Part.Right > AView.Part.Left) and
+    (AView.Part.Bottom > AView.Part.Top);
 end;
 
 procedure TPeardoxGorillaEyes.LogSnapshot(const ANote: string);
 const
   LensNames: array[TPeardoxLeiaSRLensState] of string = ('not known', 'on', 'off');
+  EyeNames: array[0..1] of string = ('L', 'R');
 var
   Info: TSRBDisplayInfo;
-  D, TanV, Scale, MidZ, Sep, CamSep: Single;
+  I: Integer;
+  P: TRectF;
+  Zoom: Single;
 
   //** @abstract(A point for the log.)
   //**
-  //** @param(P The point.)
+  //** @param(APoint The point.)
   //**
   //** @returns(Its coordinates to one place, in brackets.)
-  function Pt(const P: TPoint3D): string;
+  function Pt(const APoint: TPoint3D): string;
   begin
-    Result := Format('(%.1f, %.1f, %.1f)', [P.X, P.Y, P.Z]);
+    Result := Format('(%.1f, %.1f, %.1f)', [APoint.X, APoint.Y, APoint.Z]);
   end;
 
 begin
@@ -838,276 +873,131 @@ begin
   Log(Format('  settings: EyeSeparationMM %.1f (0 = tracked), LatencyFrames %d, LensMode %d',
     [FLeiaSR.Settings.EyeSeparationMM, FLeiaSR.Settings.LatencyFrames,
      FLeiaSR.Settings.LensMode]));
-  D := FCamera.Distance;
-  TanV := Tan(DegToRad(FCamera.FOV) / 2);
-  Log(Format('  camera: vertical field of view %.2f deg (tan half %.4f), target depth %.3f, ' +
-    '%s, shift sign %d, shifts L %d R %d px, eyes swapped %s', [FCamera.FOV, TanV, D,
-    IfThen(FConvergence = ecShift, 'parallel cameras + shift', 'toe-in'), FShiftSign,
-    FLastShift[0], FLastShift[1], BoolToStr(FSwapEyes, True)]));
-  if FLeiaSR.WindowSizeMM.Height > 0 then
+  Log(Format('  camera: field of view %.2f deg, target depth (the glass) %.3f units; viewport ' +
+    '%.0f x %.0f, rendered at %.2f times the view; per-eye view %s, weave %s', [FCamera.FOV, FCamera.Distance,
+    FViewport.Width, FViewport.Height, RenderScale,
+    BoolToStr(FLeiaSR.Settings.PerEyeView, True), BoolToStr(FLeiaSR.Settings.Weave, True)]));
+  if FLastScale > 0 then
   begin
-    // The view's height at the target depth is the view's height on the
-    // display: world units per mm, as SRDelphiFMX's scale
-    Scale := 2 * D * TanV / FLeiaSR.WindowSizeMM.Height;
-    MidZ := (FLastEyes[0].Z + FLastEyes[1].Z) / 2;
-    Sep := FLastEyes[0].Distance(FLastEyes[1]);
-    CamSep := Sqrt(Sqr(FLastOffsets[2] - FLastOffsets[0]) + Sqr(FLastOffsets[3] - FLastOffsets[1]));
-    Log(Format('  scale %.6f world units per mm (%.3f mm per unit): the glass is %.3f units ' +
-      'from the camera (%.0f mm); the eyes are %.0f mm = %.3f units from the glass, %.1f mm ' +
-      '= %.3f units apart; the cameras are put %.3f units from the glass (%.0f mm), %.3f units ' +
-      'apart (%.1f mm)', [Scale, 1 / Scale, D, D / Scale, MidZ, MidZ * Scale, Sep, Sep * Scale,
-      D, D / Scale, CamSep, CamSep / Scale]));
+    Log(Format('  scale %.6f world units per mm (%.3f mm per unit), set at the model''s depth ' +
+      '%.3f: the glass is %.0f mm from the orbit camera, the model %.0f mm', [FLastScale,
+      1 / FLastScale, FScaleDepth, FCamera.Distance / FLastScale, FScaleDepth / FLastScale]));
+    for I := 0 to 1 do
+    begin
+      P := FLastViews[I].Part;
+      Zoom := 0;
+      if P.Height > 0 then
+        Zoom := 1 / P.Height;
+      Log(Format('  %s eye camera %s units (%s mm); the glass is the picture''s part ' +
+        '(%.3f, %.3f)-(%.3f, %.3f), zoom %.3f', [EyeNames[I], Pt(FLastViews[I].Camera),
+        Pt(FLastViews[I].Camera * (1 / FLastScale)), P.Left, P.Top, P.Right, P.Bottom,
+        Zoom]));
+    end;
   end;
-  Log(Format('  camera offsets L(%.3f, %.3f) R(%.3f, %.3f), turn signs yaw %d pitch %d',
-    [FLastOffsets[0], FLastOffsets[1], FLastOffsets[2], FLastOffsets[3], FYawSign, FPitchSign]));
   if FLastRateText <> '' then
     Log('  ' + FLastRateText);
   Log('=== END SNAPSHOT ===');
 end;
 
-function TPeardoxGorillaEyes.Calibrate: Boolean;
+procedure TPeardoxGorillaEyes.CopyPart(const AData: TBitmapData; AWidth, AHeight: Integer;
+  const APart: TRectF; AX0, APitch: Integer);
 var
-  Cam: TControl3D;
-  Pivot: TControl3D;
-  SavedPos, SavedRot, Want, Got: TPoint3D;
-  V: TVector3D;
-  SY, SX, BestY, BestX: Integer;
-  Dot, Best: Single;
-  Scores: string;
+  X, Y, SY: Integer;
+  Src: PCardinal;
+  Dst: PCardinal;
 begin
-  Cam := FCamera.Camera;
-  Result := False;
-  if not (Cam.Parent is TControl3D) then
+  // The source column of each of the view's columns, the nearest pixel
+  if Length(FColumns) <> FViewWidth then
+    SetLength(FColumns, FViewWidth);
+  for X := 0 to FViewWidth - 1 do
   begin
-    Log('Eyes: the camera has no 3D parent; turn signs assumed +1');
-    Exit;
+    FColumns[X] := Floor((APart.Left + (X + 0.5) / FViewWidth * APart.Width) * AWidth);
+    if (FColumns[X] < 0) or (FColumns[X] >= AWidth) then
+      FColumns[X] := -1;
   end;
-  Pivot := TControl3D(Cam.Parent);
-  SavedPos := Cam.Position.Point;
-  SavedRot := Cam.RotationAngle.Point;
-  Best := -2;
-  BestY := 1;
-  BestX := 1;
-  Scores := '';
-  try
-    for SY := -1 to 1 do
-      for SX := -1 to 1 do
-      begin
-        if (SY = 0) or (SX = 0) then
-          Continue;
-        // A test offset well off the axis in both directions
-        PoseCamera(FCamera.Distance * 0.3, FCamera.Distance * 0.2, FCamera.Distance * 0.3,
-          FCamera.Distance * 0.2, SY, SX);
-        V := Pivot.AbsolutePosition - Cam.AbsolutePosition;
-        Want := Point3D(V.X, V.Y, V.Z).Normalize;
-        V := Cam.AbsoluteDirection;
-        Got := Point3D(V.X, V.Y, V.Z).Normalize;
-        Dot := Want.DotProduct(Got);
-        Scores := Scores + Format(' (%d, %d) %.4f', [SY, SX, Dot]);
-        if Dot > Best then
-        begin
-          Best := Dot;
-          BestY := SY;
-          BestX := SX;
-        end;
-      end;
-  finally
-    Cam.Position.Point := SavedPos;
-    Cam.RotationAngle.Point := SavedRot;
-  end;
-  FYawSign := BestY;
-  FPitchSign := BestX;
-  Result := Best > 0.999;
-  Log(Format('Eyes: turn signs yaw %d, pitch %d (match %.5f; tried (yaw, pitch):%s)',
-    [FYawSign, FPitchSign, Best, Scores]));
-end;
-
-function TPeardoxGorillaEyes.RenderEye(AOX, AOY, ATurnX, ATurnY: Single): TBitmap;
-var
-  Watch: TStopwatch;
-begin
-  PoseCamera(AOX, AOY, ATurnX, ATurnY, FYawSign, FPitchSign);
-  Watch := TStopwatch.StartNew;
-  if FRenderBeforeShot then
-    FViewport.RenderManual;
-  FRenderMs := FRenderMs + Watch.Elapsed.TotalMilliseconds;
-  // OpenGL is current now: the next frame may go by zero copy
-  if FZeroCopy and FRenderBeforeShot then
-    PrepareZeroCopy;
-  // Zero copy, step 1 (owner, 20:45): where Gorilla3D's picture is on the
-  // GPU, once, outside the timings
-  if not FProbed then
-    ProbeGL(FViewport, 'after RenderManual',
-      procedure(const AText: string)
-      begin
-        Log(AText);
-      end);
-  Watch := TStopwatch.StartNew;
-  Result := FViewport.MakeScreenshot;
-  FShotMs := FShotMs + Watch.Elapsed.TotalMilliseconds;
-  if not FProbed then
+  for Y := 0 to FViewHeight - 1 do
   begin
-    FProbed := True;
-    ProbeGL(FViewport, 'after MakeScreenshot',
-      procedure(const AText: string)
-      begin
-        Log(AText);
-      end);
-  end;
-end;
-
-function TPeardoxGorillaEyes.ShiftFor(AOffset: Single; AWidth, AHeight: Integer): Integer;
-var
-  TanH, D: Single;
-begin
-  D := FCamera.Distance;
-  // The horizontal half field of view, from the vertical FOV and the shape
-  TanH := Tan(DegToRad(FCamera.FOV) / 2) * AWidth / Max(AHeight, 1);
-  Result := 0;
-  if (D <= 0) or (TanH <= 0) then
-    Exit;
-  // A camera AOffset to the side of the midpoint sees the target AOffset
-  // the other way, AOffset / (D * TanH) of the half width; the shift moves
-  // it back to the middle
-  Result := FShiftSign * Round(AOffset / (D * TanH) * AWidth / 2);
-  Result := EnsureRange(Result, -AWidth div 4, AWidth div 4);
-end;
-
-procedure TPeardoxGorillaEyes.CopyEye(const AData: TBitmapData; AX0, AWidth, AHeight, APitch,
-  AShift, AStep: Integer);
-var
-  Y, X, Keep, Gap: Integer;
-  Src: PByte;
-  SrcPx, DstPx: PCardinal;
-begin
-  Gap := Min(Abs(AShift), AWidth);
-  Keep := AWidth - Gap;
-  for Y := 0 to AHeight - 1 do
-  begin
-    Src := AData.GetScanline(Y * AStep);
-    if AStep = 1 then
+    Dst := PCardinal(@FBuffer[Y * APitch + AX0]);
+    SY := Floor((APart.Top + (Y + 0.5) / FViewHeight * APart.Height) * AHeight);
+    if (SY < 0) or (SY >= AHeight) then
     begin
-      if AShift >= 0 then
+      // Outside the picture: opaque black, whichever order the bytes are in
+      for X := 0 to FViewWidth - 1 do
       begin
-        // Moved right: black on the left
-        if Gap > 0 then
-          Move(FBlack[0], FBuffer[Y * APitch + AX0], Gap * 4);
-        Move(Src^, FBuffer[Y * APitch + AX0 + Gap * 4], Keep * 4);
-      end
-      else
-      begin
-        // Moved left: black on the right
-        Move((Src + Gap * 4)^, FBuffer[Y * APitch + AX0], Keep * 4);
-        Move(FBlack[0], FBuffer[Y * APitch + AX0 + Keep * 4], Gap * 4);
+        Dst^ := $FF000000;
+        Inc(Dst);
       end;
-    end
-    else
+      Continue;
+    end;
+    Src := PCardinal(AData.GetScanline(SY));
+    for X := 0 to FViewWidth - 1 do
     begin
-      // Every AStep-th pixel of every AStep-th row: the picture made
-      // smaller to the size the display weaves at
-      if AShift >= 0 then
-      begin
-        if Gap > 0 then
-          Move(FBlack[0], FBuffer[Y * APitch + AX0], Gap * 4);
-        SrcPx := PCardinal(Src);
-        DstPx := PCardinal(@FBuffer[Y * APitch + AX0 + Gap * 4]);
-      end
+      if FColumns[X] >= 0 then
+        Dst^ := PCardinal(PByte(Src) + FColumns[X] * 4)^
       else
-      begin
-        SrcPx := PCardinal(Src + Gap * AStep * 4);
-        DstPx := PCardinal(@FBuffer[Y * APitch + AX0]);
-        Move(FBlack[0], FBuffer[Y * APitch + AX0 + Keep * 4], Gap * 4);
-      end;
-      for X := 0 to Keep - 1 do
-      begin
-        DstPx^ := SrcPx^;
-        Inc(DstPx);
-        Inc(SrcPx, AStep);
-      end;
+        Dst^ := $FF000000;
+      Inc(Dst);
     end;
   end;
 end;
 
-procedure TPeardoxGorillaEyes.Submit(ALeft, ARight: TBitmap; AShiftL, AShiftR: Integer);
+procedure TPeardoxGorillaEyes.Submit(ALeft, ARight: TBitmap);
 var
   DL, DR: TBitmapData;
-  W, H, Pitch, I, Step, OW, OH: Integer;
+  Pitch: Integer;
   RGBA: Boolean;
   Watch: TStopwatch;
 begin
-  // RGBA is set from the mapped picture, on the only way to SubmitViews
-  W := ALeft.Width;
-  H := ALeft.Height;
-  if (W <= 0) or (H <= 0) or (ARight.Width <> W) or (ARight.Height <> H) then
+  if (ALeft.Width <= 0) or (ALeft.Height <= 0) or (ARight.Width <= 0) or
+    (ARight.Height <= 0) then
   begin
-    FLastViewInfo := Format('pictures of different sizes or empty: %d x %d and %d x %d',
-      [W, H, ARight.Width, ARight.Height]);
+    FLastViewInfo := 'MakeScreenshot gave an empty picture';
     Exit;
   end;
   Watch := TStopwatch.StartNew;
-  // No bigger than the display weaves each eye at (its recommended view
-  // size): a full-screen 3840-wide view is halved, a quarter of the bytes
-  // to copy and upload
-  Step := 1;
-  if FMaxViewWidth > 0 then
-    Step := Max(1, W div FMaxViewWidth);
-  OW := W div Step;
-  OH := H div Step;
-  Pitch := OW * 2 * 4;
-  if Length(FBuffer) <> Pitch * OH then
-    SetLength(FBuffer, Pitch * OH);
-  if Length(FBlack) < OW * 4 then
-  begin
-    // Opaque black, whichever order the bytes are in
-    SetLength(FBlack, OW * 4);
-    for I := 0 to OW - 1 do
-    begin
-      FBlack[I * 4] := 0;
-      FBlack[I * 4 + 1] := 0;
-      FBlack[I * 4 + 2] := 0;
-      FBlack[I * 4 + 3] := 255;
-    end;
-  end;
+  RGBA := False;
+  Pitch := FViewWidth * 2 * 4;
+  if Length(FBuffer) <> Pitch * FViewHeight then
+    SetLength(FBuffer, Pitch * FViewHeight);
   if not ALeft.Map(TMapAccess.Read, DL) then
     Exit;
   try
     if not ARight.Map(TMapAccess.Read, DR) then
       Exit;
     try
-      CopyEye(DL, 0, OW, OH, Pitch, AShiftL div Step, Step);
-      CopyEye(DR, OW * 4, OW, OH, Pitch, AShiftR div Step, Step);
+      CopyPart(DL, ALeft.Width, ALeft.Height, FLastViews[0].Part, 0, Pitch);
+      CopyPart(DR, ARight.Width, ARight.Height, FLastViews[1].Part, FViewWidth * 4, Pitch);
       RGBA := DL.PixelFormat = TPixelFormat.RGBA;
-      FLastViewInfo := Format('%d x %d per eye, woven at %d x %d (1 in %d), %s',
-        [W, H, OW, OH, Step, IfThen(RGBA, 'RGBA', 'BGRA')]);
+      FLastViewInfo := Format('%d x %d per eye from %d x %d screenshots, %s',
+        [FViewWidth, FViewHeight, ALeft.Width, ALeft.Height, IfThen(RGBA, 'RGBA', 'BGRA')]);
     finally
       ARight.Unmap(DR);
     end;
   finally
     ALeft.Unmap(DL);
   end;
-  FLastShift[0] := AShiftL;
-  FLastShift[1] := AShiftR;
   FCopyMs := FCopyMs + Watch.Elapsed.TotalMilliseconds;
   Watch := TStopwatch.StartNew;
-  if FLeiaSR.SubmitViews(@FBuffer[0], OW, OH, Pitch, RGBA) = SRB_OK then
+  if FLeiaSR.SubmitViews(@FBuffer[0], FViewWidth, FViewHeight, Pitch, RGBA) = SRB_OK then
     Inc(FWovenFrames);
   FSubmitMs := FSubmitMs + Watch.Elapsed.TotalMilliseconds;
 end;
 
 procedure TPeardoxGorillaEyes.Frame;
 var
-  L, R, T: TPoint3D;
-  D, OXL, OYL, OXR, OYR, MX, MY: Single;
+  L, R: TPoint3D;
+  Scale: Single;
   Cam: TControl3D;
   SavedPos, SavedRot: TPoint3D;
   BL, BR: TBitmap;
-  Watch: TStopwatch;
+  Watch, Watch2: TStopwatch;
   NowTick: UInt64;
   Secs, N: Double;
-  ShiftL, ShiftR: Integer;
   Done: Boolean;
-  Watch2: TStopwatch;
   W, H: Integer;
+  PL, PR: TRectF;
+  Flat: Boolean;
+  RightTex: Pointer;
 begin
   if FInFrame or not FActive then
     Exit;
@@ -1122,60 +1012,49 @@ begin
     Watch := TStopwatch.StartNew;
     FLeiaSR.UpdateEyes;
     EyePair(L, R);
-    if FSwapEyes then
+    // Weave off: one view from between the eyes for both, the lens off
+    // (owner, 22:37: for screen recordings, which cannot catch the woven
+    // picture; the view still follows the head)
+    Flat := not FLeiaSR.Settings.Weave;
+    FLeiaSR.Flat := Flat;
+    if Flat then
     begin
-      T := L;
-      L := R;
-      R := T;
+      L := (L + R) * 0.5;
+      R := L;
     end;
     FLastEyes[0] := L;
     FLastEyes[1] := R;
-    D := FCamera.Distance;
-    if EyeOffset(L, D, OXL, OYL) and EyeOffset(R, D, OXR, OYR) then
+    if ViewScale(Scale) and EyeView(L, Scale, FLastViews[0]) and
+      EyeView(R, Scale, FLastViews[1]) then
     begin
-      FLastOffsets[0] := OXL;
-      FLastOffsets[1] := OYL;
-      FLastOffsets[2] := OXR;
-      FLastOffsets[3] := OYR;
-      MX := (OXL + OXR) / 2;
-      MY := (OYL + OYR) / 2;
+      FLastScale := Scale;
       Cam := FCamera.Camera;
       SavedPos := Cam.Position.Point;
       SavedRot := Cam.RotationAngle.Point;
       if CanZeroCopy then
       begin
-        ShiftL := 0;
-        ShiftR := 0;
-        if FConvergence = ecShift then
-        begin
-          // The other way to the screenshots' shift: owner (21:51), zero copy
-          // lined up with X (shift sign 1) or T (toe-in, no shift), while the
-          // screenshots line up at -1 - "basically the reverse". Why is not
-          // known yet; the per-eye view from SRDemoFMX is to replace the shift
-          ShiftL := -ShiftFor(OXL - MX, FInterop.Width, FInterop.Height);
-          ShiftR := -ShiftFor(OXR - MX, FInterop.Width, FInterop.Height);
-        end;
         try
-          FInterop.FlipRows := FZeroCopyFlip;
-          if FConvergence = ecShift then
-            Done := RenderEyeGPU(0, OXL, OYL, MX, MY, ShiftL) and
-              RenderEyeGPU(1, OXR, OYR, MX, MY, ShiftR)
-          else
-            Done := RenderEyeGPU(0, OXL, OYL, OXL, OYL, 0) and
-              RenderEyeGPU(1, OXR, OYR, OXR, OYR, 0);
+          Done := RenderEyeGPU(0, FLastViews[0]) and (Flat or RenderEyeGPU(1, FLastViews[1]));
         finally
+          // Exactly as it was: the orbit camera knows nothing of this
           Cam.Position.Point := SavedPos;
           Cam.RotationAngle.Point := SavedRot;
         end;
         if Done then
         begin
-          FLastShift[0] := ShiftL;
-          FLastShift[1] := ShiftR;
-          FLastViewInfo := Format('%d x %d per eye, zero copy (OpenGL to Direct3D on the GPU)',
-            [FInterop.Width, FInterop.Height]);
+          FLastViewInfo := Format('%d x %d per eye from %d x %d, zero copy (OpenGL to ' +
+            'Direct3D on the GPU)', [FInterop.Width, FInterop.Height, FInterop.SourceWidth,
+            FInterop.SourceHeight]);
           Watch2 := TStopwatch.StartNew;
-          if FLeiaSR.SubmitEyeTextures(FInterop.LeftTexture, FInterop.RightTexture,
-            FInterop.Width, FInterop.Height) = SRB_OK then
+          RightTex := FInterop.RightTexture;
+          if Flat then
+          begin
+            // The left eye's view for both: a flat picture
+            RightTex := FInterop.LeftTexture;
+            FLastViewInfo := FLastViewInfo + ', flat';
+          end;
+          if FLeiaSR.SubmitEyeTextures(FInterop.LeftTexture, RightTex, FInterop.Width,
+            FInterop.Height) = SRB_OK then
             Inc(FWovenFrames);
           FSubmitMs := FSubmitMs + Watch2.Elapsed.TotalMilliseconds;
         end
@@ -1184,7 +1063,7 @@ begin
           // A picture of another size (a resize): made again from the next
           // frame. Anything else: screenshots on this device from now on
           if not TPeardoxGLInterop.SourceSize(W, H) or
-            ((W = FInterop.Width) and (H = FInterop.Height)) then
+            ((W = FInterop.SourceWidth) and (H = FInterop.SourceHeight)) then
           begin
             FZeroCopyFailed := True;
             FZeroCopyFailedOn := FInterop.Device;
@@ -1193,8 +1072,6 @@ begin
           FreeAndNil(FInterop);
           FLastViewInfo := 'zero copy lost the picture';
         end;
-        Inc(FFrames);
-        FWorstMs := Max(FWorstMs, Watch.Elapsed.TotalMilliseconds);
       end
       else
       begin
@@ -1202,42 +1079,26 @@ begin
         BR := nil;
         try
           try
-            if FConvergence = ecShift then
-            begin
-              // Both turned alike, from the midpoint: parallel to each other
-              BL := RenderEye(OXL, OYL, MX, MY);
-              BR := RenderEye(OXR, OYR, MX, MY);
-            end
-            else
-            begin
-              BL := RenderEye(OXL, OYL, OXL, OYL);
-              BR := RenderEye(OXR, OYR, OXR, OYR);
-            end;
+            BL := RenderEye(FLastViews[0].Camera);
+            if not Flat then
+              BR := RenderEye(FLastViews[1].Camera);
           finally
-            // Exactly as it was: the orbit camera knows nothing of this
             Cam.Position.Point := SavedPos;
             Cam.RotationAngle.Point := SavedRot;
           end;
-          if (BL <> nil) and (BR <> nil) then
-          begin
-            ShiftL := 0;
-            ShiftR := 0;
-            if FConvergence = ecShift then
-            begin
-              ShiftL := ShiftFor(OXL - MX, BL.Width, BL.Height);
-              ShiftR := ShiftFor(OXR - MX, BR.Width, BR.Height);
-            end;
-            Submit(BL, BR, ShiftL, ShiftR);
-          end
+          if (BL <> nil) and Flat then
+            Submit(BL, BL)
+          else if (BL <> nil) and (BR <> nil) then
+            Submit(BL, BR)
           else
             FLastViewInfo := 'MakeScreenshot gave no picture';
         finally
           BL.Free;
           BR.Free;
         end;
-        Inc(FFrames);
-        FWorstMs := Max(FWorstMs, Watch.Elapsed.TotalMilliseconds);
       end;
+      Inc(FFrames);
+      FWorstMs := Max(FWorstMs, Watch.Elapsed.TotalMilliseconds);
     end;
   finally
     FInFrame := False;
@@ -1246,27 +1107,24 @@ begin
   NowTick := TThread.GetTickCount64;
   if NowTick - FLastLogTick >= 1000 then
   begin
-    // Zero copy: a check of the next copy, once a second (StereoCam51)
-    if FInterop <> nil then
-      FInterop.CheckNext;
     Secs := (NowTick - FLastLogTick) / 1000;
     N := Max(FFrames, 1);
-    Log(Format('Eyes: %.1f fps (worst %.0f ms) | per frame: render %.1f ms, screenshot %.1f ms, ' +
-      'copy %.1f ms, submit %.1f ms | %s | %s, shifts L %d R %d px | eyes %s, offsets ' +
-      'L(%.3f, %.3f) R(%.3f, %.3f) at depth %.3f | %d by the watchdog', [FFrames / Secs,
-      FWorstMs, FRenderMs / N,
-      FShotMs / N, FCopyMs / N, FSubmitMs / N, FLastViewInfo,
-      IfThen(FConvergence = ecShift, 'shift', 'toe-in'), FLastShift[0], FLastShift[1],
-      FLastEyesFrom, FLastOffsets[0], FLastOffsets[1], FLastOffsets[2], FLastOffsets[3],
-      FCamera.Distance, FWatchdogFrames]));
-    FLastRateText := Format('%.1f fps (worst %.0f ms), per frame render %.1f, screenshot %.1f, ' +
-      'copy %.1f, submit %.1f ms', [FFrames / Secs, FWorstMs, FRenderMs / N, FShotMs / N,
-      FCopyMs / N, FSubmitMs / N]);
+    PL := FLastViews[0].Part;
+    PR := FLastViews[1].Part;
+    Log(Format('Eyes: %.1f fps (worst %.0f ms) | per frame: render %.1f ms, copy %.1f ms, ' +
+      'submit %.1f ms | %s | eyes %s | scale %.5f units/mm at the model''s depth %.3f, target ' +
+      '(glass) %.3f, glass part L (%.3f, %.3f)-(%.3f, ' +
+      '%.3f) R (%.3f, %.3f)-(%.3f, %.3f) | %d by the watchdog', [FFrames / Secs, FWorstMs,
+      FRenderMs / N, FCopyMs / N, FSubmitMs / N, FLastViewInfo, FLastEyesFrom, FLastScale,
+      FScaleDepth, FCamera.Distance,
+      PL.Left, PL.Top, PL.Right, PL.Bottom, PR.Left, PR.Top, PR.Right, PR.Bottom,
+      FWatchdogFrames]));
+    FLastRateText := Format('%.1f fps (worst %.0f ms), per frame render %.1f, copy %.1f, ' +
+      'submit %.1f ms', [FFrames / Secs, FWorstMs, FRenderMs / N, FCopyMs / N, FSubmitMs / N]);
     FLastLogTick := NowTick;
     FWatchdogFrames := 0;
     FFrames := 0;
     FRenderMs := 0;
-    FShotMs := 0;
     FCopyMs := 0;
     FSubmitMs := 0;
     FWorstMs := 0;

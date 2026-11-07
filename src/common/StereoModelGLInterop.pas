@@ -4,11 +4,12 @@
 //** TPeardoxGLInterop makes two eye textures on the bridge's Direct3D 11 device (srb_GetDevice)
 //** and registers them with OpenGL through NVIDIA's WGL_NV_DX_interop2 (also offered by AMD
 //** and Intel drivers), each the colour attachment of a framebuffer of its own. After each
-//** eye's RenderManual, CopyEye blits the framebuffer Gorilla3D has just drawn into (it is
-//** still bound, StereoCam47's probe found) into the eye's texture, turned the right way up
-//** (OpenGL's rows run from the bottom) and moved sideways by the eye's shift. The textures
-//** then go to TPeardoxLeiaSR.SubmitEyeTextures: no MakeScreenshot, no copy through the
-//** CPU, no upload (owner, 7 November 2026: "all the speed we can give them helps them").
+//** eye's RenderManual, CopyEye takes the part of FMX's picture where the display's glass is
+//** (TPeardoxGorillaEyes works it out), resolves it if it is multisampled, and blits it into
+//** the eye's texture, scaled to fill it and turned the right way up (OpenGL's rows run from
+//** the bottom). The textures then go to TPeardoxLeiaSR.SubmitEyeTextures: no MakeScreenshot,
+//** no copy through the CPU, no upload (owner, 7 November 2026: "all the speed we can give
+//** them helps them").
 //**
 //** Everything here needs Gorilla3D's OpenGL context current: call it straight after
 //** RenderManual. Windows only; elsewhere Start fails and the screenshot route is used.
@@ -17,8 +18,8 @@ unit StereoModelGLInterop;
 {
   Zero copy for Gorilla3D: two eye textures on the bridge's D3D11 device,
   registered with OpenGL (WGL_NV_DX_interop2), filled after each eye's
-  RenderManual by blitting Gorilla3D's still-bound framebuffer into them,
-  flipped and shifted; then TPeardoxLeiaSR.SubmitEyeTextures. Needs
+  RenderManual by blitting the glass's part of FMX's picture into them,
+  scaled and flipped; then TPeardoxLeiaSR.SubmitEyeTextures. Needs
   Gorilla3D's GL context current. Windows only.
 }
 
@@ -45,8 +46,9 @@ type
     //** @abstract(The framebuffers they are attached to.)
     FFBO: array[0..1] of Cardinal;
     //** @abstract(Where a multisampled picture is resolved first (a blit from a multisampled
-    //** framebuffer may not flip or move it, nor change its format): a framebuffer with a
-    //** texture of the picture's own format; 0 when the picture is not multisampled.)
+    //** framebuffer may not scale, flip or move it, nor change its format): a framebuffer with
+    //** a texture of the picture's own format and size; 0 when the picture is not
+    //** multisampled.)
     FResolveFBO: Cardinal;
     //** @abstract(The texture of FResolveFBO.)
     FResolveTex: Cardinal;
@@ -60,7 +62,11 @@ type
     FDXDevice: THandle;
     //** @abstract(The interop handles of the textures (wglDXRegisterObjectNV).)
     FDXObj: array[0..1] of THandle;
-    //** @abstract(The textures' size in pixels, the same as the picture Gorilla3D draws.)
+    //** @abstract(The size of the picture Gorilla3D draws, in pixels.)
+    FSourceWidth: Integer;
+    //** @abstract(See FSourceWidth.)
+    FSourceHeight: Integer;
+    //** @abstract(The eye textures' size in pixels: the view the display weaves.)
     FWidth: Integer;
     //** @abstract(See FWidth.)
     FHeight: Integer;
@@ -72,20 +78,17 @@ type
     FGLDC: THandle;
     //** @abstract(Where the lines go.)
     FLog: TPeardoxGLInteropLog;
-    //** @abstract(True to log a check with the next CopyEye; see CheckNext.)
-    FCheckNext: Boolean;
-    //** @abstract(See FlipRows.)
-    FFlipRows: Boolean;
     //** @abstract(Sends a line to FLog.)
     //**
     //** @param(AText The line.)
     procedure Log(const AText: string);
-    //** @abstract(Looks through OpenGL's framebuffers for the finished picture: one whose
-    //** colour attachment is a texture of the eye size with something drawn in it (a 3 x 3
-    //** grid of pixels read back), the most lit winning; each candidate logged.)
+    //** @abstract(Finds FMX's finished picture among OpenGL's framebuffers: the first whose
+    //** colour attachment is a multisampled 8-bit texture of the picture's size (FMX's own;
+    //** every run on the owner's machine, 7 November 2026), else the first such plain 2D
+    //** texture, else the one bound for reading. Gorilla3D leaves its HDR target bound after
+    //** RenderManual, which holds nothing to copy.)
     //**
-    //** @param(ABound The framebuffer bound for reading after RenderManual, kept if none is
-    //** found lit.)
+    //** @param(ABound The framebuffer bound for reading after RenderManual.)
     //**
     //** @returns(The framebuffer to copy from.)
     function FindPicture(ABound: Integer): Integer;
@@ -115,35 +118,41 @@ type
     //**
     //** @returns(The first error taken, 0 if none.)
     class function TakeErrors: Cardinal; static;
-    //** @abstract(Logs, once, every texture and framebuffer OpenGL has with a low name: each
-    //** texture's target, size, format and samples, and for 2D ones the middle texel; each
-    //** framebuffer's colour attachment. To find where Gorilla3D leaves its picture. A context
-    //** must be current; OpenGL 4.5's direct state access is used, so nothing is bound.)
-    procedure Survey;
     //** @abstract(Makes the eye textures, AWidth x AHeight, on ADevice and registers them with
-    //** OpenGL. Gorilla3D's context must be current.)
+    //** OpenGL, for a picture of ASourceWidth x ASourceHeight. Gorilla3D's context must be
+    //** current.)
     //**
     //** @param(ADevice The bridge's ID3D11Device (TPeardoxLeiaSR.BridgeDevice).)
     //**
-    //** @param(AWidth The width in pixels.)
+    //** @param(ASourceWidth The width of the picture Gorilla3D draws, in pixels.)
     //**
-    //** @param(AHeight The height in pixels.)
+    //** @param(ASourceHeight Its height.)
+    //**
+    //** @param(AWidth The eye textures' width in pixels.)
+    //**
+    //** @param(AHeight Their height.)
     //**
     //** @returns(True if all is ready; False, with the reason logged, otherwise.)
-    function Start(ADevice: Pointer; AWidth, AHeight: Integer): Boolean;
-    //** @abstract(Copies the picture just drawn into an eye's texture on the GPU, the right
-    //** way up, moved AShift pixels right (left if negative), black where it moved from.)
+    function Start(ADevice: Pointer; ASourceWidth, ASourceHeight, AWidth,
+      AHeight: Integer): Boolean;
+    //** @abstract(Copies part of the picture just drawn into an eye's texture on the GPU,
+    //** scaled to fill it (linear filtering) and the right way up. The part is given in the
+    //** picture's pixels from its top-left corner and may reach outside it; what lies outside
+    //** comes out black.)
     //**
     //** @param(AEye 0 left, 1 right.)
     //**
-    //** @param(AShift The eye's shift in pixels.)
+    //** @param(ALeft The part's left edge.)
     //**
-    //** @returns(False if the picture is not there or not the textures' size.)
-    function CopyEye(AEye, AShift: Integer): Boolean;
-    //** @abstract(Has the next CopyEye log a check: the state the copy depends on, and the
-    //** middle pixel of the picture and of the eye texture (read back, so only now and
-    //** then).)
-    procedure CheckNext;
+    //** @param(ATop Its top edge.)
+    //**
+    //** @param(ARight Its right edge.)
+    //**
+    //** @param(ABottom Its bottom edge.)
+    //**
+    //** @returns(False if the picture or the textures are not there; a part wholly outside
+    //** the picture gives a black view and True.)
+    function CopyEye(AEye: Integer; ALeft, ATop, ARight, ABottom: Single): Boolean;
     //** @abstract(The left eye's ID3D11Texture2D, for SubmitEyeTextures.)
     //**
     //** @returns(The texture.)
@@ -156,14 +165,14 @@ type
     property Ready: Boolean read FReady;
     //** @abstract(The device the textures are on; nil before Start.)
     property Device: Pointer read FDevice;
-    //** @abstract(The textures' width in pixels.)
+    //** @abstract(The width of the picture Start was made for, in pixels.)
+    property SourceWidth: Integer read FSourceWidth;
+    //** @abstract(Its height.)
+    property SourceHeight: Integer read FSourceHeight;
+    //** @abstract(The eye textures' width in pixels.)
     property Width: Integer read FWidth;
-    //** @abstract(The textures' height in pixels.)
+    //** @abstract(The eye textures' height in pixels.)
     property Height: Integer read FHeight;
-    //** @abstract(True (the default) to turn the rows over in the copy: OpenGL's run from
-    //** the bottom, Direct3D's from the top. False copies them as they are, for a picture
-    //** drawn upside down already.)
-    property FlipRows: Boolean read FFlipRows write FFlipRows;
   end;
 
 implementation
@@ -173,8 +182,6 @@ uses
   Winapi.Windows, Winapi.OpenGL;
 
 const
-  //** @abstract(Framebuffer target: both.)
-  GL_FRAMEBUFFER_T = $8D40;
   //** @abstract(Framebuffer target: reading.)
   GL_READ_FRAMEBUFFER_T = $8CA8;
   //** @abstract(Framebuffer target: drawing.)
@@ -191,10 +198,6 @@ const
   GL_TEXTURE_INTERNAL_FORMAT_Q = $1003;
   //** @abstract(GL_RGBA8, the resolve texture's format when the picture's is not known.)
   GL_RGBA8_F = $8058;
-  //** @abstract(glIsEnabled: sRGB conversion on writes.)
-  GL_FRAMEBUFFER_SRGB_Q = $8DB9;
-  //** @abstract(glGetIntegerv: the buffer bound for glReadPixels' results.)
-  GL_PIXEL_PACK_BUFFER_BINDING_Q = $88ED;
   //** @abstract(glCheckFramebufferStatus: complete.)
   GL_FRAMEBUFFER_COMPLETE_S = $8CD5;
   //** @abstract(Attachment parameter: what is attached.)
@@ -355,25 +358,6 @@ begin
 end;
 {$ENDIF}
 
-{$IFDEF MSWINDOWS}
-//** @abstract(Picks one of two strings.)
-//**
-//** @param(ACondition Which to pick.)
-//**
-//** @param(AWhenTrue The string for True.)
-//**
-//** @param(AWhenFalse The string for False.)
-//**
-//** @returns(The chosen string.)
-function IfThenText(ACondition: Boolean; const AWhenTrue, AWhenFalse: string): string;
-begin
-  if ACondition then
-    Result := AWhenTrue
-  else
-    Result := AWhenFalse;
-end;
-{$ENDIF}
-
 { TPeardoxGLInterop }
 
 constructor TPeardoxGLInterop.Create(const ALog: TPeardoxGLInteropLog);
@@ -392,91 +376,6 @@ procedure TPeardoxGLInterop.Log(const AText: string);
 begin
   if Assigned(FLog) then
     FLog(AText);
-end;
-
-procedure TPeardoxGLInterop.Survey;
-{$IFDEF MSWINDOWS}
-type
-  TIsObject = function(Name: Cardinal): Byte; stdcall;
-  TGetTexParam = procedure(Texture, PName: Cardinal; Params: PInteger); stdcall;
-  TGetTexSubImage = procedure(Texture: Cardinal; Level, X, Y, Z, W, H, D: Integer;
-    Format, PixType: Cardinal; BufSize: Integer; Pixels: Pointer); stdcall;
-  TGetNamedFBAttach = procedure(Framebuffer, Attachment, PName: Cardinal;
-    Params: PInteger); stdcall;
-const
-  GL_TEXTURE_TARGET_Q = $1006;
-  GL_TEXTURE_SAMPLES_Q = $9106;
-  GL_FLOAT_T = $1406;
-var
-  IsFramebuffer: TIsObject;
-  GetTexParam: TGetTexParam;
-  GetTexSubImage: TGetTexSubImage;
-  GetNamedFBAttach: TGetNamedFBAttach;
-  N: Cardinal;
-  Target, W, H, Fmt, Samples, ObjType, ObjName: Integer;
-  Px: array[0..3] of Single;
-  Texel: string;
-{$ENDIF}
-begin
-  {$IFDEF MSWINDOWS}
-  if wglGetCurrentContext = 0 then
-    Exit;
-  @IsFramebuffer := wglGetProcAddress('glIsFramebuffer');
-  @GetTexParam := wglGetProcAddress('glGetTextureParameteriv');
-  @GetTexSubImage := wglGetProcAddress('glGetTextureSubImage');
-  @GetNamedFBAttach := wglGetProcAddress('glGetNamedFramebufferAttachmentParameteriv');
-  if not Assigned(GetTexParam) or not Assigned(GetTextureLevelParam) then
-  begin
-    Log('GL survey: no OpenGL 4.5 direct state access');
-    Exit;
-  end;
-  TakeErrors;
-  for N := 1 to 64 do
-  begin
-    if glIsTexture(N) = 0 then
-      Continue;
-    Target := 0;
-    W := 0;
-    H := 0;
-    Fmt := 0;
-    Samples := 0;
-    GetTexParam(N, GL_TEXTURE_TARGET_Q, @Target);
-    GetTextureLevelParam(N, 0, GL_TEXTURE_WIDTH_Q, @W);
-    GetTextureLevelParam(N, 0, GL_TEXTURE_HEIGHT_Q, @H);
-    GetTextureLevelParam(N, 0, GL_TEXTURE_INTERNAL_FORMAT_Q, @Fmt);
-    GetTextureLevelParam(N, 0, GL_TEXTURE_SAMPLES_Q, @Samples);
-    TakeErrors;
-    if (W < 256) or (H < 256) then
-      Continue;
-    Texel := '';
-    if (Target = GL_TEXTURE_2D) and Assigned(GetTexSubImage) then
-    begin
-      FillChar(Px, SizeOf(Px), 0);
-      GetTexSubImage(N, 0, W div 2, H div 2, 0, 1, 1, 1, GL_RGBA, GL_FLOAT_T, SizeOf(Px),
-        @Px[0]);
-      if TakeErrors = 0 then
-        Texel := Format(', middle texel RGBA %.3f %.3f %.3f %.3f', [Px[0], Px[1], Px[2], Px[3]])
-      else
-        Texel := ', middle texel not read';
-    end;
-    Log(Format('GL survey: texture %d, target $%x, %d x %d, format $%x, %d samples%s',
-      [N, Target, W, H, Fmt, Samples, Texel]));
-  end;
-  if Assigned(IsFramebuffer) and Assigned(GetNamedFBAttach) then
-    for N := 1 to 16 do
-    begin
-      if IsFramebuffer(N) = 0 then
-        Continue;
-      ObjType := 0;
-      ObjName := 0;
-      GetNamedFBAttach(N, GL_COLOR_ATTACHMENT0_T, GL_ATTACHMENT_OBJECT_TYPE_Q, @ObjType);
-      GetNamedFBAttach(N, GL_COLOR_ATTACHMENT0_T, GL_ATTACHMENT_OBJECT_NAME_Q, @ObjName);
-      TakeErrors;
-      Log(Format('GL survey: framebuffer %d, colour attachment 0: type $%x, name %d',
-        [N, ObjType, ObjName]));
-    end;
-  TakeErrors;
-  {$ENDIF}
 end;
 
 class function TPeardoxGLInterop.TakeErrors: Cardinal;
@@ -560,15 +459,9 @@ function TPeardoxGLInterop.FindPicture(ABound: Integer): Integer;
 {$IFDEF MSWINDOWS}
 const
   GL_TEXTURE_TARGET_Q = $1006;
-  GL_TEXTURE_SAMPLES_Q = $9106;
   GL_TEXTURE_2D_MS_Q = $9100;
-  PICK_GRID = 8;
 var
-  FB, ObjType, Tex, Target, W, H, Fmt, Samples, Lit, BestLit, GX, GY, PackBuf: Integer;
-  FirstMS8, First2D8: Integer;
-  PrevDraw, BoundTex: Integer;
-  TestTex, TestFBO: Cardinal;
-  Px: array[0..3] of Byte;
+  FB, ObjType, Tex, Target, W, H, Fmt, First2D8: Integer;
 {$ENDIF}
 begin
   Result := ABound;
@@ -576,141 +469,55 @@ begin
   if not Assigned(IsFramebufferFn) or not Assigned(GetNamedFBAttachFn) or
     not Assigned(GetTextureParamFn) or not Assigned(GetTextureLevelParam) then
   begin
-    Log('Zero copy: no OpenGL 4.5 direct state access to look for the picture; the bound ' +
+    Log('Zero copy: no OpenGL 4.5 direct state access to find the picture; the bound ' +
       'framebuffer is used');
     Exit;
   end;
-  PackBuf := 0;
-  glGetIntegerv(GL_PIXEL_PACK_BUFFER_BINDING_Q, @PackBuf);
-  PrevDraw := 0;
-  glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING_Q, @PrevDraw);
-  BestLit := 0;
-  FirstMS8 := 0;
   First2D8 := 0;
   TakeErrors;
-  // An 8-bit test target: a multisampled 8-bit candidate (FMX's own
-  // multisampled buffer, say) is resolved into it to be read
-  TestTex := 0;
-  TestFBO := 0;
-  BoundTex := 0;
-  glGetIntegerv(GL_TEXTURE_BINDING_2D, @BoundTex);
-  glGenTextures(1, @TestTex);
-  glBindTexture(GL_TEXTURE_2D, TestTex);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8_F, FWidth, FHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE,
-    nil);
-  glBindTexture(GL_TEXTURE_2D, BoundTex);
-  GenFramebuffers(1, @TestFBO);
-  BindFramebuffer(GL_DRAW_FRAMEBUFFER_T, TestFBO);
-  FramebufferTexture2D(GL_DRAW_FRAMEBUFFER_T, GL_COLOR_ATTACHMENT0_T, GL_TEXTURE_2D,
-    TestTex, 0);
-  if CheckFramebufferStatus(GL_DRAW_FRAMEBUFFER_T) <> GL_FRAMEBUFFER_COMPLETE_S then
+  // By name only (direct state access): nothing is bound or read back.
+  // StereoCam55-57 (owner, 21:31-21:51) read pixels of each candidate: FMX's
+  // multisampled 8-bit framebuffer had the picture every time
+  for FB := 1 to 32 do
   begin
-    BindFramebuffer(GL_DRAW_FRAMEBUFFER_T, PrevDraw);
-    if Assigned(DeleteFramebuffers) then
-      DeleteFramebuffers(1, @TestFBO);
-    TestFBO := 0;
-  end;
-  BindFramebuffer(GL_DRAW_FRAMEBUFFER_T, PrevDraw);
-  TakeErrors;
-  try
-    for FB := 1 to 32 do
-    begin
-      if IsFramebufferFn(FB) = 0 then
-        Continue;
-      ObjType := 0;
-      Tex := 0;
-      GetNamedFBAttachFn(FB, GL_COLOR_ATTACHMENT0_T, GL_ATTACHMENT_OBJECT_TYPE_Q, @ObjType);
-      GetNamedFBAttachFn(FB, GL_COLOR_ATTACHMENT0_T, GL_ATTACHMENT_OBJECT_NAME_Q, @Tex);
-      if TakeErrors <> 0 then
-        Continue;
-      if (ObjType <> GL_TEXTURE_OBJ) or (Tex = 0) then
-        Continue;
-      Target := 0;
-      W := 0;
-      H := 0;
-      Fmt := 0;
-      Samples := 0;
-      GetTextureParamFn(Tex, GL_TEXTURE_TARGET_Q, @Target);
-      GetTextureLevelParam(Tex, 0, GL_TEXTURE_WIDTH_Q, @W);
-      GetTextureLevelParam(Tex, 0, GL_TEXTURE_HEIGHT_Q, @H);
-      GetTextureLevelParam(Tex, 0, GL_TEXTURE_INTERNAL_FORMAT_Q, @Fmt);
-      GetTextureLevelParam(Tex, 0, GL_TEXTURE_SAMPLES_Q, @Samples);
-      TakeErrors;
-      if (W <> FWidth) or (H <> FHeight) then
-        Continue;
-      // Something drawn? A 2D one is read as it is, a multisampled 8-bit one
-      // after resolving into the test target; others are only logged
-      Lit := -1;
-      if (PackBuf = 0) and ((Target = GL_TEXTURE_2D) or ((Target = GL_TEXTURE_2D_MS_Q) and
-        (Fmt = GL_RGBA8_F) and (TestFBO <> 0))) then
-      begin
-        Lit := 0;
-        BindFramebuffer(GL_READ_FRAMEBUFFER_T, FB);
-        if Target = GL_TEXTURE_2D_MS_Q then
-        begin
-          BindFramebuffer(GL_DRAW_FRAMEBUFFER_T, TestFBO);
-          BlitFramebuffer(0, 0, FWidth, FHeight, 0, 0, FWidth, FHeight, GL_COLOR_BUFFER_BIT,
-            GL_NEAREST);
-          BindFramebuffer(GL_DRAW_FRAMEBUFFER_T, PrevDraw);
-          BindFramebuffer(GL_READ_FRAMEBUFFER_T, TestFBO);
-        end;
-        // An 8 x 8 grid: owner (21:37), a 3 x 3 one found nothing lit in
-        // FMX's picture one run in two (the points fell between the shapes)
-        for GY := 1 to PICK_GRID do
-          for GX := 1 to PICK_GRID do
-          begin
-            FillChar(Px, SizeOf(Px), 0);
-            glReadPixels(FWidth * GX div (PICK_GRID + 1), FHeight * GY div (PICK_GRID + 1), 1, 1,
-              GL_RGBA,
-              GL_UNSIGNED_BYTE, @Px[0]);
-            if Px[0] or Px[1] or Px[2] <> 0 then
-              Inc(Lit);
-          end;
-        if TakeErrors <> 0 then
-          Lit := -1;
-      end;
-      Log(Format('Zero copy: framebuffer %d, texture %d, target $%x, format $%x, %d samples, ' +
-        'lit %d of %d%s', [FB, Tex, Target, Fmt, Samples, Lit, PICK_GRID * PICK_GRID,
-        IfThenText(FB = ABound, ' (bound after RenderManual)', '')]));
-      // 8-bit ones in case none is lit: FMX's own (multisampled) first
-      if Fmt = GL_RGBA8_F then
-      begin
-        if (Target = GL_TEXTURE_2D_MS_Q) and (FirstMS8 = 0) then
-          FirstMS8 := FB
-        else if (Target = GL_TEXTURE_2D) and (First2D8 = 0) then
-          First2D8 := FB;
-      end;
-      if Lit > BestLit then
-      begin
-        BestLit := Lit;
-        Result := FB;
-      end;
-    end;
-  finally
-    BindFramebuffer(GL_READ_FRAMEBUFFER_T, ABound);
-    BindFramebuffer(GL_DRAW_FRAMEBUFFER_T, PrevDraw);
-    if (TestFBO <> 0) and Assigned(DeleteFramebuffers) then
-      DeleteFramebuffers(1, @TestFBO);
-    if TestTex <> 0 then
-      glDeleteTextures(1, @TestTex);
+    if IsFramebufferFn(FB) = 0 then
+      Continue;
+    ObjType := 0;
+    Tex := 0;
+    GetNamedFBAttachFn(FB, GL_COLOR_ATTACHMENT0_T, GL_ATTACHMENT_OBJECT_TYPE_Q, @ObjType);
+    GetNamedFBAttachFn(FB, GL_COLOR_ATTACHMENT0_T, GL_ATTACHMENT_OBJECT_NAME_Q, @Tex);
+    if (TakeErrors <> 0) or (ObjType <> GL_TEXTURE_OBJ) or (Tex = 0) then
+      Continue;
+    Target := 0;
+    W := 0;
+    H := 0;
+    Fmt := 0;
+    GetTextureParamFn(Tex, GL_TEXTURE_TARGET_Q, @Target);
+    GetTextureLevelParam(Tex, 0, GL_TEXTURE_WIDTH_Q, @W);
+    GetTextureLevelParam(Tex, 0, GL_TEXTURE_HEIGHT_Q, @H);
+    GetTextureLevelParam(Tex, 0, GL_TEXTURE_INTERNAL_FORMAT_Q, @Fmt);
     TakeErrors;
+    if (W <> FSourceWidth) or (H <> FSourceHeight) or (Fmt <> GL_RGBA8_F) then
+      Continue;
+    if Target = GL_TEXTURE_2D_MS_Q then
+    begin
+      Result := FB;
+      Log(Format('Zero copy: the picture is FMX''s multisampled framebuffer %d (texture %d)',
+        [FB, Tex]));
+      Exit;
+    end;
+    if (Target = GL_TEXTURE_2D) and (First2D8 = 0) then
+      First2D8 := FB;
   end;
-  if BestLit = 0 then
-  begin
-    // Nothing lit (an empty first frame, or every point on the background):
-    // FMX's own 8-bit picture rather than Gorilla3D's HDR target, which
-    // gave black (owner, 21:25 and 21:37)
-    if FirstMS8 <> 0 then
-      Result := FirstMS8
-    else if First2D8 <> 0 then
-      Result := First2D8;
-    Log(Format('Zero copy: nothing lit in any; framebuffer %d chosen by its kind', [Result]));
-  end;
-  Log(Format('Zero copy: the picture is taken from framebuffer %d', [Result]));
+  if First2D8 <> 0 then
+    Result := First2D8;
+  Log(Format('Zero copy: no multisampled 8-bit framebuffer of the picture''s size; ' +
+    'framebuffer %d is used', [Result]));
   {$ENDIF}
 end;
 
-function TPeardoxGLInterop.Start(ADevice: Pointer; AWidth, AHeight: Integer): Boolean;
+function TPeardoxGLInterop.Start(ADevice: Pointer; ASourceWidth, ASourceHeight, AWidth,
+  AHeight: Integer): Boolean;
 {$IFDEF MSWINDOWS}
 var
   Missing: string;
@@ -742,6 +549,8 @@ begin
   FDevice := ADevice;
   FGLContext := wglGetCurrentContext;
   FGLDC := wglGetCurrentDC;
+  FSourceWidth := ASourceWidth;
+  FSourceHeight := ASourceHeight;
   FWidth := AWidth;
   FHeight := AHeight;
   FillChar(Desc, SizeOf(Desc), 0);
@@ -771,16 +580,11 @@ begin
   end;
   PrevDraw := 0;
   glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING_Q, @PrevDraw);
-  // The picture Gorilla3D drew: multisampled (FMX's 3D views are, four
-  // samples by default) and its format. Owner (21:17): the picture read back
-  // 0 0 0 0 and the eye textures stayed black, with $502 after the blit -
-  // a multisampled framebuffer cannot be blitted flipped, moved or into
-  // another format, only resolved as it is
+  // The picture: FMX's framebuffer, multisampled (four samples by default),
+  // so resolved as it is before it can be scaled or flipped (owner, 21:17:
+  // a flipped blit straight from it gave $502 and nothing)
   ReadFB := 0;
   glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING_Q, @ReadFB);
-  // Owner (21:25): the framebuffer left bound after RenderManual (Gorilla3D's
-  // multisampled HDR target) read black at all nine points even resolved:
-  // the finished picture is elsewhere, so it is looked for
   FSourceFB := FindPicture(ReadFB);
   FSamples := 0;
   FSourceFormat := 0;
@@ -809,7 +613,7 @@ begin
     glGetIntegerv(GL_TEXTURE_BINDING_2D, @Bound);
     glGenTextures(1, @FResolveTex);
     glBindTexture(GL_TEXTURE_2D, FResolveTex);
-    glTexImage2D(GL_TEXTURE_2D, 0, FSourceFormat, AWidth, AHeight, 0, GL_RGBA,
+    glTexImage2D(GL_TEXTURE_2D, 0, FSourceFormat, ASourceWidth, ASourceHeight, 0, GL_RGBA,
       GL_UNSIGNED_BYTE, nil);
     glBindTexture(GL_TEXTURE_2D, Bound);
     GenFramebuffers(1, @FResolveFBO);
@@ -868,51 +672,84 @@ begin
     Log(Format('Zero copy: the picture is not multisampled, internal format $%x: copied ' +
       'directly', [FSourceFormat]));
   Log(Format('Zero copy: two %d x %d eye textures on the bridge''s Direct3D 11 device, drawn ' +
-    'into by OpenGL (WGL_NV_DX_interop2); no screenshot, copy or upload', [AWidth, AHeight]));
+    'into by OpenGL (WGL_NV_DX_interop2) from a %d x %d picture; no screenshot, copy or ' +
+    'upload', [AWidth, AHeight, ASourceWidth, ASourceHeight]));
   {$ELSE}
   Log('Zero copy: Windows only');
   {$ENDIF}
 end;
 
-function TPeardoxGLInterop.CopyEye(AEye, AShift: Integer): Boolean;
+function TPeardoxGLInterop.CopyEye(AEye: Integer; ALeft, ATop, ARight,
+  ABottom: Single): Boolean;
 {$IFDEF MSWINDOWS}
 var
-  ReadFB, PrevDraw, ReadBuf, PackBuf: Integer;
-  Scissor, SRGB: Boolean;
+  ReadFB, PrevDraw, ReadBuf: Integer;
+  Scissor: Boolean;
   Clear: array[0..3] of Single;
   Mask: array[0..3] of Byte;
-  Src, Dst: array[0..3] of Byte;
-  SrcLit, DstLit, GX, GY, PX, PY: Integer;
-  Grid: array[0..3] of Byte;
-  Checked: Boolean;
+  SX0, SY0, SX1, SY1, KX0, KY0, KX1, KY1, FX, FY: Single;
+  IX0, IY0, IX1, IY1, DX0, DY0, DX1, DY1: Integer;
+  Clipped, Inside: Boolean;
 {$ENDIF}
 begin
   Result := False;
   {$IFDEF MSWINDOWS}
-  if not FReady or (AEye < 0) or (AEye > 1) then
+  if not FReady or (AEye < 0) or (AEye > 1) or (FSourceFB = 0) or (ARight <= ALeft) or
+    (ABottom <= ATop) then
     Exit;
+  // The part in OpenGL's coordinates: rows from the bottom
+  SX0 := ALeft;
+  SX1 := ARight;
+  SY0 := FSourceHeight - ABottom;
+  SY1 := FSourceHeight - ATop;
+  // What of it lies inside the picture, and where that lands in the eye
+  // texture: the part fills the texture, its bottom row at the texture's
+  // last (the blit turns the rows over for Direct3D)
+  KX0 := SX0;
+  if KX0 < 0 then
+    KX0 := 0;
+  KX1 := SX1;
+  if KX1 > FSourceWidth then
+    KX1 := FSourceWidth;
+  KY0 := SY0;
+  if KY0 < 0 then
+    KY0 := 0;
+  KY1 := SY1;
+  if KY1 > FSourceHeight then
+    KY1 := FSourceHeight;
+  // None of it inside (the eye far off to one side): a black view, not a
+  // failure, as on the screenshot route
+  Inside := (KX1 > KX0) and (KY1 > KY0);
+  Clipped := not Inside or (KX0 > SX0) or (KX1 < SX1) or (KY0 > SY0) or (KY1 < SY1);
+  // The source in whole pixels first, and the destination from those, so
+  // the two rectangles match exactly
+  IX0 := Round(KX0);
+  IX1 := Round(KX1);
+  IY0 := Round(KY0);
+  IY1 := Round(KY1);
+  Inside := Inside and (IX1 > IX0) and (IY1 > IY0);
+  FX := FWidth / (SX1 - SX0);
+  FY := FHeight / (SY1 - SY0);
+  DX0 := Round((IX0 - SX0) * FX);
+  DX1 := Round((IX1 - SX0) * FX);
+  DY0 := FHeight - Round((IY0 - SY0) * FY);
+  DY1 := FHeight - Round((IY1 - SY0) * FY);
   ReadFB := 0;
   glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING_Q, @ReadFB);
-  if FSourceFB = 0 then
-    Exit;
   PrevDraw := 0;
   glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING_Q, @PrevDraw);
-  // The picture's framebuffer for reading (FindPicture's choice); the one
-  // bound now is put back after
+  // The picture's framebuffer for reading; the one bound now is put back
+  // after
   BindFramebuffer(GL_READ_FRAMEBUFFER_T, FSourceFB);
-  // State the blit and the clear depend on, set for them and put back
+  // State the blits and the clear depend on, set for them and put back
   // after: the scissor, the colour mask, the clear colour (Gorilla3D's), and
   // the source's read buffer (a blit from GL_NONE copies nothing, without an
-  // error: owner, 21:14, zero copy ran at 100 fps and showed no picture).
-  // GLboolean is a Byte in Winapi.OpenGL
+  // error: owner, 21:14). GLboolean is a Byte in Winapi.OpenGL
   Scissor := glIsEnabled(GL_SCISSOR_TEST) <> 0;
-  SRGB := glIsEnabled(GL_FRAMEBUFFER_SRGB_Q) <> 0;
   glGetFloatv(GL_COLOR_CLEAR_VALUE, @Clear[0]);
   glGetBooleanv(GL_COLOR_WRITEMASK, @Mask[0]);
   ReadBuf := 0;
   glGetIntegerv(GL_READ_BUFFER, @ReadBuf);
-  Checked := FCheckNext;
-  FCheckNext := False;
   if not DXLockObjects(FDXDevice, 1, @FDXObj[AEye]) then
   begin
     BindFramebuffer(GL_READ_FRAMEBUFFER_T, ReadFB);
@@ -924,83 +761,24 @@ begin
     glColorMask(1, 1, 1, 1);
     if ReadBuf <> GL_COLOR_ATTACHMENT0_T then
       glReadBuffer(GL_COLOR_ATTACHMENT0_T);
-    if FResolveFBO <> 0 then
+    if Inside and (FResolveFBO <> 0) then
     begin
       // Multisampled: resolved as it is, then copied from there
       BindFramebuffer(GL_DRAW_FRAMEBUFFER_T, FResolveFBO);
-      BlitFramebuffer(0, 0, FWidth, FHeight, 0, 0, FWidth, FHeight, GL_COLOR_BUFFER_BIT,
-        GL_NEAREST);
+      BlitFramebuffer(0, 0, FSourceWidth, FSourceHeight, 0, 0, FSourceWidth, FSourceHeight,
+        GL_COLOR_BUFFER_BIT, GL_NEAREST);
       BindFramebuffer(GL_READ_FRAMEBUFFER_T, FResolveFBO);
     end;
-    SrcLit := 0;
-    if Checked then
-    begin
-      // Once in a while: nine pixels of the picture (a 3 x 3 grid), before
-      // the copy - the middle one alone can fall between the spheres
-      // (owner, 21:23: every texture's middle texel was the background)
-      PackBuf := 0;
-      glGetIntegerv(GL_PIXEL_PACK_BUFFER_BINDING_Q, @PackBuf);
-      Checked := PackBuf = 0;
-      FillChar(Src, SizeOf(Src), 0);
-      if Checked then
-      begin
-        glReadPixels(FWidth div 2, FHeight div 2, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, @Src[0]);
-        for GY := 1 to 3 do
-          for GX := 1 to 3 do
-          begin
-            glReadPixels(FWidth * GX div 4, FHeight * GY div 4, 1, 1, GL_RGBA,
-              GL_UNSIGNED_BYTE, @Grid[0]);
-            if Grid[0] or Grid[1] or Grid[2] <> 0 then
-              Inc(SrcLit);
-          end;
-      end;
-    end;
     BindFramebuffer(GL_DRAW_FRAMEBUFFER_T, FFBO[AEye]);
-    if AShift <> 0 then
+    if Clipped then
     begin
-      // Black where the picture moved away from
+      // Black where the part reaches outside the picture (the eye far off
+      // to one side, or close to the glass)
       glClearColor(0, 0, 0, 1);
       glClear(GL_COLOR_BUFFER_BIT);
     end;
-    // OpenGL's rows run from the bottom, Direct3D's from the top: drawn
-    // upside down here, the texture is the right way up
-    if FFlipRows then
-      BlitFramebuffer(0, 0, FWidth, FHeight, AShift, FHeight, FWidth + AShift, 0,
-        GL_COLOR_BUFFER_BIT, GL_NEAREST)
-    else
-      BlitFramebuffer(0, 0, FWidth, FHeight, AShift, 0, FWidth + AShift, FHeight,
-        GL_COLOR_BUFFER_BIT, GL_NEAREST);
-    if Checked then
-    begin
-      // The same pixel in the eye texture (rows turned over, so the middle
-      // row of the other half; near enough to see whether anything arrived)
-      FillChar(Dst, SizeOf(Dst), 0);
-      BindFramebuffer(GL_READ_FRAMEBUFFER_T, FFBO[AEye]);
-      glReadPixels(FWidth div 2 + AShift, FHeight div 2, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE,
-        @Dst[0]);
-      // The same grid in the eye texture: turned over and shifted, so the
-      // rows and columns map back as the blit put them
-      DstLit := 0;
-      for GY := 1 to 3 do
-        for GX := 1 to 3 do
-        begin
-          PX := FWidth * GX div 4 + AShift;
-          PY := FHeight * GY div 4;
-          if FFlipRows then
-            PY := FHeight - 1 - PY;
-          if (PX < 0) or (PX >= FWidth) then
-            Continue;
-          glReadPixels(PX, PY, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, @Grid[0]);
-          if Grid[0] or Grid[1] or Grid[2] <> 0 then
-            Inc(DstLit);
-        end;
-      Log(Format('Zero copy check (eye %d): source framebuffer %d (%d samples), read buffer ' +
-        '$%x, colour mask %d%d%d%d, sRGB writes %s, scissor %s | middle pixel RGBA source ' +
-        '%d %d %d %d, eye texture %d %d %d %d | of a 3 x 3 grid, not black: source %d, eye ' +
-        'texture %d', [AEye, FSourceFB, FSamples, ReadBuf, Mask[0], Mask[1], Mask[2], Mask[3],
-        BoolToStr(SRGB, True), BoolToStr(Scissor, True), Src[0], Src[1], Src[2], Src[3], Dst[0],
-        Dst[1], Dst[2], Dst[3], SrcLit, DstLit]));
-    end;
+    if Inside then
+      BlitFramebuffer(IX0, IY0, IX1, IY1, DX0, DY0, DX1, DY1, GL_COLOR_BUFFER_BIT, GL_LINEAR);
     Result := True;
   finally
     // The source's read buffer as it was, then the framebuffers bound before
@@ -1016,11 +794,6 @@ begin
     DXUnlockObjects(FDXDevice, 1, @FDXObj[AEye]);
   end;
   {$ENDIF}
-end;
-
-procedure TPeardoxGLInterop.CheckNext;
-begin
-  FCheckNext := True;
 end;
 
 function TPeardoxGLInterop.LeftTexture: Pointer;
@@ -1082,7 +855,6 @@ begin
   FResolveFBO := 0;
   FResolveTex := 0;
   FSourceFB := 0;
-  FFlipRows := True;
   FDXDevice := 0;
   FGLContext := 0;
   FGLDC := 0;

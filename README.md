@@ -225,49 +225,61 @@ top, and weaves the view there (the lens comes on); if the main window is on
 the SR display it hides until Stereo is off, on any other monitor it stays
 (the button shows pressed). **Esc**, the button again, or Alt+F4 on the 3D
 window turn Stereo off: the 3D window hides, the lens goes off, and SR stays
-running so the next time is quick. While Stereo is on, the viewport is the
-size the display weaves each eye at (its recommended view, 1920 x 1080 on
-the owner's display), centred and clipped in the main window, and the drags
-and wheel work on the 3D window as on the viewport. Once Stereo is on, the
-view is woven (first light,
-`src/common/StereoModelEyes.pas`, `TPeardoxGorillaEyes`): each frame the
-orbital camera's Gorilla3D camera is moved once per eye, sideways and up or
-down by the eye's offset from the view's centre times target depth / eye
-distance, turned (both alike, from the midpoint between the eyes), rendered
-(`RenderManual`) and captured (`MakeScreenshot`); each picture is shifted
-sideways by its eye's half of the separation, which is the off-axis frustum
-built from Gorilla3D's symmetric one (a thin black strip at the outer
-edges), and the pair goes side by side to `TPeardoxLeiaSR.SubmitViews`; the
-camera is put back. The target's depth is the plane on the glass. Frames
-are drawn whenever the program is idle, paced by the display's vertical
-blank. Each eye is woven no wider than the display's recommended view (1920
-pixels on the owner's 4K display): a full-screen 3840-wide picture is
-halved as it is copied, a quarter of the bytes to copy and upload. Keys
-(once per press, however long the key is held; on Windows through a thread keyboard hook, as SRDelphiFMX's SRDemoFMX does, and only while the main window or the 3D window is active) while testing: **S** swaps the eyes (if near things look far),
-**T** switches to toe-in (each camera turned to the target, no strip but
-mismatched corners) and back, **X** reverses the shift (reversed is now the
-default, from the owner's test), **L** steps the weaver's latency (0, SR's
-own, then 1 to 4 frames: how far ahead SR predicts the eyes; our frames are
-read back through the CPU, so a frame or two behind), **[** and **]** make
-the eye separation 5 mm smaller or larger (both saved in the LeiaSR
-settings), **Home** puts the view back, **Z** switches zero copy off and on
-(on, the default, where the bridge has `srb_GetDevice` and OpenGL has
-`WGL_NV_DX_interop2`: each eye Gorilla3D draws is copied on the GPU into a
-Direct3D 11 texture on the bridge's device, the right way up and shifted,
-and woven from there - no screenshot, no copy through the CPU, no upload;
-off, or where it cannot be, the screenshots as before), **F** turns zero
-copy's row flip off and on (a test switch: on, the default, OpenGL's
-bottom-up rows are turned over for Direct3D), **C** turns the bridge's frame cap
-on and off (on: it waits for the SR display's vertical blank after each
-frame, which cost 8 fps here; off, the default, it does not; vsync stays on,
-so no tearing; saved as `FrameCap` in the LeiaSR settings), **P** writes a snapshot to the log
-(one block between `=== SNAPSHOT ===` lines, in the same terms as
-SRDelphiFMX's SRDemoFMX writes with its own P: the display, the view on it,
-the eyes, the settings, the camera, the world-to-mm scale, the frame rate),
-for comparing a view that looks right there with this one, **R** switches
-`RenderManual` before each screenshot on and off (the log's timings show
-whether `MakeScreenshot` renders by itself). The log gives, once a second,
-the frame rate, the time each stage takes, the view size and the offsets.
+running so the next time is quick. While Stereo is on, the viewport is
+rendered at the render scale (2 by default) times the size the display
+weaves each eye at (its recommended view, 1920 x 1080 on the owner's
+display, so 3840 x 2160), off screen, and
+the drags and wheel work on the 3D window (through the bridge's
+window, which passes the mouse on) and on the launcher's cover as on the
+viewport; a right drag moves the target, the depth that sits on the glass,
+nearer or further with the camera still, so the model comes out of the
+screen or goes behind it. Once Stereo is
+on, the view is woven (`src/common/StereoModelEyes.pas`,
+`TPeardoxGorillaEyes`), each eye from where it really is, as SRDelphiFMX's
+SRDemoFMX does it (the per-eye off-axis view): the target's depth is the
+glass, the view's rectangle on the display fills the camera's field of view
+there, which sets how many scene units a millimetre is, and each frame the
+orbital camera's Gorilla3D camera is put once per eye at the tracked eye's
+place in those units, looking straight ahead, and rendered
+(`RenderManual`). From there the glass is off to one side and smaller than
+the picture: that part of the picture is cut out and scaled to the woven
+view, which is exactly what the eye sees through the glass (SRDemoFMX does
+it in FMX's view matrix; Gorilla3D 1.5.3 takes no matrix of ours, so it is
+done in the copy, and the picture is rendered twice the size so the part
+stays sharp). Where it can (zero copy: the bridge has `srb_GetDevice` and
+OpenGL has `WGL_NV_DX_interop2`) the part is copied on the GPU straight
+into a Direct3D 11 texture on the bridge's device, the right way up, and
+woven from there: no screenshot, no copy through the CPU, no upload (about
+100 fps on the owner's laptop against 40 with screenshots). Elsewhere each
+eye is captured (`MakeScreenshot`) and the part copied through the CPU.
+The camera is put back after each frame. Frames are drawn whenever the
+program is idle. Keys (once per press, however long the key is held; on
+Windows through a thread keyboard hook, as SRDelphiFMX's SRDemoFMX does,
+and only while the main window or the 3D window is active): **L** steps the
+weaver's latency (0, SR's own, then 1 to 4 frames: how far ahead SR
+predicts the eyes), **[** and **]** make the eye separation 5 mm smaller or
+larger, **C** turns the bridge's frame cap on and off (on: it waits for the
+SR display's vertical blank after each frame, which cost frames here; off,
+the default, it does not; vsync stays on, so no tearing), **V** turns the
+per-eye view off and on (off: each eye is drawn from the camera's own
+distance in the direction the real eye is, so the whole picture is woven
+at the view's size: full speed, about 100 fps against 46-48 on the owner's
+laptop, the depth exaggerated as the viewer moves back), **,** and **.**
+make the render scale 0.25 smaller or larger (1 to 2; used only with the
+per-eye view: 1 is fast and softer, 2 sharp), **M** turns hiding the mouse
+pointer over the SR display off and on (hidden by default), **W** turns
+weaving off and on (off: one flat view from between the tracked eyes for
+both, with the lens off, so a screen recording catches it and the view
+still follows the head) - all saved in the LeiaSR settings (`FrameCap`,
+`PerEyeView`, `RenderScale`, `HideCursor`, `Weave`) -, **Home** puts the
+view back, **P** writes a
+snapshot to the log (one block between `=== SNAPSHOT ===` lines, in the
+same terms as SRDelphiFMX's SRDemoFMX writes with its own P: the display,
+the view on it, the eyes, the settings, the camera, the world-to-mm scale,
+each eye's camera and part of the picture, the frame rate), for comparing a
+view that looks right there with this one. The log gives, once a second,
+the frame rate, the time each stage takes, the view size and each eye's
+part of the picture.
 SR's own lines also log,
 the SR platform, the display, where the view lies on it, SR's events and
 the eyes once a second. The lens is on exactly while Stereo is, so there is

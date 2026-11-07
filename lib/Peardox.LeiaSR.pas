@@ -201,6 +201,8 @@ type
     FCanReadLens: Boolean;
     //** @abstract(See Weaving.)
     FWeaving: Boolean;
+    //** @abstract(See Flat.)
+    FFlat: Boolean;
     //** @abstract(SubmitViews calls since the last periodic log line.)
     FSubmits: Integer;
     //** @abstract(Of FSubmits: woven, shown flat (SR unavailable), hidden window, failed.)
@@ -250,6 +252,10 @@ type
     //**
     //** @param(AValue True to weave.)
     procedure SetWeaving(const AValue: Boolean);
+    //** @abstract(Sets Flat: the lens off while weaving if True, on if False.)
+    //**
+    //** @param(AValue True for flat.)
+    procedure SetFlat(const AValue: Boolean);
     //** @abstract(Sets LensState, logging and raising OnLensChange when it changes.)
     //**
     //** @param(AValue The lens's new state.)
@@ -364,25 +370,6 @@ type
     //**
     //** @returns(True if SR is running and the bridge answered.)
     function UpdateEyes: Boolean;
-    //** @abstract(Weaves and presents one frame: a side-by-side image, the left eye's view in
-    //** the left half, the right eye's in the right.)
-    //**
-    //** Only while Weaving. The bridge stretches each view to its window over Control. The
-    //** results are counted and summed up in the periodic log line.
-    //**
-    //** @param(APixels The image: AViewHeight rows of 2 * AViewWidth pixels, 4 bytes each.)
-    //**
-    //** @param(AViewWidth Width of ONE eye's view in pixels.)
-    //**
-    //** @param(AViewHeight Height in pixels.)
-    //**
-    //** @param(APitch Bytes from one row to the next.)
-    //**
-    //** @param(ARGBA True if the bytes are red, green, blue, alpha; False (the default) for
-    //** blue, green, red, alpha, as FMX bitmaps on Windows.)
-    //**
-    //** @returns(The bridge's answer: SRB_OK (woven), SRB_S_2D_FALLBACK, SRB_S_OCCLUDED, or a
-    //** negative error; SRB_E_NOT_INITIALIZED while not Weaving.)
     //** @abstract(Zero copy: weaves two eye textures already on the bridge's device
     //** (BridgeDevice), copying them on the GPU (srb_CopyEyeTexture, srb_PresentViews); the
     //** results are counted and logged as SubmitViews's.)
@@ -403,6 +390,25 @@ type
     //**
     //** @returns(An ID3D11Device, or nil.)
     function BridgeDevice: Pointer;
+    //** @abstract(Weaves and presents one frame: a side-by-side image, the left eye's view in
+    //** the left half, the right eye's in the right.)
+    //**
+    //** Only while Weaving. The bridge stretches each view to its window over Control. The
+    //** results are counted and summed up in the periodic log line.
+    //**
+    //** @param(APixels The image: AViewHeight rows of 2 * AViewWidth pixels, 4 bytes each.)
+    //**
+    //** @param(AViewWidth Width of ONE eye's view in pixels.)
+    //**
+    //** @param(AViewHeight Height in pixels.)
+    //**
+    //** @param(APitch Bytes from one row to the next.)
+    //**
+    //** @param(ARGBA True if the bytes are red, green, blue, alpha; False (the default) for
+    //** blue, green, red, alpha, as FMX bitmaps on Windows.)
+    //**
+    //** @returns(The bridge's answer: SRB_OK (woven), SRB_S_2D_FALLBACK, SRB_S_OCCLUDED, or a
+    //** negative error; SRB_E_NOT_INITIALIZED while not Weaving.)
     function SubmitViews(APixels: Pointer; AViewWidth, AViewHeight, APitch: Integer;
       ARGBA: Boolean = False): Integer;
     //** @abstract(The SR display's properties, while SR runs.)
@@ -457,6 +463,10 @@ type
     //** display's lens is on. Set it when a renderer starts handing frames to SubmitViews, and
     //** clear it when it stops; only possible while Running, and cleared by Stop.)
     property Weaving: Boolean read FWeaving write SetWeaving;
+    //** @abstract(True to keep the display's lens off while Weaving, for a renderer that hands
+    //** the same view to both eyes: an ordinary flat picture, which a screen recording can
+    //** catch. False (the default) for glasses-free 3D. It can be changed while weaving.)
+    property Flat: Boolean read FFlat write SetFlat;
   published
     //** @abstract(The view SR is for: the bridge's window is put over it, and its place on the
     //** display is what the eyes will look through. Normally the Gorilla3D viewport.)
@@ -948,6 +958,22 @@ begin
     FOnStopped(Self);
 end;
 
+procedure TPeardoxLeiaSR.SetFlat(const AValue: Boolean);
+begin
+  if AValue = FFlat then
+    Exit;
+  FFlat := AValue;
+  if not FWeaving then
+    Exit;
+  {$IFDEF MSWINDOWS}
+  srb_SetLens(Ord(not FFlat));
+  {$ENDIF}
+  if FFlat then
+    Log('Flat: the lens is asked off while weaving')
+  else
+    Log('Glasses-free 3D: the lens is asked on while weaving');
+end;
+
 procedure TPeardoxLeiaSR.SetWeaving(const AValue: Boolean);
 begin
   if (AValue = FWeaving) or (AValue and not Running) then
@@ -957,11 +983,13 @@ begin
   // The window over Control shows the woven frames; the lens makes them 3D
   // (and blurs everything else on the panel)
   srb_SetVisible(Ord(AValue));
-  srb_SetLens(Ord(AValue));
+  srb_SetLens(Ord(AValue and not FFlat));
   {$ENDIF}
   FSubmits := 0;
   FillChar(FSubmitResults, SizeOf(FSubmitResults), 0);
-  if AValue then
+  if AValue and FFlat then
+    Log('Weaving flat: the bridge''s window covers the view and the lens stays off')
+  else if AValue then
     Log('Weaving: the bridge''s window covers the view and the lens is asked to come on')
   else
     Log('Not weaving: the bridge''s window is hidden and the lens asked off');
@@ -1346,10 +1374,12 @@ begin
     Log('SR display''s place on the desktop not known');
   Log(Format('Settings: eye separation %.1f mm (0 = tracked), look-around %s, latency %d ' +
     'frames (0 = SR''s), lens mode %d (0 off over controls, 1 on, 2 off), full screen %s, ' +
-    'frame cap %s',
+    'frame cap %s, per-eye view %s, render scale %.2f, hide cursor %s, weave %s',
     [FSettings.EyeSeparationMM, BoolToStr(FSettings.LookAround, True), FSettings.LatencyFrames,
      FSettings.LensMode, BoolToStr(FSettings.FullScreen, True),
-     BoolToStr(FSettings.FrameCap, True)]));
+     BoolToStr(FSettings.FrameCap, True), BoolToStr(FSettings.PerEyeView, True),
+     FSettings.RenderScale, BoolToStr(FSettings.HideCursor, True),
+     BoolToStr(FSettings.Weave, True)]));
   Log('Nothing woven until a renderer sets Weaving: the bridge''s window is hidden and the ' +
     'lens off');
 end;

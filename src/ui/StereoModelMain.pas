@@ -164,6 +164,12 @@ type
     //** @abstract(Fires STEREO_WATCH_MS after weaving starts: if nothing has been woven by
     //** then, Stereo is turned off, so a black full-screen window on top cannot trap the user.)
     FStereoWatch: TTimer;
+    //** @abstract(Checks every CURSOR_CHECK_MS while Stereo is on whether the mouse pointer is
+    //** over the SR display, and hides it there if the LeiaSR setting HideCursor says so.)
+    FCursorTimer: TTimer;
+    //** @abstract(True while this program has the pointer hidden (one ShowCursor(False) to
+    //** undo).)
+    FCursorHidden: Boolean;
     //** @abstract(True once the test model's load has been queued, so FormShow queues it
     //** only once.)
     FLoadQueued: Boolean;
@@ -275,21 +281,32 @@ type
     procedure StereoWatchTimer(Sender: TObject);
     //** @abstract(Starts the eyes and FStereoWatch.)
     procedure StartWeaving;
+    //** @abstract(FCursorTimer OnTimer: the pointer hidden while it is over the SR display in
+    //** Stereo and HideCursor is set, shown otherwise.)
+    //**
+    //** @param(Sender FCursorTimer.)
+    procedure CursorTimer(Sender: TObject);
+    //** @abstract(Hides or shows the mouse pointer, once each way (Windows' ShowCursor keeps a
+    //** count).)
+    //**
+    //** @param(AHide True to hide it.)
+    procedure SetCursorHidden(AHide: Boolean);
     //** @abstract(FEyes' log: every line to the status strip and the log file.)
     //**
     //** @param(Sender FEyes.)
     //**
     //** @param(AText The line.)
     procedure EyesLog(Sender: TObject; const AText: string);
-    //** @abstract(Keys while testing glasses-free 3D, acted on once a press however long it is
-    //** held: S swaps the eyes (for depth that comes out inverted),
-    //** T switches between shifted parallel cameras and toe-in, X reverses the shift, R
-    //** switches RenderManual before each screenshot on and off, L steps the weaver's latency
-    //** (0 to LATENCY_MAX_FRAMES), [ and ] the eye separation by EYE_SEPARATION_STEP_MM (both
-    //** saved), Home puts the view back (the test view for the test scene), P logs a snapshot
-    //** of everything that sets the view (as SRDemoFMX's P does), Z switches zero copy off and
-    //** on, F turns zero copy's row flip off and on, Esc turns Stereo off (while it is on), C turns the bridge's frame cap off and on (the wait for the SR display's vertical blank after each frame; saved,
-    //** off by default).)
+    //** @abstract(The keys for glasses-free 3D, acted on once a press however long it is
+    //** held: L steps the weaver's latency (0 to LATENCY_MAX_FRAMES), [ and ] the eye
+    //** separation by EYE_SEPARATION_STEP_MM, C turns the bridge's frame cap off and on (the
+    //** wait for the SR display's vertical blank after each frame; off by default), V the
+    //** per-eye view (off: full speed), comma and full stop the render scale down and up by
+    //** RENDER_SCALE_STEP, M hiding the mouse pointer over the SR display, W weaving (off: one
+    //** flat view, lens off, for screen recordings) - all saved -, Home puts the view back
+    //** (the test view for the test scene), P logs a snapshot
+    //** of everything that sets the view (as SRDemoFMX's P does), Esc turns Stereo off (while
+    //** it is on).)
     //**
     //** @param(Sender The form.)
     //**
@@ -302,7 +319,8 @@ type
     procedure FormKeyUp(Sender: TObject; var Key: Word; var KeyChar: WideChar;
       Shift: TShiftState);
     {$ENDIF}
-    //** @abstract(Does what a test key does (see FormKeyUp for the keys).)
+    //** @abstract(Does what a key does (the keys are listed at FormKeyUp's comment and in
+    //** IsTestKey).)
     //**
     //** @param(AKey The key's virtual key code.)
     procedure HandleKey(AKey: Word);
@@ -310,7 +328,7 @@ type
     //**
     //** @param(AKey The key's virtual key code.)
     //**
-    //** @returns(True for S, T, X, L, [, ], P, Home, R and C.)
+    //** @returns(True for L, [, ], P, Home, C, V, comma, full stop, M and W.)
     class function IsTestKey(AKey: Word): Boolean; static;
     //** @abstract(Loads a model file into the viewport in place of the one shown, stands it
     //** upright and frames it.)
@@ -479,6 +497,27 @@ const
   HWND_TOPMOST = High(NativeUInt);
   //** @abstract(SetWindowPos: show the window.)
   SWP_SHOWWINDOW = $0040;
+  //** @abstract(GetWindow: the first child.)
+  GW_CHILD = 5;
+  //** @abstract(GetWindow: the next window at the same level.)
+  GW_HWNDNEXT = 2;
+  //** @abstract(Window message: which part of the window the pointer is over.)
+  WM_NCHITTEST = $0084;
+  //** @abstract(Window message: the window's last.)
+  WM_NCDESTROY = $0082;
+  //** @abstract(WM_NCHITTEST answer: look at the window underneath, in the same thread.)
+  HTTRANSPARENT = -1;
+  //** @abstract(The id PassMouseThrough is installed under.)
+  PASS_MOUSE_SUBCLASS_ID = 1;
+function ShowCursor(bShow: LongBool): Integer; stdcall; external 'user32.dll';
+function GetWindow(hWnd: NativeUInt; uCmd: Cardinal): NativeUInt; stdcall; external 'user32.dll';
+function SetWindowSubclass(hWnd: NativeUInt; pfnSubclass: Pointer; uIdSubclass,
+  dwRefData: NativeUInt): LongBool; stdcall; external 'comctl32.dll';
+function RemoveWindowSubclass(hWnd: NativeUInt; pfnSubclass: Pointer;
+  uIdSubclass: NativeUInt): LongBool; stdcall; external 'comctl32.dll';
+function DefSubclassProc(hWnd: NativeUInt; uMsg: Cardinal; wParam: NativeUInt;
+  lParam: NativeInt): NativeInt; stdcall; external 'comctl32.dll';
+function GetCursorPos(out lpPoint: TPoint): LongBool; stdcall; external 'user32.dll';
 function GetCurrentThreadId: Cardinal; stdcall; external 'kernel32.dll';
 function GetLastError: Cardinal; stdcall; external 'kernel32.dll';
 {$ENDIF}
@@ -508,6 +547,34 @@ begin
   Result := CallNextHookEx(KeyHook, Code, WParam, LParam);
 end;
 
+//** @abstract(Window subclass for the bridge's child window: the mouse passes through it to
+//** the 3D window underneath, so drags and the wheel reach FMX while Stereo is on (owner, 22:59:
+//** "right click + drag still doesn't work" - the bridge's window covers the view and took
+//** every mouse message).)
+//**
+//** @param(hWnd The bridge's window.)
+//**
+//** @param(uMsg The message.)
+//**
+//** @param(wParam Its first parameter.)
+//**
+//** @param(lParam Its second parameter.)
+//**
+//** @param(uIdSubclass PASS_MOUSE_SUBCLASS_ID.)
+//**
+//** @param(dwRefData Not used.)
+//**
+//** @returns(HTTRANSPARENT for WM_NCHITTEST, otherwise what the window itself answers.)
+function PassMouseThrough(hWnd: NativeUInt; uMsg: Cardinal; wParam: NativeUInt;
+  lParam: NativeInt; uIdSubclass, dwRefData: NativeUInt): NativeInt; stdcall;
+begin
+  if uMsg = WM_NCHITTEST then
+    Exit(HTTRANSPARENT);
+  if uMsg = WM_NCDESTROY then
+    RemoveWindowSubclass(hWnd, @PassMouseThrough, PASS_MOUSE_SUBCLASS_ID);
+  Result := DefSubclassProc(hWnd, uMsg, wParam, lParam);
+end;
+
 //** @abstract(Installs the keyboard hook for this thread, reporting to AForm.)
 //**
 //** @param(AForm The form whose HookKey sees the keys.)
@@ -519,7 +586,7 @@ begin
     LogLine(Format('Keyboard hook NOT installed (error %d): the test keys will not work',
       [GetLastError]))
   else
-    LogLine('Keyboard hook installed: S T X L [ ] P Home R C Z F');
+    LogLine('Keyboard hook installed: L [ ] C V , . M W P Home Esc');
 end;
 
 //** @abstract(Removes the keyboard hook; the form no longer sees keys.)
@@ -552,6 +619,10 @@ const
   TEST_VIEW_DEPTH = 42;
   //** @abstract(Millimetres the [ and ] keys change the eye separation by.)
   EYE_SEPARATION_STEP_MM = 5;
+  //** @abstract(How often FCursorTimer checks where the mouse pointer is, ms.)
+  CURSOR_CHECK_MS = 100;
+  //** @abstract(The step the , and . keys change the render scale by.)
+  RENDER_SCALE_STEP = 0.25;
   //** @abstract(The smallest eye separation the keys go to, millimetres.)
   EYE_SEPARATION_MIN_MM = 20;
   //** @abstract(The largest eye separation the keys go to, millimetres.)
@@ -595,11 +666,6 @@ const
   ANIMATION_BOX_WIDTH = 180;
   //** @abstract(FAnimationBox's first entry: no animation playing.)
   NO_ANIMATION = '(none)';
-  //** @abstract(The view each eye is rendered at in Stereo when the display does not say,
-  //** physical pixels.)
-  STEREO_VIEW_WIDTH = 1920;
-  //** @abstract(See STEREO_VIEW_WIDTH.)
-  STEREO_VIEW_HEIGHT = 1080;
   //** @abstract(How long after weaving starts the first frame must have been woven, ms.)
   STEREO_WATCH_MS = 3000;
   //** @abstract(Gap at the status line's left, in pixels.)
@@ -719,7 +785,13 @@ begin
   FStereoCover.Fill.Kind := TBrushKind.Solid;
   FStereoCover.Fill.Color := $FF202428;
   FStereoCover.Stroke.Kind := TBrushKind.None;
-  FStereoCover.HitTest := False;
+  // Drags and the wheel on the cover work on the view too, so the launcher
+  // can move the view while Stereo shows it on the SR display
+  FStereoCover.HitTest := True;
+  FStereoCover.OnMouseDown := ViewMouseDown;
+  FStereoCover.OnMouseMove := ViewMouseMove;
+  FStereoCover.OnMouseUp := ViewMouseUp;
+  FStereoCover.OnMouseWheel := ViewMouseWheel;
   FStereoCover.Visible := False;
   FStereoNote := TLabel.Create(Self);
   FStereoNote.Parent := FStereoCover;
@@ -734,6 +806,10 @@ begin
   FStereoWatch.Enabled := False;
   FStereoWatch.Interval := STEREO_WATCH_MS;
   FStereoWatch.OnTimer := StereoWatchTimer;
+  FCursorTimer := TTimer.Create(Self);
+  FCursorTimer.Enabled := False;
+  FCursorTimer.Interval := CURSOR_CHECK_MS;
+  FCursorTimer.OnTimer := CursorTimer;
 end;
 
 procedure TForm2.FillAnimations;
@@ -903,6 +979,7 @@ begin
     Hide;
   FStereoOn := True;
   btnStereo.IsPressed := True;
+  FCursorTimer.Enabled := True;
   {$IFDEF MSWINDOWS}
   // Owner (19:53): black, and the bridge's window measured 0 x 0 mm at the
   // panel's corner, as a window that no longer exists would: FMX had made
@@ -938,12 +1015,38 @@ begin
   Result := True;
 end;
 
+procedure TForm2.SetCursorHidden(AHide: Boolean);
+begin
+  if AHide = FCursorHidden then
+    Exit;
+  FCursorHidden := AHide;
+  {$IFDEF MSWINDOWS}
+  // Over this thread's windows, the bridge's child window included
+  ShowCursor(not AHide);
+  {$ENDIF}
+end;
+
+procedure TForm2.CursorTimer(Sender: TObject);
+{$IFDEF MSWINDOWS}
+var
+  P: TPoint;
+  R: TRect;
+{$ENDIF}
+begin
+  {$IFDEF MSWINDOWS}
+  SetCursorHidden(FStereoOn and FLeiaSR.Settings.HideCursor and GetCursorPos(P) and
+    FLeiaSR.DisplayRect(R) and R.Contains(P));
+  {$ENDIF}
+end;
+
 procedure TForm2.LeaveStereo;
 begin
   if not FStereoOn then
     Exit;
   FStereoOn := False;
   FStereoWatch.Enabled := False;
+  FCursorTimer.Enabled := False;
+  SetCursorHidden(False);
   FEyes.Stop;
   FOutput.Hide;
   SizeViewForStereo(False);
@@ -1013,17 +1116,19 @@ begin
   try
     if AOn then
     begin
-      // Each eye is rendered at the size the display weaves it at, not this
-      // window's: a quarter of the pixels of a 4K window to render, read
-      // back and copy
-      W := STEREO_VIEW_WIDTH;
-      H := STEREO_VIEW_HEIGHT;
+      // Each eye is rendered at FEyes.RenderScale times the view the
+      // display weaves, whatever this window's size: the glass takes up only
+      // part of each eye's picture, which is cut out and scaled to the view
+      W := PEARDOX_EYES_DEFAULT_VIEW_WIDTH;
+      H := PEARDOX_EYES_DEFAULT_VIEW_HEIGHT;
       if FLeiaSR.DisplayInfo(Info) and (Info.recommendedViewWidth > 0) and
         (Info.recommendedViewHeight > 0) then
       begin
         W := Info.recommendedViewWidth;
         H := Info.recommendedViewHeight;
       end;
+      W := W * FEyes.RenderScale;
+      H := H * FEyes.RenderScale;
       // Where this window stays in sight, the viewport goes onto FRenderForm,
       // which is never seen. Owner (20:02, 20:15): on another monitor the
       // main window flashed horribly however the viewport was hidden in it -
@@ -1089,9 +1194,25 @@ begin
 end;
 
 procedure TForm2.LeiaSRStarted(Sender: TObject);
+{$IFDEF MSWINDOWS}
+var
+  Child: NativeUInt;
+  N: Integer;
+{$ENDIF}
 begin
   {$IFDEF MSWINDOWS}
   FSRParent := FormToHWND(FOutput);
+  // The bridge's window is the 3D window's only native child: the mouse is
+  // passed through it to the 3D window (FOutputHost's handlers)
+  N := 0;
+  Child := GetWindow(FSRParent, GW_CHILD);
+  while Child <> 0 do
+  begin
+    if SetWindowSubclass(Child, @PassMouseThrough, PASS_MOUSE_SUBCLASS_ID, 0) then
+      Inc(N);
+    Child := GetWindow(Child, GW_HWNDNEXT);
+  end;
+  ShowStatus(Format('Mouse passed through %d window(s) of the bridge to the 3D window', [N]));
   {$ENDIF}
   btnStereo.Enabled := True;
   // Started again on a new 3D window (see EnterStereo): weave now
@@ -1132,7 +1253,7 @@ end;
 class function TForm2.IsTestKey(AKey: Word): Boolean;
 begin
   case AKey of
-    vkS, vkT, vkX, vkL, vkLeftBracket, vkRightBracket, vkP, vkHome, vkR, vkC, vkZ, vkF:
+    vkL, vkLeftBracket, vkRightBracket, vkP, vkHome, vkC, vkV, vkComma, vkPeriod, vkM, vkW:
       Result := True;
   else
     Result := False;
@@ -1177,30 +1298,9 @@ end;
 
 procedure TForm2.HandleKey(AKey: Word);
 var
-  Sep: Double;
+  Sep, Scale: Double;
 begin
   case AKey of
-    vkS:
-      begin
-        FEyes.SwapEyes := not FEyes.SwapEyes;
-        ShowStatus('Eyes swapped: ' + BoolToStr(FEyes.SwapEyes, True));
-      end;
-    vkT:
-      begin
-        if FEyes.Convergence = ecShift then
-          FEyes.Convergence := ecToeIn
-        else
-          FEyes.Convergence := ecShift;
-        if FEyes.Convergence = ecShift then
-          ShowStatus('Convergence: parallel cameras, pictures shifted (off-axis)')
-        else
-          ShowStatus('Convergence: toe-in (each camera turned to the target)');
-      end;
-    vkX:
-      begin
-        FEyes.ShiftSign := -FEyes.ShiftSign;
-        ShowStatus(Format('Shift sign %d', [FEyes.ShiftSign]));
-      end;
     vkL:
       begin
         // 0 (SR's own) .. LATENCY_MAX_FRAMES, round and round
@@ -1230,21 +1330,6 @@ begin
         TestView
       else
         ResetView;
-    vkZ:
-      begin
-        // Zero copy against screenshots, to compare (StereoCam48)
-        FEyes.ZeroCopy := not FEyes.ZeroCopy;
-        ShowStatus('Zero copy (OpenGL to Direct3D on the GPU): ' +
-          BoolToStr(FEyes.ZeroCopy, True));
-      end;
-    vkF:
-      begin
-        // Zero copy's rows turned over or not (owner, 21:31: a picture, but
-        // misaligned)
-        FEyes.ZeroCopyFlip := not FEyes.ZeroCopyFlip;
-        ShowStatus('Zero copy rows turned over for Direct3D: ' +
-          BoolToStr(FEyes.ZeroCopyFlip, True));
-      end;
     vkC:
       begin
         // Owner's Release log (19:27): off, submit 8 -> 0.9 ms and 24 -> 32
@@ -1252,11 +1337,45 @@ begin
         FLeiaSR.SetFrameCap(not FLeiaSR.Settings.FrameCap);
         FLeiaSR.SaveSettings;
       end;
-    vkR:
+    vkV, vkComma, vkPeriod:
       begin
-        FEyes.RenderBeforeShot := not FEyes.RenderBeforeShot;
-        ShowStatus('RenderManual before each screenshot: ' +
-          BoolToStr(FEyes.RenderBeforeShot, True));
+        // The per-eye view on and off (off: full speed), and its render
+        // scale (owner, 22:37); the viewport is made the new size at once
+        if AKey = vkV then
+          FLeiaSR.Settings.PerEyeView := not FLeiaSR.Settings.PerEyeView
+        else
+        begin
+          Scale := EnsureRange(FLeiaSR.Settings.RenderScale, PEARDOX_MIN_RENDER_SCALE,
+            PEARDOX_MAX_RENDER_SCALE);
+          if AKey = vkComma then
+            Scale := Scale - RENDER_SCALE_STEP
+          else
+            Scale := Scale + RENDER_SCALE_STEP;
+          FLeiaSR.Settings.RenderScale := EnsureRange(Scale, PEARDOX_MIN_RENDER_SCALE,
+            PEARDOX_MAX_RENDER_SCALE);
+        end;
+        FLeiaSR.SaveSettings;
+        if FStereoOn then
+          SizeViewForStereo(True);
+        ShowStatus(Format('Per-eye view %s, render scale %.2f (used: %.2f)',
+          [IfThenStr(FLeiaSR.Settings.PerEyeView, 'on', 'off (full speed)'),
+          FLeiaSR.Settings.RenderScale, FEyes.RenderScale]));
+      end;
+    vkM:
+      begin
+        FLeiaSR.Settings.HideCursor := not FLeiaSR.Settings.HideCursor;
+        FLeiaSR.SaveSettings;
+        CursorTimer(nil);
+        ShowStatus('Mouse pointer hidden over the SR display: ' +
+          BoolToStr(FLeiaSR.Settings.HideCursor, True));
+      end;
+    vkW:
+      begin
+        // Off: one flat view, lens off, for screen recordings (owner, 22:37)
+        FLeiaSR.Settings.Weave := not FLeiaSR.Settings.Weave;
+        FLeiaSR.SaveSettings;
+        ShowStatus(IfThenStr(FLeiaSR.Settings.Weave, 'Weave on: glasses-free 3D',
+          'Weave off: one flat view from between the eyes, the lens off (for recording)'));
       end;
   end;
 end;

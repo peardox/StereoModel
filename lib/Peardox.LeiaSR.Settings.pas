@@ -35,6 +35,13 @@ const
   //** @abstract(Default for TPeardoxLeiaSRSettings.EyeSeparationMM: the usual adult separation,
   //** as in SRDelphiFMX.)
   PEARDOX_DEFAULT_EYE_SEPARATION_MM = 63.0;
+  //** @abstract(Default for TPeardoxLeiaSRSettings.RenderScale: sharp at a normal viewing
+  //** distance.)
+  PEARDOX_DEFAULT_RENDER_SCALE = 2.0;
+  //** @abstract(The smallest TPeardoxLeiaSRSettings.RenderScale a renderer uses.)
+  PEARDOX_MIN_RENDER_SCALE = 1.0;
+  //** @abstract(The largest TPeardoxLeiaSRSettings.RenderScale a renderer uses.)
+  PEARDOX_MAX_RENDER_SCALE = 2.0;
 
 type
   //** @abstract(The saved LeiaSR settings.)
@@ -57,6 +64,14 @@ type
     FFullScreen: Boolean;
     //** @abstract(See FrameCap.)
     FFrameCap: Boolean;
+    //** @abstract(See PerEyeView.)
+    FPerEyeView: Boolean;
+    //** @abstract(See RenderScale.)
+    FRenderScale: Double;
+    //** @abstract(See HideCursor.)
+    FHideCursor: Boolean;
+    //** @abstract(See Weave.)
+    FWeave: Boolean;
   public
     //** @abstract(Creates the settings with their defaults, for the file DefaultFileName
     //** names.)
@@ -96,6 +111,24 @@ type
     //** and drops to half the refresh rate or below: StereoModel went from 24 to 32 fps with
     //** it off, and looked no different (owner, 7 November 2026).
     property FrameCap: Boolean read FFrameCap write FFrameCap;
+    //** @abstract(True (the default) to draw each eye from where it really is, as
+    //** SRDelphiFMX's SRDemoFMX does: the per-eye off-axis view, true to the viewer's distance,
+    //** with the scene rendered RenderScale times the view's size so the glass's part of it
+    //** stays sharp. False for full speed: each eye drawn from the orbit camera's distance in
+    //** the direction the real eye is, at the view's size, the depth exaggerated as the viewer
+    //** moves back.)
+    property PerEyeView: Boolean read FPerEyeView write FPerEyeView;
+    //** @abstract(How many times the woven view's size, each way, a renderer draws the scene
+    //** at for PerEyeView, from PEARDOX_MIN_RENDER_SCALE (fast, softer) to
+    //** PEARDOX_MAX_RENDER_SCALE (sharp); default PEARDOX_DEFAULT_RENDER_SCALE.)
+    property RenderScale: Double read FRenderScale write FRenderScale;
+    //** @abstract(True (the default) to hide the mouse pointer while it is over the SR display
+    //** and the view is woven there.)
+    property HideCursor: Boolean read FHideCursor write FHideCursor;
+    //** @abstract(True (the default) to weave in glasses-free 3D; False to show one flat view,
+    //** drawn from between the tracked eyes, with the lens off. A screen recording cannot catch
+    //** the woven picture, but it catches the flat one, and the view still follows the head.)
+    property Weave: Boolean read FWeave write FWeave;
   end;
 
 implementation
@@ -115,6 +148,10 @@ begin
   FLensMode := 0;
   FFullScreen := False;
   FFrameCap := False;
+  FPerEyeView := True;
+  FRenderScale := PEARDOX_DEFAULT_RENDER_SCALE;
+  FHideCursor := True;
+  FWeave := True;
 end;
 
 class function TPeardoxLeiaSRSettings.DefaultFileName: string;

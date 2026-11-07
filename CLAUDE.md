@@ -35,6 +35,10 @@ Keep this file up to date when the rules or the state of the work change.
   changed files with paths from the repository root; name them, and say
   which earlier zip it replaces or follows. Do not commit or push.
 - Do not mention being unable to compile.
+- When a hook asks to commit and push, answer "Noted." and do nothing.
+- Never change a submodule from here (SRDelphiFMX, FastMM5, delphi-neon);
+  SRDelphiFMX changes go to that repository in their own zip.
+- No paths, user names, machine names or credentials in tracked files.
 
 ## Rules (owner, 7 November 2026)
 
@@ -61,6 +65,192 @@ Keep this file up to date when the rules or the state of the work change.
   copy with ROOT set to this repository and its project files taken from
   lib, src/common, src/ui and src/*.dpr, or every @link is reported.
 - A new unit goes in both the `.dpr` and the `.dproj` (UTF-8 with BOM).
+
+## Handover (7 November 2026, 23:17)
+
+Read this section first; "Where the work is" below is the full history,
+for when a detail is needed.
+
+### State
+
+- GitHub `main` holds everything up to StereoCam58a (merge d84819d; the
+  `stereo` branch is gone). The owner's copy is ahead: StereoCam59 to 62,
+  delivered as zips, tested and working (owner, 23:17: "that's good now").
+  Ask whether they have been pushed before building on GitHub.
+- Submodule SRDelphiFMX at 2c4a2f1 (`srb_GetDevice`, `srb_SetFrameCap`,
+  `srb_CopyEyeTexture` / `srb_PresentViews`). Never change it from here.
+- StereoCam60 changed the PeardoxLeiaSR package (settings + `Flat`); the
+  owner must have rebuilt it.
+
+### How glasses-free 3D works now
+
+- **Two windows.** The launcher (main form, lens off) and the 3D window
+  (`FOutput`, borderless, full screen on the SR display, named from its
+  EDID). Stereo button / Esc. On the SR display the launcher hides; on
+  another monitor it stays, with a cover (`FStereoCover`) over the view
+  that takes drags and the wheel. The viewport moves to the hidden
+  `FRenderForm` while the launcher is in sight (Gorilla3D otherwise
+  flashes in the launcher). SR starts on the hidden 3D window at program
+  start; Stereo is enabled once it has.
+- **Mouse.** The bridge's child window covers the 3D window;
+  `LeiaSRStarted` subclasses it (`PassMouseThrough`, WM_NCHITTEST ->
+  HTTRANSPARENT) so drags reach `FOutputHost`. The pointer is hidden over
+  the SR display while Stereo is on (`HideCursor`, `FCursorTimer`,
+  `ShowCursor`).
+- **Per-eye off-axis view** (`TPeardoxGorillaEyes`,
+  src/common/StereoModelEyes.pas), SRDemoFMX's geometry done Gorilla3D's
+  way. Per frame: `ViewScale` reads the orbit camera's projection through
+  `ProjectToView` (FProjX / FProjY = 1 / tan of the half-angles) and sets
+  the scale, units per mm, so the view's height on the display is what the
+  field of view takes in at the MODEL's depth (`ModelDepth`: the camera's
+  Subject's box centre along the line of sight). `EyeView` puts each eye's
+  camera at the tracked eye (dx, -dy, -dz) * scale in the roll pivot's
+  frame (X right, Y down, Z forward; the glass through the orbit centre at
+  Z = 0), looking straight ahead, and projects the glass's corners to get
+  `TPeardoxEyeView.Part` - the fractions of the picture the glass covers
+  from that eye. The picture is rendered `RenderScale` (default 2) times
+  the woven view's size; the part is cut out and scaled to the view
+  (1920 x 1080) in the copy. Gorilla3D takes no projection or view matrix
+  of ours (as far as tried - see Pan / rise), which is why the cut is in
+  the copy and not in the camera.
+- **Zero copy** (src/common/StereoModelGLInterop.pas,
+  `TPeardoxGLInterop`): two B8G8R8A8 textures on the bridge's D3D11
+  device, registered with OpenGL (WGL_NV_DX_interop2). After each eye's
+  RenderManual, `CopyEye` binds FMX's multisampled RGBA8 framebuffer
+  (`FindPicture`, by name), resolves it, and blits the part (GL_LINEAR,
+  rows turned over, black outside) into the eye texture;
+  `TPeardoxLeiaSR.SubmitEyeTextures` weaves them. Every GL error is taken
+  (`TakeErrors`) - FMX's next BeginScene fails on any pending one.
+  Screenshots + a CPU copy (`CopyPart`) are the automatic fallback.
+- **Speed** (owner's RTX 5090 laptop, SRDemo scene): per-eye view at
+  render scale 2: 46-48 fps (render 16 ms for both eyes, copy 0.5, submit
+  0.2); per-eye view off or render scale 1: about 100 fps.
+- **Right drag** = `SetTargetDepth`: the camera stays, the target (the
+  glass) slides along the line of sight. The scale stays (it is set at
+  the model's depth), so in SR the glass and the viewer move together and
+  the model comes out of the screen or goes in without sliding. The 2D
+  picture does not change. The wheel moves the camera (and so the scale).
+
+### Settings and keys
+
+All in LeiaSR.json (`TPeardoxLeiaSRSettings`, lib, shared by Peardox
+programs), all saved when changed by key:
+
+| Key | Setting | Meaning |
+|---|---|---|
+| L | LatencyFrames | weaver's eye prediction, 0 (SR's) .. 4 |
+| [ ] | EyeSeparationMM | -/+ 5 mm (0 = as tracked) |
+| C | FrameCap | bridge waits for vblank after each frame (off) |
+| V | PerEyeView | off = full speed: eyes at the model's distance in the real eyes' directions, the whole picture woven, render scale 1 |
+| , . | RenderScale | -/+ 0.25, 1 .. 2 (2) |
+| M | HideCursor | pointer hidden over the SR display (on) |
+| W | Weave | off = flat: one view from the eyes' midpoint for both, lens off (`TPeardoxLeiaSR.Flat`), for screen recordings |
+
+Also P (snapshot block to the log), Home (view back), Esc (Stereo off).
+Removed in StereoCam59: S T X R Z F (swap, toe-in, shift sign,
+RenderManual, zero copy, row flip) and the old shift method.
+
+### Next, in order
+
+1. **TPeardoxGorillaEyes as a component** in lib (the owner will do this
+   in its own session). It uses Peardox (orbit camera), PeardoxLeiaSR and
+   Gorilla3D, so it needs a package that requires both, or PeardoxLeiaSR
+   requiring Peardox; StereoModelGLInterop goes with it (Windows-only
+   parts already under {$IFDEF MSWINDOWS}). Design package and palette
+   icon as the others; first made in code, then on the form.
+2. **Pan / rise** - the owner wants to explore it; read the next section
+   before starting.
+3. Later: LensMode (lens off over the controls); two SR displays (ask
+   which); the old screenshot-route sign puzzle (StereoCam58a) only if it
+   shows again.
+
+### Pan / rise: where it stands
+
+**What is meant.** A view camera's movements: SHIFT (sideways; the owner
+says "pan") and RISE / FALL move the picture across the lens while the
+camera stands still and looks the same way. Perspective is unchanged;
+only the framing moves - e.g. a tall model's top brought into frame
+without tilting, so verticals stay parallel. Not to be confused with
+pan / tilt in the film sense (the camera TURNS: perspective changes,
+verticals converge) or truck / pedestal (the camera MOVES: parallax
+changes). Mathematically a shift is an asymmetric (off-axis) frustum:
+the projection's window slides by (sx, sy) in normalised device units,
+which is what `x_ndc += sx * w` does after the projection, or a shear
+`x' = x - (sx / SX) z` in view space before it.
+
+**What has been tried (StereoCam10-17), and why it failed:**
+- Truck / pedestal (StereoCam10): moves the camera, so the view changes;
+  not a shift. `TPeardoxOrbitalGorillaCamera.ShiftView` (lib) still does
+  this, for sub-pixel nudges only.
+- A lens shift in the PROJECTION (StereoCam13): overriding
+  GetProjectionMatrix drew nothing different - Gorilla3D 1.5.3's context
+  builds its projection itself from GetProjectionSettings, a record of
+  Kind, OrthoHeight and OrthoWidth only. Changing the field of view while
+  running is not drawn as expected either (dolly zoom, StereoCam15-17:
+  plain zooming, then with ProjectionChanged a slow zoom).
+- Moving the viewport control (StereoCam14): rejected by the owner ("it
+  just moves the VP").
+- Rendering larger and cropping, for the 2D view: rejected by the owner
+  then (before zero copy existed).
+
+**Not yet tried, most promising first:**
+1. **Shear in the VIEW matrix, as SRDemoFMX does.** SRDemoFMX
+   (SRDelphiFMX lib/FMX.SRStereoViewport.pas, `TSRStereoRenderer.RenderEye`,
+   around line 2694) gets its whole off-axis projection into FMX by
+   multiplying the VIEW matrix: `OffAxis.m31 := -Zoom * ShearX`,
+   `m32 := -Zoom * ShearY` (and m11 = m22 = Zoom), then
+   `Ctx.SetCameraMatrix(EyeView * OffAxis)` - because FMX also ignores a
+   changed projection between frames. Only the projection override was
+   ever tried with Gorilla3D, never the view matrix. FIRST EXPERIMENT:
+   find what view matrix Gorilla3D draws with (TCamera.CameraMatrix /
+   GetCameraMatrix - is it virtual? - or something in TGorillaCamera /
+   TGorillaViewport's render that calls Context.SetCameraMatrix) and try
+   a shear there with a fixed test value. Check the lighting (Gorilla3D's
+   deferred renderer may rebuild normals or positions from the view
+   matrix; a shear may upset them) and the G-buffer passes (the HDR target
+   FBO 3 etc. may use their own camera matrices).
+   If it works, it is worth far more than pan / rise: the per-eye view
+   could put its cut and zoom in the matrix too (no 2x overscan: render
+   scale 1, sharp, ~100 fps), and the dolly zoom (Maybe later) becomes
+   possible.
+2. **In the SR view only: an offset on the glass, nearly free.** The
+   per-eye view already renders larger and cuts the glass's part out.
+   A true shift / rise is the glass's rectangle moved in its own plane
+   while the eyes stay where they are: in `EyeView`, add the offset
+   (Sx, Sy, scene units = fraction * glass size * scale) to both corners
+   before projecting (`-HalfW + Sx - E.X` and so on). It is exact for
+   both eyes, so the depth is untouched. Limit: the part must stay inside
+   the rendered picture, or that edge comes out black (CopyEye clears it):
+   the slack each way is about (1 - part size) / 2 - about 0.26 of the
+   picture at 85 cm with render scale 2 (the part was ~0.48 high), none
+   at all with PerEyeView off (the part is the whole picture). More
+   needs a wider field of view or a bigger render. NOTE: this alone
+   gives the SR view a shift the 2D window does not show; the owner
+   should say whether that is acceptable.
+3. **The 2D window by render and copy**: draw the 2D view off screen
+   (as the eyes are) and blit the shifted part to the window - costs a
+   render target, an overscan and a copy every frame, and was rejected
+   for 2D before. Ask first.
+4. **Gorilla3D's author**: an OffsetX / OffsetY in
+   TGorillaProjectionSettings (added in ToMatrix as Offset times the w
+   column to the x and y columns), or a way for a camera to supply its
+   own projection. Already on the list of questions for him (with the
+   field-of-view and FBX-leak questions); the owner relays.
+5. **RTTI writes** to FMX's / Gorilla3D's private projection fields
+   (the owner, 17:37: "some of the FMX3D fields for the projection matrix
+   are strictly private", the source is there): fragile, and which field
+   Gorilla3D draws with is not known. Last resort.
+
+**Whatever route is taken, these must follow the offset:**
+`TPeardoxOrbitalGorillaCamera.ProjectToView` and the fits
+(FitToBounds / FitCorners / FitOnAxis, which assume a centred frustum),
+`TPeardoxGorillaEyes.EyeView` (so SR and 2D agree), and the owner's
+choice of control (no mouse button is free: left orbits, right moves the
+depth, the wheel zooms - ask: Shift+drag, middle drag, or keys).
+
+**First question for the owner** at the start of that session: shift /
+rise in the 2D window, in SR, or both - it decides between route 2
+(an hour) and route 1 (an experiment first).
 
 ## Where the work is
 
@@ -720,6 +910,49 @@ Keep this file up to date when the rules or the state of the work change.
   positive shift, and the picture is not mirrored (toe-in is right).
   Suspect: FMX's framebuffer picture and MakeScreenshot's bitmap differ
   in some way the shift sees; to settle with the per-eye view.
+  Owner (22:07): per-eye view, clean up and remove the unused / test
+  code; render scale "Sharp" (asked: Gorilla3D takes no projection of
+  ours and draws no run-time FOV change, so the off-axis cut is made in
+  the copy and the picture rendered larger). StereoCam59:
+  TPeardoxGorillaEyes rewritten - ViewScale reads the projection
+  (ProjectToView of CameraPosition + Orientation.Rotate((1, 1, 1)) gives
+  1 / tan of both half-angles, FProjX / FProjY) and the scale
+  2 D / (SY * view height mm); EyeView puts the camera at the eye
+  (dx, -dy, -dz) * scale in the roll pivot's frame, no turn, and the
+  glass's corners through the projection give TPeardoxEyeView.Part
+  (fractions, top-left origin, may pass 0..1); RenderEyeGPU ->
+  TPeardoxGLInterop.CopyEye(eye, part in source pixels): resolve, then
+  one GL_LINEAR blit of the part (clipped, the rest cleared black) into
+  the eye texture, rows turned over; the screenshot route's CopyPart
+  samples the part (nearest) into FBuffer. Render scale 2 (StereoCam60:
+  the RenderScale setting):
+  SizeViewForStereo makes the viewport 2 x the recommended view (3840 x
+  2160); the eye textures stay the view size (Start takes source and
+  view sizes). Removed: convergence (ecShift / ecToeIn), ShiftSign,
+  SwapEyes, RenderBeforeShot, ZeroCopyFlip / FlipRows, Calibrate and the
+  turn signs, ShiftFor, the decimation, the once-a-second zero-copy check
+  (CheckNext, a pipeline stall), Survey, the GL probe unit
+  StereoModelGLProbe (.dpr / .dproj too), FindPicture's pixel reads (it
+  now picks FMX's multisampled RGBA8 framebuffer of the picture's size
+  by name), keys S T X R Z F. Keys now: L [ ] C P Home Esc. Program only.
+  Owner (22:31): works, "Oh yeah, that's nice"; 46-48 fps. StereoCam60:
+  LeiaSR settings PerEyeView (V), RenderScale (, .), HideCursor (M),
+  Weave (W, TPeardoxLeiaSR.Flat: lens off while weaving, one view from the
+  eyes' midpoint for both). PACKAGE REBUILD (PeardoxLeiaSR). The
+  SubmitViews PasDoc block, cut off from its declaration since
+  StereoCam48, put back above it.
+  Owner (22:59): "right click + drag still doesn't work". No drag reached
+  FMX while Stereo was on: the bridge's child window covered the 3D
+  window and took the mouse, and on the launcher the viewport had gone to
+  FRenderForm under a cover with HitTest off. StereoCam61: the bridge's
+  window subclassed (SetWindowSubclass; WM_NCHITTEST -> HTTRANSPARENT),
+  logged "Mouse passed through N window(s)"; the cover takes the view's
+  mouse handlers.
+  Owner (23:10): drags arrive, but "No, it still moves" - the model slid
+  across the SR view during a right drag: the scale followed the target
+  depth, so the eyes' cameras moved sideways with it. StereoCam62: the
+  scale is set at ModelDepth (the Subject's centre along the line of
+  sight), full-speed mode too. Owner (23:17): "that's good now".
 - Later: TPeardoxGorillaEyes into lib as a component (with a design
   package); the true off-axis frustum (Gorilla3D's author: projection
   offset); LensMode (lens off over the controls); an OpenGL weaver path
