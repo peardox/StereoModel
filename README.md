@@ -9,11 +9,12 @@ orbital camera, as the first step towards showing it on a glasses-free
 
 | Folder | What is in it |
 |---|---|
-| `src/` | The program: `StereoModel.dpr` / `.dproj`, forms in `src/ui/` |
+| `src/` | The program: `StereoModel.dpr` / `.dproj`, forms in `src/ui/`, helpers in `src/common/` (`FmxLinuxMenu`, an unchanged copy from G3DGames/TSteamAPI: the main menu as an FMX menu bar on desktop Linux) |
 | `lib/` | The Peardox components, kept apart because other projects reuse them |
 | `lib/icons/` | Their palette icons (`.ico`, and the `.svg` sources in `svg/`) |
 | `models/` | Test models: `uvcube.glb` (a cube with a UV test texture) and `Mage.glb` |
-| `tools/` | Scripts: the palette icons, and the PasDoc reference |
+| `packages/` | The Peardox packages: `Peardox` (runtime) and `dclPeardox` (design time) |
+| `tools/` | Scripts: the packages, the palette icons, and the PasDoc reference |
 | `delphi-neon/` | Neon, the JSON library (submodule) |
 | `FastMM5/` | FastMM5, the memory manager on Windows (submodule); Debug builds report leaks |
 
@@ -40,12 +41,36 @@ it only keeps its settings.
 | `ProjectionMode` | Perspective (default), orthographic or isometric |
 | `OrthoHeight`, `OrthoWidth` | The view's size in orthographic and isometric mode; 0 leaves Gorilla3D's own height, and a width of 0 follows the height |
 | `Locked` | While True nothing moves or turns the camera |
+| `Subject` | A model the camera may not go inside: the wheel, `Distance`, orbits and angles stop at the face nearest the camera (its bounding box, plus a gap of twice the viewport's near plane) |
 
-Methods: `FitToBounds(Model)` frames a model for the current angles,
-`FitToBoundsMax(Model)` for every angle (orbit freely afterwards),
-`Orbit`, `Zoom` (works in every projection), `LookAt` and `MoveCenterTo`.
-`Camera` gives the camera itself (`TPeardoxOrbitalGorillaCamera`) for
-anything else, and `Light` the headlight.
+Methods: `FitToBounds` frames a subject for the current angles, and
+`FitToBoundsMax` for every angle (orbit freely afterwards). Both work as
+Sprite3D frames a model: the subject is centred in the view and the target
+(the orbit centre) is put on its turning axis, the up axis through its
+centre of rotation, so the camera turns about the subject's own axis.
+`FitToBounds` makes the subject as large as it goes for the current angles;
+`FitToBoundsMax` frames the ball round it, centred on that axis halfway up,
+so no angle takes any of it out of view. Each sets the target and
+`Distance`, or the orthographic size, from the angles, `FOV` and projection
+as they are, and takes the subject as:
+
+- a model: `FitToBounds(Model)`, turning about its `RotationCenter`;
+- a group of models: `FitToBounds([Model1, Model2])`, the box holding them
+  all, turning about its middle;
+- a box in the scene's space: `FitToBounds(Box)`, turning about its middle;
+- a box in an object's own space, such as part of a model:
+  `FitToBounds(Box, Model)`, turning about the model's `RotationCenter`.
+
+A box has no centre of rotation of its own, so the box and group forms
+also take one: `FitToBounds(Box, Center)`, `FitToBounds(Box, Model, Center)`
+(in the model's coordinates), `FitToBounds([Model1, Model2], Center)`.
+All take an optional margin. Also: `SetTargetDepth` (moves the target
+nearer or deeper along the line of sight without moving the camera: the
+picture is unchanged, the point the camera orbits, and `Distance`, change;
+for the stereo pair this is the depth that will sit on the display's
+surface), `Orbit`, `Zoom` (works in every projection), `LookAt`,
+`MoveCenterTo`, and `MinimumDistance` (how near the camera may come along
+its present line without entering `Subject`).
 
 It is a component of its own rather than the camera itself because the
 camera hangs under three pivots, one per angle, that are not stored: as a
@@ -61,8 +86,35 @@ program.
 and `rsvg-convert`); `python3 tools/gen_icon_res.py` packages them into
 `lib/Peardox.Reg.dcr` (standard library only). Never edit the `.dcr` by hand.
 
-The runtime and design packages are still to come; until then the
-component is created in code.
+### Packages and installing
+
+The components are built into two packages, like G3DGames/TSteamAPI's:
+
+| Package | What it is |
+|---|---|
+| `packages/Peardox` | Runtime: every component unit in `lib`. It requires `rtl`, `fmx` and Gorilla3D's runtime package (`Gorilla3D_Delphi_13_2_0_Florence`). Its DCUs go to Delphi's Dcp folder, `$(BDSCOMMONDIR)\Dcp\<platform>` (`\Dcp` alone for Win32), beside `Peardox.dcp`, which is on the IDE's default Library path, so **a program that uses a Peardox component needs no search path**. Win32, Win64, macOS (x64, ARM64), Linux64, Android (32 and 64-bit), iOS device and simulator; not WinARM64EC, for which Gorilla3D is not installed |
+| `packages/dclPeardox` | Design time: `lib/Peardox.Reg.pas`, which puts the components on the **Peardox** palette page with their icons. Win32 (the 32-bit IDE) and Win64 |
+
+To install, in `StereoGroup.groupproj`:
+
+1. Build **Peardox** for every platform you compile programs for, and
+   always for **Win32**, which the 32-bit IDE's design package needs.
+   Debug and Release write to the same Dcp folder: the last build wins.
+2. Build **dclPeardox** (Win32) and **Install** it (right-click in the
+   Projects window). The Peardox page appears on the palette.
+3. Build `StereoModel`. It lists no `lib` unit and has no path to `lib`:
+   `Peardox.OrbitalCamera` comes from the Dcp folder.
+
+After a change in `lib`, rebuild Peardox for each platform used before
+building a program; after a change to `lib/Peardox.Reg.pas` or the icons,
+rebuild and reinstall dclPeardox too. A program failing with *F2613 Unit
+'Peardox.OrbitalCamera' not found* has not got Peardox built for the
+platform it is compiling for (new projects start on Win32).
+
+`python3 tools/gen_packages.py` writes the packages. A new component unit
+in `lib` must be added to its list, or the script stops. The `.dpk` files
+are always rewritten from it; a `.dproj` only when missing, as the IDE's
+re-saved copy then counts (`--force` overwrites it).
 
 ## The reference (PasDoc, optional)
 
@@ -83,15 +135,27 @@ Adapted from peardox/SRDelphiFMX.
 
 ## Running the test
 
-Build and run `src/StereoModel.dproj`. The form makes the orbital camera
-in code, with its headlight, and once it is showing loads
+Build and run `src/StereoModel.dproj` (after installing the packages,
+above). The orbital camera, `PeardoxOrbitalCamera1`, is on the form with
+its headlight; once the form is showing it loads
 `models/uvcube.glb`, centres it, turns it 180 degrees about X so it stands
 upright (glTF's up is +Y, FMX's -Y; Sprite3D does the same) and frames it.
-It looks for the model in a `models` folder beside the program, in the bundle's `Resources` on macOS, in the
-documents folder on Android and iOS, then in the folders above the program,
+It looks for the model in a `models` folder beside the program, in the
+bundle's `Resources` on macOS, in the documents folder on Android and iOS, then in the folders above the program,
 which finds the repository's `models` folder when run from the IDE on
 Windows. The status line at the bottom says which file it loaded, or every
 folder it looked in.
 
-Mouse: left-drag orbits, the wheel zooms, right-click (or Control-click)
-goes back to the starting view.
+File, Open (desktop) loads another model in place of the one shown. Its
+filter lists every format Gorilla3D has a loader for in the program, read
+from Gorilla3D's own registry: glTF / GLB, OBJ, FBX, Collada, STL, PLY, USD,
+Babylon and Gorilla3D's G3D (one loader unit each, in `StereoModelMain`'s
+uses). Not included: the Mayo CAD loaders and SketchUp's, which need
+external libraries, and Sketchfab's, which loads from the web.
+
+Mouse: left-drag orbits; right-drag up or down moves the target deeper or
+nearer along the line of sight, the camera staying put (the status line
+shows the depth; orbit afterwards to see the new centre); the wheel zooms
+(stopping at the cube's nearest face, never inside it). A click on its own
+does nothing. A window resize refits the view, putting the target back on
+the cube.

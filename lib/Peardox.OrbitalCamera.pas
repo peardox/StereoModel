@@ -312,6 +312,15 @@ uses
   FMX.Types, FMX.Types3D, FMX.Controls3D, FMX.Objects3D, FMX.Viewport3D,
   Gorilla.Camera, Gorilla.Viewport, Gorilla.Model, Gorilla.Light;
 
+const
+  //** @abstract(The platforms the Peardox components are offered for in the IDE's palette, as
+  //** a ComponentPlatformsAttribute.)
+  //**
+  //** A component without that attribute counts as Win32-only, and the palette greys it out
+  //** while a project's active platform is another one. The Peardox components sit on
+  //** Gorilla3D, and Gorilla3D's own components declare every platform, so these do the same.
+  PEARDOX_COMPONENT_PLATFORMS = pidAllPlatforms;
+
 type
   { Unit quaternion, Hamilton convention, right-hand rule on raw
     coordinates. Q1 * Q2 means "apply Q2 first, then Q1". }
@@ -1191,6 +1200,7 @@ type
   //** any FMX object.
   //**
   //** @seealso(TPeardoxOrbitalGorillaCamera)
+  [ComponentPlatformsAttribute(PEARDOX_COMPONENT_PLATFORMS)]
   TPeardoxOrbitalCamera = class(TComponent)
   private
     //** @abstract(The viewport the camera is put in, or nil.)
@@ -1220,6 +1230,8 @@ type
     //** @abstract(The viewport's UsingDesignCamera before Attach switched it off, put back by
     //** Detach.)
     FWasUsingDesignCamera: Boolean;
+    //** @abstract(The model the camera is kept outside of, or nil.)
+    FSubject: TGorillaModel;
     //** @abstract(Whether the camera may be made now: not at design time, not while the form is
     //** loading, and only with a viewport.)
     function CanAttach: Boolean;
@@ -1238,6 +1250,16 @@ type
     //** Gorilla's. The field of view, projection and orthographic sizes are not read: the fields
     //** already hold them, kept by their setters, and by KeepOrthoSizes after a fit or Zoom.
     procedure KeepCameraValues;
+    //** @abstract(Moves the camera back out along its line to the orbit centre if it has come
+    //** closer than MinimumDistance, so it never goes inside Subject.)
+    //**
+    //** Called after everything done through the component that can bring the camera nearer
+    //** the subject: a distance, a zoom, an orbit, an angle, LookAt, a new centre or a new
+    //** subject. Does nothing while Locked.
+    procedure KeepOutsideSubject;
+    //** @abstract(Setter for Subject: watches the model for being freed and keeps the camera
+    //** outside it at once.)
+    procedure SetSubject(const Value: TGorillaModel);
     //** @abstract(Whether the viewport, or the form it is on, is being freed.)
     //**
     //** While it is, the camera and light are left for the viewport to free, as it frees its
@@ -1251,6 +1273,28 @@ type
     //**
     //** Only while the viewport is not closing; see ViewportClosing.
     procedure ReleaseCamera;
+    //** @abstract(The work of every fit: frames ABox, in ASpace's local coordinates, with the
+    //** target on the up axis through ARotationCenter, as Sprite3D frames a model.)
+    //**
+    //** For the current angles @(AAnyAngle False@) the box's corners go to the inner camera's
+    //** FitPointsOnAxis with that axis. For every angle the ball round the corners is framed,
+    //** centred on the axis halfway between the lowest and highest corner along it, by fitting
+    //** a cube that ball just holds.
+    //**
+    //** @param(ABox The box, in ASpace's local coordinates.)
+    //**
+    //** @param(ASpace The object whose space ABox and ARotationCenter are in; nil for the
+    //** scene's.)
+    //**
+    //** @param(ARotationCenter The point the box turns about, in ASpace's local coordinates.)
+    //**
+    //** @param(AAnyAngle True to frame for every angle, False for the current angles.)
+    //**
+    //** @param(AMargin Padding as a fraction of the view.)
+    //**
+    //** @returns(False if there is no camera, the box is empty, or the view has no size.)
+    function FitAround(const ABox: TBoundingBox; const ASpace: TControl3D;
+      const ARotationCenter: TPoint3D; const AAnyAngle: Boolean; const AMargin: Single): Boolean;
     //** @abstract(Copies the camera's orthographic sizes into the fields after a fit or Zoom
     //** has changed them, so a camera made again starts with them.)
     procedure KeepOrthoSizes;
@@ -1330,24 +1374,204 @@ type
     //** @abstract(Takes the camera out of the viewport and frees it, with its rig and light,
     //** unless the viewport is closing and frees them itself.)
     destructor Destroy; override;
-    //** @abstract(Frames a model for the current angles; see TPeardoxOrbitalGorillaCamera.FitToBounds.)
+    //** @abstract(Frames a model for the current angles, centred, with the target on its
+    //** turning axis.)
+    //**
+    //** As Sprite3D frames a model: the model's box @(its current pose, GetAnimatedBoundingBox,
+    //** carried through its transform@) is made as large as it will go for the current angles,
+    //** centred, and the target @(the orbit centre@) is then put where the line of sight meets
+    //** the model's turning axis, the line through its centre of rotation @(RotationCenter@)
+    //** along its up axis; Distance changes to match, so the view is the same. Orbiting then
+    //** turns about the model's own axis with the model in the middle of the view. The angles
+    //** are not changed; a change of angle can take part of the model out of view, so fit again
+    //** after one, or use FitToBoundsMax.
     //**
     //** @param(AModel The model to frame.)
     //**
     //** @param(AMargin Padding as a fraction of the view.)
     //**
-    //** @returns(False if there is no camera yet, or the camera could not frame the model.)
-    function FitToBounds(const AModel: TGorillaModel; const AMargin: Single = 0): Boolean;
-    //** @abstract(Frames a model for every angle; see TPeardoxOrbitalGorillaCamera.FitToBoundsMax.)
+    //** @returns(False if there is no camera yet, AModel is nil or has no vertices, or the view
+    //** has no size.)
+    function FitToBounds(const AModel: TGorillaModel; const AMargin: Single = 0): Boolean; overload;
+    //** @abstract(Frames a group of models together, for the current angles; the target on
+    //** the up axis through the middle of the box that holds them all.)
     //**
-    //** After it the angles can change freely and the model stays in view.
+    //** The box is the union of each model's GetAbsoluteBoundingBox, in the scene's space;
+    //** models that are nil or have no vertices are left out.
+    //**
+    //** @param(AModels The models to frame.)
+    //**
+    //** @param(AMargin Padding as a fraction of the view.)
+    //**
+    //** @returns(False if there is no camera yet, no model with a box, or the view has no size.)
+    function FitToBounds(const AModels: array of TGorillaModel;
+      const AMargin: Single = 0): Boolean; overload;
+    //** @abstract(Frames a group of models together, for the current angles, turning about the
+    //** up axis through ARotationCenter.)
+    //**
+    //** @param(AModels The models to frame.)
+    //**
+    //** @param(ARotationCenter The point the group turns about, in the scene's space.)
+    //**
+    //** @param(AMargin Padding as a fraction of the view.)
+    //**
+    //** @returns(False if there is no camera yet, no model with a box, or the view has no size.)
+    function FitToBounds(const AModels: array of TGorillaModel; const ARotationCenter: TPoint3D;
+      const AMargin: Single = 0): Boolean; overload;
+    //** @abstract(Frames a box in the scene's space, for the current angles; the target on the
+    //** up axis through its middle.)
+    //**
+    //** A box has no centre of rotation of its own, so its middle is used; give one with the
+    //** overload that takes ARotationCenter.
+    //**
+    //** @param(ABox The box, in the scene's space: the viewport's, where the camera's rig is.)
+    //**
+    //** @param(AMargin Padding as a fraction of the view.)
+    //**
+    //** @returns(False if there is no camera yet, the box is empty, or the view has no size.)
+    function FitToBounds(const ABox: TBoundingBox; const AMargin: Single = 0): Boolean; overload;
+    //** @abstract(Frames a box in the scene's space, for the current angles, turning about the
+    //** up axis through ARotationCenter.)
+    //**
+    //** @param(ABox The box, in the scene's space.)
+    //**
+    //** @param(ARotationCenter The point it turns about, in the scene's space.)
+    //**
+    //** @param(AMargin Padding as a fraction of the view.)
+    //**
+    //** @returns(False if there is no camera yet, the box is empty, or the view has no size.)
+    function FitToBounds(const ABox: TBoundingBox; const ARotationCenter: TPoint3D;
+      const AMargin: Single = 0): Boolean; overload;
+    //** @abstract(Frames a box in an object's own space, such as part of a model, for the
+    //** current angles; the target on the object's turning axis.)
+    //**
+    //** The object's centre of rotation @(RotationCenter@) and up axis are used, so part of a
+    //** model turns about the model's own axis; give another centre with the overload that
+    //** takes ARotationCenter.
+    //**
+    //** @param(ABox The box, in ASpace's local coordinates.)
+    //**
+    //** @param(ASpace The object whose space ABox is in; nil for the scene's, as the overload
+    //** without it.)
+    //**
+    //** @param(AMargin Padding as a fraction of the view.)
+    //**
+    //** @returns(False if there is no camera yet, the box is empty, or the view has no size.)
+    function FitToBounds(const ABox: TBoundingBox; const ASpace: TControl3D;
+      const AMargin: Single = 0): Boolean; overload;
+    //** @abstract(Frames a box in an object's own space, for the current angles, turning about
+    //** the object's up axis through ARotationCenter.)
+    //**
+    //** @param(ABox The box, in ASpace's local coordinates.)
+    //**
+    //** @param(ASpace The object whose space ABox and ARotationCenter are in; nil for the
+    //** scene's.)
+    //**
+    //** @param(ARotationCenter The point it turns about, in ASpace's local coordinates.)
+    //**
+    //** @param(AMargin Padding as a fraction of the view.)
+    //**
+    //** @returns(False if there is no camera yet, the box is empty, or the view has no size.)
+    function FitToBounds(const ABox: TBoundingBox; const ASpace: TControl3D;
+      const ARotationCenter: TPoint3D; const AMargin: Single = 0): Boolean; overload;
+    //** @abstract(Frames a model for every angle, centred, with the target on its turning
+    //** axis.)
+    //**
+    //** The ball round the model's box, centred on its turning axis @(the up axis through its
+    //** RotationCenter@) halfway up the box, is framed: every corner stays in view at any
+    //** Azimuth, PolarAngle and Roll, so the angles can change freely without fitting again,
+    //** and the target sits on the model's own axis with the model in the middle of the view.
+    //** The model looks smaller than with FitToBounds, by up to the ratio of the ball to the
+    //** box.
     //**
     //** @param(AModel The model to frame.)
     //**
     //** @param(AMargin Padding as a fraction of the view.)
     //**
-    //** @returns(False if there is no camera yet, or the camera could not frame the model.)
-    function FitToBoundsMax(const AModel: TGorillaModel; const AMargin: Single = 0): Boolean;
+    //** @returns(False if there is no camera yet, AModel is nil or has no vertices, or the view
+    //** has no size.)
+    function FitToBoundsMax(const AModel: TGorillaModel; const AMargin: Single = 0): Boolean; overload;
+    //** @abstract(Frames a group of models for every angle; the ball centred halfway up the
+    //** up axis through the middle of the box that holds them all.)
+    //**
+    //** @param(AModels The models to frame.)
+    //**
+    //** @param(AMargin Padding as a fraction of the view.)
+    //**
+    //** @returns(False if there is no camera yet, no model with a box, or the view has no size.)
+    function FitToBoundsMax(const AModels: array of TGorillaModel;
+      const AMargin: Single = 0): Boolean; overload;
+    //** @abstract(Frames a group of models for every angle, turning about the up axis through
+    //** ARotationCenter.)
+    //**
+    //** @param(AModels The models to frame.)
+    //**
+    //** @param(ARotationCenter The point the group turns about, in the scene's space.)
+    //**
+    //** @param(AMargin Padding as a fraction of the view.)
+    //**
+    //** @returns(False if there is no camera yet, no model with a box, or the view has no size.)
+    function FitToBoundsMax(const AModels: array of TGorillaModel; const ARotationCenter: TPoint3D;
+      const AMargin: Single = 0): Boolean; overload;
+    //** @abstract(Frames a box in the scene's space for every angle; the ball centred on its
+    //** middle.)
+    //**
+    //** @param(ABox The box, in the scene's space.)
+    //**
+    //** @param(AMargin Padding as a fraction of the view.)
+    //**
+    //** @returns(False if there is no camera yet, the box is empty, or the view has no size.)
+    function FitToBoundsMax(const ABox: TBoundingBox; const AMargin: Single = 0): Boolean; overload;
+    //** @abstract(Frames a box in the scene's space for every angle, turning about the up axis
+    //** through ARotationCenter.)
+    //**
+    //** @param(ABox The box, in the scene's space.)
+    //**
+    //** @param(ARotationCenter The point it turns about, in the scene's space.)
+    //**
+    //** @param(AMargin Padding as a fraction of the view.)
+    //**
+    //** @returns(False if there is no camera yet, the box is empty, or the view has no size.)
+    function FitToBoundsMax(const ABox: TBoundingBox; const ARotationCenter: TPoint3D;
+      const AMargin: Single = 0): Boolean; overload;
+    //** @abstract(Frames a box in an object's own space for every angle, turning about the
+    //** object's axis through its RotationCenter.)
+    //**
+    //** @param(ABox The box, in ASpace's local coordinates.)
+    //**
+    //** @param(ASpace The object whose space ABox is in; nil for the scene's.)
+    //**
+    //** @param(AMargin Padding as a fraction of the view.)
+    //**
+    //** @returns(False if there is no camera yet, the box is empty, or the view has no size.)
+    function FitToBoundsMax(const ABox: TBoundingBox; const ASpace: TControl3D;
+      const AMargin: Single = 0): Boolean; overload;
+    //** @abstract(Frames a box in an object's own space for every angle, turning about the
+    //** object's up axis through ARotationCenter.)
+    //**
+    //** @param(ABox The box, in ASpace's local coordinates.)
+    //**
+    //** @param(ASpace The object whose space ABox and ARotationCenter are in; nil for the
+    //** scene's.)
+    //**
+    //** @param(ARotationCenter The point it turns about, in ASpace's local coordinates.)
+    //**
+    //** @param(AMargin Padding as a fraction of the view.)
+    //**
+    //** @returns(False if there is no camera yet, the box is empty, or the view has no size.)
+    function FitToBoundsMax(const ABox: TBoundingBox; const ASpace: TControl3D;
+      const ARotationCenter: TPoint3D; const AMargin: Single = 0): Boolean; overload;
+    //** @abstract(Moves the target, the orbit centre, to ADepth along the line of sight; the
+    //** camera does not move.)
+    //**
+    //** The picture is unchanged; what changes is the point the camera orbits, and so Distance,
+    //** which is ADepth afterwards. For the stereo pair this depth will be the one that sits on
+    //** the display's surface. Kept at 0.001 or more. Does nothing while there is no camera, or
+    //** while Locked.
+    //**
+    //** @param(ADepth The target's distance from the camera along its view direction, in scene
+    //** units.)
+    procedure SetTargetDepth(const ADepth: Single);
     //** @abstract(Adds to Azimuth and PolarAngle; see TPeardoxOrbitalGorillaCamera.Orbit.)
     //**
     //** Works on the kept values while there is no camera.
@@ -1356,6 +1580,20 @@ type
     //**
     //** @param(DeltaPolar Degrees to add to PolarAngle; positive raises the camera.)
     procedure Orbit(const DeltaAzimuth, DeltaPolar: Single);
+    //** @abstract(How near the orbit centre the camera may come, along its present line,
+    //** without going inside Subject.)
+    //**
+    //** A ray is cast from the orbit centre towards the camera, through the subject's bounding
+    //** box @(its current pose, from GetAnimatedBoundingBox, carried through the model's
+    //** position, rotation and scale@). Where the ray leaves the box is the face nearest the
+    //** camera; to that is added a gap of PEARDOX_ORBITAL_NEAR_GAP times the viewport's near
+    //** plane, so the near plane cannot clip into that face and show the model from the inside.
+    //** The box, not the mesh, is what is kept out of, so for a model that does not fill its box
+    //** the camera stops short of the surface.
+    //**
+    //** @returns(The least Distance for the camera's present direction, or 0 when there is no
+    //** limit: no camera, no subject, an empty model, or a line that misses the box.)
+    function MinimumDistance: Single;
     //** @abstract(Brings the view nearer or takes it farther, in any projection.)
     //**
     //** In perspective Distance is multiplied by Factor. In orthographic or isometric mode,
@@ -1420,6 +1658,12 @@ type
     //** @abstract(While True nothing done through the camera moves or turns it; see
     //** TPeardoxOrbitalGorillaCamera.Locked.)
     property Locked: Boolean read GetLocked write SetLocked default False;
+    //** @abstract(The model the camera may not go inside, or nil for no limit.)
+    //**
+    //** While it is set, nothing done through the component brings the camera nearer the orbit
+    //** centre than MinimumDistance: the wheel, Distance, Orbit and the angles all stop at the
+    //** face nearest the camera. Changes made straight to Camera are not checked.
+    property Subject: TGorillaModel read FSubject write SetSubject;
     //** @abstract(The camera's projection: perspective, orthographic or isometric.)
     //**
     //** Perspective by default. The fits work in every mode: in orthographic and isometric
@@ -1442,6 +1686,12 @@ const
   //** @abstract(TPeardoxOrbitalCamera's field of view until it is changed, in degrees, as Sprite3D
   //** uses.)
   PEARDOX_ORBITAL_DEFAULT_FOV = 45;
+  //** @abstract(The gap MinimumDistance keeps between the camera and Subject's nearest face,
+  //** as a multiple of the viewport's near plane.)
+  //**
+  //** The near plane is a rectangle in front of the camera whose corners reach farther than its
+  //** middle, so a gap of one near plane would let them clip a face seen at an angle.
+  PEARDOX_ORBITAL_NEAR_GAP = 2;
 
 implementation
 
@@ -2472,6 +2722,7 @@ begin
   // The light last, so it is made inside a camera that is already in the
   // viewport's scene
   UpdateHeadlight;
+  KeepOutsideSubject;
 end;
 
 procedure TPeardoxOrbitalCamera.Detach;
@@ -2541,6 +2792,8 @@ begin
   end
   else if (FLight <> nil) and (AComponent = FLight) then
     FLight := nil
+  else if (FSubject <> nil) and (AComponent = FSubject) then
+    FSubject := nil
   else if AComponent = FViewport then
   begin
     // The viewport tells us it is going BEFORE it frees the rig, camera
@@ -2653,7 +2906,10 @@ begin
   // The camera applies its own rules (the lock, wrapping into 0 to 360);
   // without it the value is kept as given
   if FCamera <> nil then
-    FCamera.Azimuth := Value
+  begin
+    FCamera.Azimuth := Value;
+    KeepOutsideSubject;
+  end
   else if not FLocked then
     FAzimuth := Value;
 end;
@@ -2661,7 +2917,10 @@ end;
 procedure TPeardoxOrbitalCamera.SetPolarAngle(const Value: Single);
 begin
   if FCamera <> nil then
-    FCamera.PolarAngle := Value
+  begin
+    FCamera.PolarAngle := Value;
+    KeepOutsideSubject;
+  end
   else if not FLocked then
     FPolarAngle := Value;
 end;
@@ -2677,7 +2936,10 @@ end;
 procedure TPeardoxOrbitalCamera.SetDistance(const Value: Single);
 begin
   if FCamera <> nil then
-    FCamera.Distance := Value
+  begin
+    FCamera.Distance := Value;
+    KeepOutsideSubject;
+  end
   else if not FLocked then
     FDistance := Max(Value, 0.001);
 end;
@@ -2746,7 +3008,10 @@ begin
   if (FCamera = nil) or FCamera.Locked or (Factor <= 0) then
     Exit;
   if FCamera.ProjectionMode = TGorillaCameraProjection.cpPerspective then
-    FCamera.Zoom(Factor)
+  begin
+    FCamera.Zoom(Factor);
+    KeepOutsideSubject;
+  end
   else
   begin
     // The size, not the distance, sets how big things look here
@@ -2777,24 +3042,236 @@ begin
   FOrthoWidth := FCamera.OrthoWidth;
 end;
 
-function TPeardoxOrbitalCamera.FitToBounds(const AModel: TGorillaModel; const AMargin: Single): Boolean;
+{ The box that holds every model of AModels, in the scene's space, from each
+  one's GetAbsoluteBoundingBox; nil models and empty boxes are left out.
+  False if none has a box }
+function ModelsBox(const AModels: array of TGorillaModel; out ABox: TBoundingBox): Boolean;
+var
+  I: Integer;
+  B: TBoundingBox;
+  Lo, Hi: TPoint3D;
 begin
-  Result := (FCamera <> nil) and FCamera.FitToBounds(AModel, AMargin);
+  Result := False;
+  Lo := TPoint3D.Zero;
+  Hi := TPoint3D.Zero;
+  for I := 0 to High(AModels) do
+  begin
+    if AModels[I] = nil then
+      Continue;
+    B := AModels[I].GetAbsoluteBoundingBox;
+    if not IsValidBox(B) then
+      Continue;
+    if not Result then
+    begin
+      Lo := Point3D(B.Left, B.Top, B.Near);
+      Hi := Point3D(B.Right, B.Bottom, B.Far);
+      Result := True;
+    end
+    else
+    begin
+      Lo := Point3D(Min(Lo.X, B.Left), Min(Lo.Y, B.Top), Min(Lo.Z, B.Near));
+      Hi := Point3D(Max(Hi.X, B.Right), Max(Hi.Y, B.Bottom), Max(Hi.Z, B.Far));
+    end;
+  end;
+  ABox.TopLeftNear := Lo;
+  ABox.BottomRightFar := Hi;
+end;
+
+function TPeardoxOrbitalCamera.FitAround(const ABox: TBoundingBox; const ASpace: TControl3D;
+  const ARotationCenter: TPoint3D; const AAnyAngle: Boolean; const AMargin: Single): Boolean;
+var
+  Corners: TBoxCorners;
+  Up, Pivot, Mid, D: TPoint3D;
+  T, TMin, TMax, R, H: Single;
+  Ball: TBoundingBox;
+  I: Integer;
+
+  // ASpace's local coordinates into the scene's, where the rig is
+  function ToScene(const P: TPoint3D): TPoint3D;
+  begin
+    if ASpace <> nil then
+      Result := ASpace.LocalToAbsolute3D(P)
+    else
+      Result := P;
+  end;
+
+begin
+  Result := (FCamera <> nil) and IsValidBox(ABox);
+  if not Result then
+    Exit;
+  GetBoxCorners(ABox, Corners);
+  if not AAnyAngle then
+    // As Sprite3D's FitCameraToSweep: the corners as large as they go for
+    // the current angles, centred, then the target slid along the line of
+    // sight to where it meets the turning axis (ASpace's own Y, its up
+    // axis: glTF's, for a model), so the view does not change
+    Result := FCamera.FitPointsOnAxis(Corners, ARotationCenter, Point3D(0, 1, 0), ASpace, AMargin)
+  else
+  begin
+    // For every angle: the ball round the corners, centred on the turning
+    // axis halfway between the lowest and highest corner along it, so the
+    // model sits in the middle of the view and the camera turns about its
+    // own axis. Worked out in the scene's space, which carries ASpace's
+    // scale; the inner camera frames a box for every angle as the ball
+    // round its middle and farthest corner, so a cube that ball just holds
+    // is what is passed
+    Pivot := ToScene(ARotationCenter);
+    Up := ToScene(ARotationCenter + Point3D(0, 1, 0)) - Pivot;
+    Result := Up.Length > EPS;
+    if not Result then
+      Exit;
+    Up := Up.Normalize;
+    TMin := MaxSingle;
+    TMax := -MaxSingle;
+    for I := 0 to High(Corners) do
+    begin
+      Corners[I] := ToScene(Corners[I]);
+      T := (Corners[I] - Pivot).DotProduct(Up);
+      TMin := Min(TMin, T);
+      TMax := Max(TMax, T);
+    end;
+    Mid := Pivot + Up * ((TMin + TMax) / 2);
+    R := 0;
+    for I := 0 to High(Corners) do
+    begin
+      D := Corners[I] - Mid;
+      R := Max(R, D.Length);
+    end;
+    Result := R > EPS;
+    if not Result then
+      Exit;
+    H := R / Sqrt(3);
+    Ball.TopLeftNear := Mid - Point3D(H, H, H);
+    Ball.BottomRightFar := Mid + Point3D(H, H, H);
+    Result := FCamera.FitToBoundsMax(Ball, AMargin);
+  end;
   if Result then
     KeepOrthoSizes;
 end;
 
+function TPeardoxOrbitalCamera.FitToBounds(const AModel: TGorillaModel; const AMargin: Single): Boolean;
+begin
+  Result := (AModel <> nil) and FitAround(AModel.GetAnimatedBoundingBox(), AModel,
+    AModel.RotationCenter.Point, False, AMargin);
+end;
+
+function TPeardoxOrbitalCamera.FitToBounds(const AModels: array of TGorillaModel;
+  const AMargin: Single): Boolean;
+var
+  Box: TBoundingBox;
+begin
+  Result := ModelsBox(AModels, Box) and FitAround(Box, nil, Box.CenterPoint, False, AMargin);
+end;
+
+function TPeardoxOrbitalCamera.FitToBounds(const AModels: array of TGorillaModel;
+  const ARotationCenter: TPoint3D; const AMargin: Single): Boolean;
+var
+  Box: TBoundingBox;
+begin
+  Result := ModelsBox(AModels, Box) and FitAround(Box, nil, ARotationCenter, False, AMargin);
+end;
+
+function TPeardoxOrbitalCamera.FitToBounds(const ABox: TBoundingBox; const AMargin: Single): Boolean;
+begin
+  Result := FitAround(ABox, nil, ABox.CenterPoint, False, AMargin);
+end;
+
+function TPeardoxOrbitalCamera.FitToBounds(const ABox: TBoundingBox;
+  const ARotationCenter: TPoint3D; const AMargin: Single): Boolean;
+begin
+  Result := FitAround(ABox, nil, ARotationCenter, False, AMargin);
+end;
+
+function TPeardoxOrbitalCamera.FitToBounds(const ABox: TBoundingBox; const ASpace: TControl3D;
+  const AMargin: Single): Boolean;
+begin
+  if ASpace <> nil then
+    Result := FitAround(ABox, ASpace, ASpace.RotationCenter.Point, False, AMargin)
+  else
+    Result := FitAround(ABox, nil, ABox.CenterPoint, False, AMargin);
+end;
+
+function TPeardoxOrbitalCamera.FitToBounds(const ABox: TBoundingBox; const ASpace: TControl3D;
+  const ARotationCenter: TPoint3D; const AMargin: Single): Boolean;
+begin
+  Result := FitAround(ABox, ASpace, ARotationCenter, False, AMargin);
+end;
+
 function TPeardoxOrbitalCamera.FitToBoundsMax(const AModel: TGorillaModel; const AMargin: Single): Boolean;
 begin
-  Result := (FCamera <> nil) and FCamera.FitToBoundsMax(AModel, AMargin);
-  if Result then
-    KeepOrthoSizes;
+  Result := (AModel <> nil) and FitAround(AModel.GetAnimatedBoundingBox(), AModel,
+    AModel.RotationCenter.Point, True, AMargin);
+end;
+
+function TPeardoxOrbitalCamera.FitToBoundsMax(const AModels: array of TGorillaModel;
+  const AMargin: Single): Boolean;
+var
+  Box: TBoundingBox;
+begin
+  Result := ModelsBox(AModels, Box) and FitAround(Box, nil, Box.CenterPoint, True, AMargin);
+end;
+
+function TPeardoxOrbitalCamera.FitToBoundsMax(const AModels: array of TGorillaModel;
+  const ARotationCenter: TPoint3D; const AMargin: Single): Boolean;
+var
+  Box: TBoundingBox;
+begin
+  Result := ModelsBox(AModels, Box) and FitAround(Box, nil, ARotationCenter, True, AMargin);
+end;
+
+function TPeardoxOrbitalCamera.FitToBoundsMax(const ABox: TBoundingBox; const AMargin: Single): Boolean;
+begin
+  Result := FitAround(ABox, nil, ABox.CenterPoint, True, AMargin);
+end;
+
+function TPeardoxOrbitalCamera.FitToBoundsMax(const ABox: TBoundingBox;
+  const ARotationCenter: TPoint3D; const AMargin: Single): Boolean;
+begin
+  Result := FitAround(ABox, nil, ARotationCenter, True, AMargin);
+end;
+
+function TPeardoxOrbitalCamera.FitToBoundsMax(const ABox: TBoundingBox; const ASpace: TControl3D;
+  const AMargin: Single): Boolean;
+begin
+  if ASpace <> nil then
+    Result := FitAround(ABox, ASpace, ASpace.RotationCenter.Point, True, AMargin)
+  else
+    Result := FitAround(ABox, nil, ABox.CenterPoint, True, AMargin);
+end;
+
+function TPeardoxOrbitalCamera.FitToBoundsMax(const ABox: TBoundingBox; const ASpace: TControl3D;
+  const ARotationCenter: TPoint3D; const AMargin: Single): Boolean;
+begin
+  Result := FitAround(ABox, ASpace, ARotationCenter, True, AMargin);
+end;
+
+procedure TPeardoxOrbitalCamera.SetTargetDepth(const ADepth: Single);
+var
+  Eye, Forward: TPoint3D;
+  Depth: Single;
+begin
+  if (FCamera = nil) or FCamera.Locked then
+    Exit;
+  Depth := Max(ADepth, 0.001);
+  // The camera stays where it is: the orbit centre slides along the view
+  // direction to the new depth, and Distance becomes that depth, so the
+  // camera's position (centre minus the view direction times Distance) is
+  // unchanged. The rig is in the scene's space, where both are measured
+  Eye := FCamera.CameraPosition;
+  Forward := FCamera.Orientation.Rotate(Point3D(0, 0, 1));
+  FCamera.Distance := Depth;
+  FCamera.OrbitCenter.Point := Eye + Forward * Depth;
 end;
 
 procedure TPeardoxOrbitalCamera.Orbit(const DeltaAzimuth, DeltaPolar: Single);
 begin
   if FCamera <> nil then
-    FCamera.Orbit(DeltaAzimuth, DeltaPolar)
+  begin
+    FCamera.Orbit(DeltaAzimuth, DeltaPolar);
+    // A box is nearer at some angles than others: a cube's corner is
+    // nearer the centre's far side than its face
+    KeepOutsideSubject;
+  end
   else if not FLocked then
   begin
     FAzimuth := FAzimuth + DeltaAzimuth;
@@ -2805,13 +3282,110 @@ end;
 procedure TPeardoxOrbitalCamera.LookAt(const APoint: TPoint3D; const AMode: TPeardoxLookAtMode);
 begin
   if FCamera <> nil then
+  begin
     FCamera.LookAt(APoint, AMode);
+    KeepOutsideSubject;
+  end;
 end;
 
 procedure TPeardoxOrbitalCamera.MoveCenterTo(const APoint: TPoint3D);
 begin
   if FCamera <> nil then
+  begin
     FCamera.MoveCenterTo(APoint);
+    KeepOutsideSubject;
+  end;
+end;
+
+procedure TPeardoxOrbitalCamera.SetSubject(const Value: TGorillaModel);
+begin
+  if Value = FSubject then
+    Exit;
+  if FSubject <> nil then
+    FSubject.RemoveFreeNotification(Self);
+  FSubject := Value;
+  if FSubject <> nil then
+  begin
+    FSubject.FreeNotification(Self);
+    KeepOutsideSubject;
+  end;
+end;
+
+function TPeardoxOrbitalCamera.MinimumDistance: Single;
+var
+  Box: TBoundingBox;
+  Center, Dir, L0, LD: TPoint3D;
+  TNear, TFar, Gap: Single;
+
+  // One slab of the ray / box test: narrows TNear..TFar to the stretch of
+  // the ray between the box's two faces across this axis. False if the ray
+  // runs parallel to them and outside
+  function Slab(const AStart, ADir, ALow, AHigh: Single): Boolean;
+  var
+    T1, T2, T: Single;
+  begin
+    if Abs(ADir) < EPS then
+      Exit((AStart >= ALow) and (AStart <= AHigh));
+    T1 := (ALow - AStart) / ADir;
+    T2 := (AHigh - AStart) / ADir;
+    if T1 > T2 then
+    begin
+      T := T1;
+      T1 := T2;
+      T2 := T;
+    end;
+    TNear := Max(TNear, T1);
+    TFar := Min(TFar, T2);
+    Result := TNear <= TFar;
+  end;
+
+begin
+  Result := 0;
+  if (FCamera = nil) or (FSubject = nil) or (FViewport = nil) then
+    Exit;
+  // The current pose's box in the model's own space, as the fits use it
+  Box := FSubject.GetAnimatedBoundingBox();
+  if not IsValidBox(Box) then
+    Exit;
+  // The rig is a child of the viewport, so the orbit centre and the
+  // camera's position are in the scene's absolute space
+  Center := FCamera.OrbitCenter.Point;
+  Dir := FCamera.CameraPosition - Center;
+  if Dir.Length < EPS then
+    Dir := FCamera.Orientation.Rotate(Point3D(0, 0, -1))
+  else
+    Dir := Dir.Normalize;
+  // The ray Center + t Dir, t in scene units, carried into the model's
+  // own space. The model's transform is affine, so the ray stays a ray
+  // and t keeps its meaning, even with rotation or non-uniform scale
+  L0 := FSubject.AbsoluteToLocal3D(Center);
+  LD := FSubject.AbsoluteToLocal3D(Center + Dir) - L0;
+  TNear := -MaxSingle;
+  TFar := MaxSingle;
+  if not (Slab(L0.X, LD.X, Box.Left, Box.Right)
+    and Slab(L0.Y, LD.Y, Box.Top, Box.Bottom)
+    and Slab(L0.Z, LD.Z, Box.Near, Box.Far)) then
+    Exit;
+  // TFar is where the ray leaves the box on the camera's side: the face
+  // nearest the camera. Behind the centre (TFar <= 0) the box is never in
+  // the camera's way
+  if TFar <= 0 then
+    Exit;
+  Gap := FViewport.NearPlane * PEARDOX_ORBITAL_NEAR_GAP;
+  if Gap <= 0 then
+    Gap := NEAR_CLEARANCE;
+  Result := TFar + Gap;
+end;
+
+procedure TPeardoxOrbitalCamera.KeepOutsideSubject;
+var
+  M: Single;
+begin
+  if (FCamera = nil) or FCamera.Locked then
+    Exit;
+  M := MinimumDistance;
+  if (M > 0) and (FCamera.Distance < M) then
+    FCamera.Distance := M;
 end;
 
 initialization

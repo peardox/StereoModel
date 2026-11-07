@@ -25,6 +25,12 @@ Keep this file up to date when the rules or the state of the work change.
   also builds for macOS, Linux 64-bit, Android and iOS.
 - Tests promptly and pastes back logs; make log and status lines say
   exactly what happened.
+- **Package rebuilds** (as in TSteamAPI): whenever a delivery changes
+  anything a package compiles (`lib/`, `packages/`), say so IN CAPITALS on
+  a line of its own, naming the packages and platforms, e.g.
+  `====> REBUILD RUNTIME PACKAGE PEARDOX (WIN32 AND WIN64) AND REINSTALL
+  DCLPEARDOX <====`, and `====> NO PACKAGE REBUILD <====` when nothing
+  needs it.
 - **Deliver whole files, never patches**, in a zip of only the new and
   changed files with paths from the repository root; name them, and say
   which earlier zip it replaces or follows. Do not commit or push.
@@ -58,12 +64,88 @@ Keep this file up to date when the rules or the state of the work change.
 - `TPeardoxOrbitalCamera` (`lib/Peardox.OrbitalCamera.pas`): a non-visual
   component wrapping Sprite3D's orbit camera (renamed
   `TPeardoxOrbitalGorillaCamera`), with `Headlight`, the projection
-  properties and fits. Registration unit and icon done. Packages
-  (runtime + design) not yet made.
-- `src/ui/StereoModelMain.pas` makes it in code, loads `models/uvcube.glb`
-  and frames it, for the owner's first test. Next after that test: put the
-  component on the form in the `.fmx`, then the packages, then the stereo
-  rendering (target display still to be named by the owner).
+  properties, fits and `Subject`. Registration unit and icon done.
+- Packages (StereoCam8, owner 7 November 2026, as TSteamAPI does them):
+  `packages/Peardox` (runtime; DCUs to `$(BDSCOMMONDIR)\Dcp\$(Platform)`,
+  `\Dcp` for Win32, so programs need no paths) and `packages/dclPeardox`
+  (design; Win32 + Win64), written by `tools/gen_packages.py`. Peardox
+  requires Gorilla3D's runtime package `Gorilla3D_Delphi_13_2_0_Florence`
+  (the name from StereoModel's DCC_UsePackage; it has no WinARM64EC entry,
+  so neither has Peardox). StereoGroup.groupproj shows StereoModel,
+  Peardox, dclPeardox and builds Peardox, dclPeardox, StereoModel, with
+  Dependencies; check they survive the IDE's re-saves (TSteamAPI's group
+  lost its Dependencies three times). NOT YET BUILT.
+- `src/ui/StereoModelMain` (StereoCam8): the component is on the form,
+  `PeardoxOrbitalCamera1` in the `.fmx` with `Viewport = GorillaViewport1`
+  (last in the file, so the viewport has loaded first); the `.dpr` /
+  `.dproj` no longer list `lib` or search it. The program's WinARM64EC
+  target cannot link Gorilla3D or Peardox (no packages there).
+- StereoCam8 first install (owner): TPeardoxOrbitalCamera greyed out on
+  the palette - no ComponentPlatformsAttribute; StereoCam9 adds it.
+- Picture placement (owner, 7 November 2026): tried and REMOVED. Truck /
+  pedestal (StereoCam10) moved the camera, so the view changed; a lens
+  shift through a GetProjectionMatrix override (StereoCam13) drew nothing,
+  because Gorilla3D's context builds the projection from
+  GetProjectionSettings, a record of Kind, OrthoHeight and OrthoWidth only;
+  moving the viewport control (StereoCam14) was rejected ("it just moves
+  the VP"), and so was rendering larger and cropping. StereoCam15 removes
+  it all. A true lens shift needs Gorilla3D: TO ASK ITS AUTHOR (owner
+  relays) an offset in TGorillaProjectionSettings (OffsetX / OffsetY in
+  normalised device units, applied in ToMatrix by adding Offset times the
+  w column to the x and y columns), or a way for a camera to supply its
+  own matrix. The stereo pair needs the same (off-axis frustum per eye for
+  convergence without toe-in). Terms: shift and rise/fall (view camera);
+  pan/tilt turn the camera; truck/pedestal move it.
+- Dolly zoom: tried and REMOVED (StereoCam15 to 17, owner, 14:54: "take
+  that out too - earlier was better"). The arithmetic was right (the
+  owner's log: Distance * tan(FOV / 2) held at 2.00 from 45 degrees to 10),
+  and FOV and FMX's AngleOfView both changed on the camera, but Gorilla3D
+  1.5.3 did not draw with the new lens: first plain zooming (distance
+  only), then, with ProjectionChanged called, a slow zoom. Changing the
+  field of view at run time does not behave in Gorilla3D as expected -
+  ask its author before trying again. StereoCam18 puts the component back
+  to StereoCam9's file exactly, and the test form to left-drag orbit, wheel
+  zoom, no click resets, right button unused; the test hallway went with
+  it.
+- StereoCam19 (owner, 15:03): `SetTargetDepth` moves the orbit centre
+  along the line of sight with the camera fixed (Distance becomes the
+  depth; for the SR display's convergence plane later); test form:
+  right-drag vertical, 1.01 per pixel, up deeper. Fit overloads on the
+  component for the target space: `FitToBounds` / `FitToBoundsMax` with a
+  model, an array of models (union of GetAbsoluteBoundingBox), a box in
+  the scene's space, or a box in an object's space (part of a model);
+  each sets target and distance from the current angles, FOV and
+  projection.
+- StereoCam20 (owner, 15:12): File, Open. The filter is built from
+  TGorillaLoader.FileTypes (a dictionary keyed by extension, filled by each
+  loader unit linked in), so it lists exactly what loads; loaders in
+  StereoModelMain's uses: GLB, GLTF, OBJ, FBX, DAE, STL, PLY, USD (owner:
+  USD is fine now; Sprite3D left it out for a problem in an earlier
+  Gorilla3D), Babylon, G3D. Left out: Gorilla.Mayo.* and Gorilla.SKP
+  (external libraries, as far as known) and Gorilla.Sketchfab (web). A new
+  model replaces the old only once it has loaded. File menu hidden on
+  Android / iOS. src/common/FmxLinuxMenu.pas: an UNCHANGED copy of
+  TSteamAPI's (identical in its demos) - never edit it here, re-copy;
+  its comments are TSteamAPI's PasDoc style, not ours, so pasdoc_check is
+  not run on it. ReplaceMainMenu(Self, MainMenu1) is first in FormCreate.
+- StereoCam21 (owner, 15:27, Mage.glb shown with its feet in the middle):
+  fits now frame as Sprite3D does (FitCameraToSweep): FitToBounds = the
+  box's corners through the inner camera's FitPointsOnAxis, centred, target
+  on the turning axis (ASpace's Y through the centre of rotation);
+  FitToBoundsMax = the ball round the corners centred ON THAT AXIS halfway
+  up (not on RotationCenter itself, which was the cause: Mage's is at his
+  feet), every angle safe. Boxes and groups take an optional rotation
+  centre (TPoint3D overloads); without it a box or group turns about its
+  middle, a box in an object's space about that object's RotationCenter.
+- MEMORY LEAK opening several models (owner, 15:27, FastMM5 log): ALL in
+  Gorilla3D 1.5.3, none of ours - the FBX loader's parse tree is never
+  freed (6848 TFBXNode, 16036 TFBXProperty, 3709 + 6848 TObjectList, 6848
+  TDictionary<string, TObjectList<TFBXNode>>, for the FBX files of that
+  run), one Gorilla.Imaging.TGA.TTargaFileFormat, and two TStringList
+  holding shader source (vertPos, return vec4). For Gorilla3D's author,
+  with the projection-offset and field-of-view questions.
+- Next: the stereo rendering (target display still to be named by the
+  owner).
 - FastMM5 (submodule, owner 7 November 2026) is the memory manager on
   Windows, first in the `.dpr`; Debug builds report leaks, in full, to
   `StereoModel_MemoryManager_EventLog.txt` beside the executable.
@@ -72,7 +154,13 @@ Keep this file up to date when the rules or the state of the work change.
   EXIT, still there with StereoCam3. The FastMM5 leak dump of that run
   located it (see Lessons); StereoCam4 fixes it. The model also came up
   upside down: StereoCam4 turns it 180 degrees about X as Sprite3D does.
-  Awaiting the owner's re-test.
+  Owner's re-test (push 5aea8b7): upright, horizontal drag reversed as
+  asked (StereoCam6), no word of the exit crash since StereoCam4. Then:
+  the wheel could take the camera inside the model. StereoCam7 adds
+  `Subject` (a TGorillaModel): every move made through the component keeps
+  the camera beyond the face nearest it (ray from the orbit centre through
+  the model's box, plus twice the viewport's near plane). The box, not the
+  mesh: a model that does not fill its box stops short.
 - `tools/pasdoc.bat` (+ the two dark .css files), adapted from
   peardox/SRDelphiFMX: programs are `src\<program>.dpr`, the api run is
   `lib` without `*.Reg`. Not yet run.
@@ -81,6 +169,21 @@ Keep this file up to date when the rules or the state of the work change.
   stereo work starts.
 - `MainMenu1` is on the form: once it has items, desktop Linux needs
   Sprite3D's `UseFmxMenuBar` swap (see Sprite3D's `CLAUDE.md`, Menus).
+
+## Maybe later (owner, 7 November 2026)
+
+Not to start unless the owner asks for one.
+
+- **Dolly zoom**: tried in StereoCam15 to 17 and removed - Gorilla3D did
+  not draw a field-of-view change made while running (see Where the work
+  is). Needs Gorilla3D's author first.
+- **Convergence pull**, once the stereo pair exists: convergence (the
+  depth that sits on the screen surface) and eye separation will be rig
+  properties anyway; a pull is changing convergence smoothly during a
+  view, bringing the model out of the screen or back behind it.
+- **Focus pull**: advised AGAINST. It needs depth-of-field blur from the
+  renderer (not checked whether Gorilla3D has one), and on a glasses-free
+  display blur fights the depth cues and tires the viewer.
 
 ## Lessons learned
 
@@ -92,6 +195,12 @@ Keep this file up to date when the rules or the state of the work change.
   component's destructor later called into a dead camera. On the
   viewport's notice the component now lets go of the camera and light at
   once and never touches them again.
+- **Palette greyed out**: a component class needs
+  `[ComponentPlatformsAttribute(...)]` (here `PEARDOX_COMPONENT_PLATFORMS`,
+  `pidAllPlatforms` as Gorilla3D's components use); without it the IDE
+  takes it as Win32-only and greys it out while the project's active
+  platform is Win64 (owner, 7 November 2026). Every new Peardox component
+  carries the attribute.
 - **Reading a FastMM5 leak dump**: when an exception aborts shut-down,
   TApplication, TPlatformWin, the form and its registry entries all show
   as leaks; they are a symptom. The leaked object of our own class is the

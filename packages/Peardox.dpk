@@ -1,0 +1,17 @@
+package Peardox;
+
+{ Peardox components for FireMonkey and Gorilla3D - runtime. Written by tools/gen_packages.py - edit the script, not this file. }
+
+{$DESCRIPTION 'Peardox components for FireMonkey and Gorilla3D - runtime'}
+{$RUNONLY}
+{$IMPLICITBUILD ON}
+
+requires
+  rtl,
+  fmx,
+  Gorilla3D_Delphi_13_2_0_Florence;
+
+contains
+  Peardox.OrbitalCamera in '..\lib\Peardox.OrbitalCamera.pas';
+
+end.

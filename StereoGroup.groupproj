@@ -4,7 +4,13 @@
     </PropertyGroup>
     <ItemGroup>
         <Projects Include="src\StereoModel.dproj">
+            <Dependencies>packages\Peardox.dproj</Dependencies>
+        </Projects>
+        <Projects Include="packages\Peardox.dproj">
             <Dependencies/>
+        </Projects>
+        <Projects Include="packages\dclPeardox.dproj">
+            <Dependencies>packages\Peardox.dproj</Dependencies>
         </Projects>
     </ItemGroup>
     <ProjectExtensions>
@@ -23,14 +29,32 @@
     <Target Name="StereoModel:Make">
         <MSBuild Projects="src\StereoModel.dproj" Targets="Make"/>
     </Target>
+    <Target Name="Peardox">
+        <MSBuild Projects="packages\Peardox.dproj"/>
+    </Target>
+    <Target Name="Peardox:Clean">
+        <MSBuild Projects="packages\Peardox.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Peardox:Make">
+        <MSBuild Projects="packages\Peardox.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="dclPeardox">
+        <MSBuild Projects="packages\dclPeardox.dproj"/>
+    </Target>
+    <Target Name="dclPeardox:Clean">
+        <MSBuild Projects="packages\dclPeardox.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="dclPeardox:Make">
+        <MSBuild Projects="packages\dclPeardox.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Build">
-        <CallTarget Targets="StereoModel"/>
+        <CallTarget Targets="Peardox;dclPeardox;StereoModel"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="StereoModel:Clean"/>
+        <CallTarget Targets="Peardox:Clean;dclPeardox:Clean;StereoModel:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="StereoModel:Make"/>
+        <CallTarget Targets="Peardox:Make;dclPeardox:Make;StereoModel:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>

@@ -85,5 +85,17 @@ object Form2: TForm2
   object MainMenu1: TMainMenu
     Left = 32
     Top = 16
+    object FileMenuItem: TMenuItem
+      Text = 'File'
+      object OpenMenuItem: TMenuItem
+        Text = 'Open...'
+        OnClick = OpenMenuItemClick
+      end
+    end
+  end
+  object PeardoxOrbitalCamera1: TPeardoxOrbitalCamera
+    Viewport = GorillaViewport1
+    Left = 80
+    Top = 16
   end
 end

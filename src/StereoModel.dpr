@@ -1,14 +1,17 @@
 //** @abstract(StereoModel: shows a 3D model on a glasses-free stereo display.)
 //**
 //** The model is shown in a Gorilla3D viewport through TPeardoxOrbitalCamera, the Peardox
-//** orbital camera component. TForm2, in StereoModelMain, holds the view. Leaks still
+//** orbital camera component, which comes from the Peardox runtime package's DCUs in Delphi's
+//** Dcp folder, so the program lists no lib unit and needs no path to it. TForm2, in
+//** StereoModelMain, holds the view. Leaks still
 //** allocated at shut-down are reported, as ReportMemoryLeaksOnShutdown is set in Debug
 //** builds. On Windows FastMM5 is the memory manager and also writes them, in full, to
 //** StereoModel_MemoryManager_EventLog.txt beside the executable.
 //**
 //** @preformatted(
-//** src/ui/  the forms
-//** lib/     the Peardox components, shared with other projects
+//** src/ui/      the forms
+//** src/common/  helpers shared with other projects (FmxLinuxMenu, from TSteamAPI)
+//** lib/         the Peardox components' sources, built by packages/Peardox.dpk
 //** )
 program StereoModel;
 
@@ -16,14 +19,17 @@ program StereoModel;
   StereoModel: shows a 3D model on a glasses-free stereo display.
 
   The model is shown in a Gorilla3D viewport through TPeardoxOrbitalCamera,
-  the Peardox orbital camera component. TForm2, in StereoModelMain, holds
-  the view. Leaks still allocated at shut-down are reported, as
+  the Peardox orbital camera component, which comes from the Peardox
+  runtime package's DCUs in Delphi's Dcp folder, so the program lists no
+  lib unit and needs no path to it. TForm2, in StereoModelMain, holds the
+  view. Leaks still allocated at shut-down are reported, as
   ReportMemoryLeaksOnShutdown is set in Debug builds. On Windows FastMM5 is
   the memory manager and also writes them, in full, to
   StereoModel_MemoryManager_EventLog.txt beside the executable.
 
-    src/ui/  the forms
-    lib/     the Peardox components, shared with other projects
+    src/ui/      the forms
+    src/common/  helpers shared with other projects (FmxLinuxMenu, from TSteamAPI)
+    lib/         the Peardox components' sources, built by packages/Peardox.dpk
 }
 
 uses
@@ -34,7 +40,7 @@ uses
   {$ENDIF}
   System.StartUpCopy,
   FMX.Forms,
-  Peardox.OrbitalCamera in '..\lib\Peardox.OrbitalCamera.pas',
+  FmxLinuxMenu in 'common\FmxLinuxMenu.pas',
   StereoModelMain in 'ui\StereoModelMain.pas' {Form2};
 
 {$R *.res}

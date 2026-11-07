@@ -1,0 +1,18 @@
+package dclPeardox;
+
+{ Peardox components for FireMonkey and Gorilla3D - design time. Written by tools/gen_packages.py - edit the script, not this file. }
+
+{$DESCRIPTION 'Peardox components for FireMonkey and Gorilla3D - design time'}
+{$DESIGNONLY}
+{$IMPLICITBUILD ON}
+
+requires
+  rtl,
+  fmx,
+  designide,
+  Peardox;
+
+contains
+  Peardox.Reg in '..\lib\Peardox.Reg.pas';
+
+end.
