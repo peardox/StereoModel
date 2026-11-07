@@ -64,6 +64,21 @@ Keep this file up to date when the rules or the state of the work change.
   and frames it, for the owner's first test. Next after that test: put the
   component on the form in the `.fmx`, then the packages, then the stereo
   rendering (target display still to be named by the owner).
-- Not yet in this repository: the `FastMM5` submodule Sprite3D uses.
+- FastMM5 (submodule, owner 7 November 2026) is the memory manager on
+  Windows, first in the `.dpr`; Debug builds report leaks, in full, to
+  `StereoModel_MemoryManager_EventLog.txt` beside the executable.
+- First Win64 run (owner, 7 November 2026): camera made, uvcube.glb loaded
+  and framed (distance 4.84), headlight on; then an ACCESS VIOLATION ON
+  EXIT. Zip StereoCam3 holds the most likely fix (below); awaiting the
+  owner's re-test, and the call stack if it still happens.
 - `MainMenu1` is on the form: once it has items, desktop Linux needs
   Sprite3D's `UseFmxMenuBar` swap (see Sprite3D's `CLAUDE.md`, Menus).
+
+## Lessons learned
+
+- **Gorilla3D teardown**: let the viewport free what is in it. The camera
+  and light are owned by the viewport, as in Sprite3D and VirtualGamepad;
+  while the viewport or its form is being destroyed, the component only
+  lets go of them. Freeing them from the component's destructor, while the
+  viewport still held them, is the most likely cause of the access
+  violation on exit (to be confirmed by the owner's re-test).

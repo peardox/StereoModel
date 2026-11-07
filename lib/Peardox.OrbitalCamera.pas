@@ -1182,10 +1182,13 @@ type
   //** when it is made. Fits, orbits and zooms work on the camera, and do nothing, returning
   //** False where they return anything, until it exists.
   //**
-  //** The camera and light are freed with the component. If the viewport goes first, freeing
-  //** the rig and so the camera and light with it, the component notices, keeps the camera's
-  //** last values and makes a new camera when it is given a viewport again. Use it from the
-  //** main thread only, like any FMX object.
+  //** The camera and light are owned by the viewport they are made in, as in Sprite3D and
+  //** VirtualGamepad. When the form closes the viewport frees them, with the rig, and the
+  //** component only lets go of them. When the component is freed on its own, or given
+  //** another viewport, it frees them itself, after taking the camera out of the viewport. If
+  //** the viewport goes first the component notices, keeps the camera's last values and makes
+  //** a new camera when it is given a viewport again. Use it from the main thread only, like
+  //** any FMX object.
   //**
   //** @seealso(TPeardoxOrbitalGorillaCamera)
   TPeardoxOrbitalCamera = class(TComponent)
@@ -1235,6 +1238,19 @@ type
     //** Gorilla's. The field of view, projection and orthographic sizes are not read: the fields
     //** already hold them, kept by their setters, and by KeepOrthoSizes after a fit or Zoom.
     procedure KeepCameraValues;
+    //** @abstract(Whether the viewport, or the form it is on, is being freed.)
+    //**
+    //** While it is, the camera and light are left for the viewport to free, as it frees its
+    //** children, as Sprite3D and VirtualGamepad do: freeing them first, while it still holds
+    //** them, is the most likely cause of an access violation seen on exit.
+    //**
+    //** @returns(True if the viewport or its owner is being destroyed.)
+    function ViewportClosing: Boolean;
+    //** @abstract(Keeps the camera's values, takes it out of the viewport and frees it, with
+    //** its rig and light.)
+    //**
+    //** Only while the viewport is not closing; see ViewportClosing.
+    procedure ReleaseCamera;
     //** @abstract(Copies the camera's orthographic sizes into the fields after a fit or Zoom
     //** has changed them, so a camera made again starts with them.)
     procedure KeepOrthoSizes;
@@ -1310,7 +1326,8 @@ type
     //**
     //** @param(AOwner The owner, normally the form.)
     constructor Create(AOwner: TComponent); override;
-    //** @abstract(Takes the camera out of the viewport and frees it, with its rig and light.)
+    //** @abstract(Takes the camera out of the viewport and frees it, with its rig and light,
+    //** unless the viewport is closing and frees them itself.)
     destructor Destroy; override;
     //** @abstract(Frames a model for the current angles; see TPeardoxOrbitalGorillaCamera.FitToBounds.)
     //**
@@ -2368,18 +2385,47 @@ end;
 
 destructor TPeardoxOrbitalCamera.Destroy;
 begin
-  Detach;
   if FCamera <> nil then
   begin
-    FCamera.RemoveFreeNotification(Self);
-    if FLight <> nil then
-      FLight.RemoveFreeNotification(Self);
-    // The camera frees its rig, and the light with it as the camera's child
-    FreeAndNil(FCamera);
-    FLight := nil;
+    if ViewportClosing then
+    begin
+      // The form is closing: the viewport frees the rig, camera and light
+      // itself, after this, as Sprite3D and VirtualGamepad leave it to.
+      // Freeing them here, while the viewport still holds them, is the
+      // most likely cause of an access violation on exit (7 November 2026)
+      FCamera.RemoveFreeNotification(Self);
+      if FLight <> nil then
+        FLight.RemoveFreeNotification(Self);
+      FCamera := nil;
+      FLight := nil;
+    end
+    else
+      ReleaseCamera;
   end;
   SetViewport(nil);
   inherited;
+end;
+
+function TPeardoxOrbitalCamera.ViewportClosing: Boolean;
+begin
+  Result := (FViewport <> nil)
+    and ((csDestroying in FViewport.ComponentState)
+      or ((FViewport.Owner <> nil) and (csDestroying in FViewport.Owner.ComponentState)));
+end;
+
+procedure TPeardoxOrbitalCamera.ReleaseCamera;
+begin
+  if FCamera = nil then
+    Exit;
+  KeepCameraValues;
+  KeepOrthoSizes;
+  Detach;
+  FCamera.RemoveFreeNotification(Self);
+  if FLight <> nil then
+    FLight.RemoveFreeNotification(Self);
+  // The camera frees its rig, and the light with it as the camera's child
+  FreeAndNil(FCamera);
+  FLight := nil;
 end;
 
 function TPeardoxOrbitalCamera.CanAttach: Boolean;
@@ -2397,9 +2443,11 @@ begin
     Exit;
   if FCamera = nil then
   begin
-    // No owner: the component frees it. The free notification tells us if
-    // the viewport frees it first, as it does its children when it goes
-    FCamera := TPeardoxOrbitalGorillaCamera.Create(nil);
+    // Owned by the viewport, as in Sprite3D and VirtualGamepad, so that when
+    // the form closes the viewport frees it with everything else. The free
+    // notification tells us when that happens. Made with the viewport as
+    // owner, the camera also puts its rig in the viewport itself
+    FCamera := TPeardoxOrbitalGorillaCamera.Create(FViewport);
     FCamera.FreeNotification(Self);
     FCamera.FOV := FFOV;
     FCamera.Distance := FDistance;
@@ -2447,9 +2495,9 @@ begin
   if FHeadlight and (FCamera <> nil) and (FLight = nil) then
   begin
     // A child of the camera at its origin with no turn of its own, so it
-    // lights whatever side is in view (as in Sprite3D). No owner: it goes
-    // with the camera, as its child
-    FLight := TGorillaLight.Create(nil);
+    // lights whatever side is in view (as in Sprite3D). Owned, like the
+    // camera, by the viewport, as in VirtualGamepad
+    FLight := TGorillaLight.Create(FCamera.Owner);
     FLight.FreeNotification(Self);
     FLight.Parent := FCamera;
     FLight.Position.Point := TPoint3D.Zero;
@@ -2512,7 +2560,19 @@ procedure TPeardoxOrbitalCamera.SetViewport(const Value: TGorillaViewport);
 begin
   if Value = FViewport then
     Exit;
-  Detach;
+  // The camera and light belong to the viewport they were made in, so a
+  // new viewport gets new ones (with the same values); the old are freed
+  // now unless that viewport is closing and frees them itself
+  if (FCamera <> nil) and ViewportClosing then
+  begin
+    FCamera.RemoveFreeNotification(Self);
+    if FLight <> nil then
+      FLight.RemoveFreeNotification(Self);
+    FCamera := nil;
+    FLight := nil;
+  end
+  else
+    ReleaseCamera;
   if FViewport <> nil then
     FViewport.RemoveFreeNotification(Self);
   FViewport := Value;
