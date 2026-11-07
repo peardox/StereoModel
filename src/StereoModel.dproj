@@ -340,6 +340,7 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
+        <DCCReference Include="..\lib\Peardox.OrbitalCamera.pas"/>
         <DCCReference Include="ui\StereoModelMain.pas">
             <Form>Form2</Form>
             <FormType>fmx</FormType>
