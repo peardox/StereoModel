@@ -180,8 +180,58 @@ Keep this file up to date when the rules or the state of the work change.
   FormCreate (Control = GorillaViewport1), Stereo button (StaysPressed)
   hidden unless Installed, pressed = Start, released = Stop, choice saved;
   auto-start after the first model load when UseGlassesFree3D; Stop in
-  FormClose. NOT YET BUILT. To see in the owner's log: whether eye
-  positions and SR events come while nothing is presented.
+  FormClose. Owner's first run (branch `stereo`, push 0c89b44, 16:21,
+  under the debugger): works - background check 937 ms, then
+  srb_Initialize 9.2 s on the main thread (window frozen; SRDemoFMX
+  measured ~0.2 s without the debugger and ~20 s to first frame under F9,
+  so probably the debugger and NVIDIA's DLL loads: judge without it), SR
+  1.36.4, display 3840 x 2160, 596.7 x 335.7 mm, view mm follows the
+  window (maximise / restore), UserLost / UserFound / LensOff events
+  arrive and the EYES TRACK (separation 63-72 mm) with nothing presented;
+  Stop / Start again fine. No 3D, as expected. StereoCam23 (owner: "Log
+  to file please"): src/common/StereoModelLog.pas, StereoModel.log beside
+  the exe (documents folder on macOS / mobile), the previous run's kept
+  as StereoModel.prev.log, every ShowStatus line timed and flushed, ends
+  "Log closed normally"; opened first in FormCreate, closed in FormClose.
+  Owner's Release run (16:26, still from the IDE: its Event Log shows the
+  debugger attached): srb_Initialize again 9.2 s, and the UI was BLURRED -
+  the bridge creates its lens hint inside srb_Initialize in the state last
+  set with srb_SetLens, which starts as ON (bridge g.lensOn = true), so the
+  lens was on through the whole start until our srb_SetLens(0) after it.
+  StereoCam23 also calls srb_SetLens(0) before srb_Initialize.
+  Owner (16:29): without the debugger "much faster". StereoCam23's log
+  (16:31, Debug build, debugger not known): no blur reported; start
+  8.9 s (D3D11 device 3.4 s, weaver 4.4 s), and srb_Finalize took 9.3 s
+  (7 s of it AFTER "SR context deleted": the bridge releasing its D3D
+  objects / child window) - the window freezes for both; to look at if
+  it holds without the debugger. A second start was stopped at once
+  (clicks queued during the freeze). StereoCam24 (owner, 16:35: "Need
+  some indicator to inform when Lens is on"): TPeardoxLeiaSR.LensState
+  (lslUnknown / lslOn / lslOff, from the SR LensOn / LensOff events,
+  SRB_EVENT_LENS_ON = 14 / _OFF = 15 in the Api unit; unknown after
+  Stop) and OnLensChange; the form's FLensLabel left of btnStereo: LENS
+  ON red bold, Lens off grey, blank while not running. The log's first
+  line now says whether a debugger is attached (IsDebuggerPresent).
+  Owner's build of 24 failed (E2003 OnLensChange, LensState, lslOn) only
+  because PeardoxLeiaSR had not been rebuilt - the program takes the
+  package's DCUs from the Dcp folder. StereoCam25 (owner, 16:40: "Changing
+  the depth with RightDrag made wheel zoom behave badly in big jumps"):
+  Zoom scales Distance, the distance to the TARGET, so after a deep
+  SetTargetDepth (the log had 1186) a notch moved the camera ~110 units.
+  The test form's wheel now steps by a share of the camera's distance to
+  the MODEL's box centre, moving along the line of sight (Distance minus
+  the change), at least MIN_TARGET_SHARE (5%) of Distance left when the
+  target is in front of the model; FZoom tracks the model distance. Form
+  only, the component's Zoom is unchanged.
+  StereoCam26 (owner, 16:47: wants the model to pop out, "a Z of < 0 but
+  right drag won't permit this"): the target depth is a distance from the
+  camera, always > 0; pop-out is the TARGET DEEPER THAN THE MODEL (drag
+  up), which right-drag already allows (the log went to 1186). The status
+  line now says it: DepthStatus gives the model centre's Z against the
+  glass, Z = depth along the line of sight - target depth (< 0 in front,
+  out of the screen), and in mm while LeiaSR runs, at mm per unit =
+  view height mm / (2 * target depth * tan(FOV / 2)), FOV taken as
+  vertical. Nothing shows on the display until step 1 weaves.
 - Next, step 1: first light - Gorilla3D renders each eye (off-axis in the
   view matrix as SRDelphiFMX does, else toe-in), pixels read back and
   uploaded with srb_SubmitViews; convergence = the camera's target depth

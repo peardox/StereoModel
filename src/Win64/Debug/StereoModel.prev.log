@@ -1,0 +1,907 @@
+﻿16:43:01.889  StereoModel log, 2026-11-07, Debug build, debugger attached, Windows 11 (Version 26H2, OS Build 26300.9818, 64-bit Edition)
+16:43:01.889  Executable C:\src\StereoModel\src\Win64\Debug\StereoModel.exe
+16:43:01.944  Orbital camera made: FOV 45, distance 10.00, headlight True
+16:43:01.953  LeiaSR settings read from C:\Users\simon\AppData\Roaming\Peardox\LeiaSR.json
+16:43:01.965  LeiaSR installed; glasses-free 3D is off in the settings
+16:43:06.055  Loaded C:\src\StereoModel\models\uvcube.glb; azimuth 0.0, polar 0.0, distance 4.84, headlight True
+16:43:18.188  Checking for the LeiaSR service and display on a background thread (up to 5000 ms)
+16:43:18.356  LeiaSR settings saved to C:\Users\simon\AppData\Roaming\Peardox\LeiaSR.json
+16:43:19.122  LeiaSR check: service running and SR display found, after 828 ms
+16:43:19.134  [bridge] [bridge t7140] log callback set
+16:43:19.144  [bridge] [bridge t7140] external device 0000000000000000 cleared: the bridge makes its own
+16:43:19.158  Starting LeiaSR (srb_Initialize, timeout 5.0 s, lens off); the bridge uses a Direct3D 11 device of its own
+16:43:19.174  [bridge] [bridge t7140] srb_Initialize(parent 00000000006F0E56)
+16:43:19.188  [bridge] [bridge t7140] creating SR context (timeout 5.0 s)
+16:43:19.339  [bridge] [bridge t7140] SR context 000001C0795E8D50
+16:43:19.354  [bridge] [bridge t7140] display 000001C079E88D20 ready: 3840 x 2160 px, 59.7 x 33.6 cm
+16:43:19.605  [bridge] [bridge t7140] SR system event 17: User has been lost
+16:43:19.649  [bridge] [bridge t7140] system listener 000001C07A208370, lens hint 000001C079AD15B8
+16:43:19.660  [bridge] [bridge t7140] SR display at (0, 0)-(3840, 2160), from SR::Display::getLocation
+16:43:19.674  [bridge] [bridge t7140] SR display is driven by adapter 0 (NVIDIA GeForce RTX 5090 Laptop GPU); output \\.\DISPLAY6 at 60 Hz
+16:43:19.688  [bridge] [bridge t7140] adapter 0: NVIDIA GeForce RTX 5090 Laptop GPU, vendor 0x10DE, 24137 MB dedicated; monitors: \\.\DISPLAY6 (0, 0)-(3840, 2160), \\.\DISPLAY5 (-5360, 7)-(-1920, 1447)
+16:43:19.698  [bridge] [bridge t7140] adapter 1: Intel(R) Graphics, vendor 0x8086, 128 MB dedicated; monitors: \\.\DISPLAY1 (-1920, 0)-(0, 1200)
+16:43:19.712  [bridge] [bridge t7140] adapter 2: Microsoft Basic Render Driver, vendor 0x1414, 0 MB dedicated (software, skipped); monitors: none
+16:43:19.726  [bridge] [bridge t7140] adapter choice: the one driving the SR display
+16:43:23.338  [bridge] [bridge t7140] D3D11 device on NVIDIA GeForce RTX 5090 Laptop GPU
+16:43:23.353  [bridge] [bridge t7140] child window 00000000007F0CA2, 1 x 1, D3D device 000001C07A249E10, swap chain 000001C023BB5720 (bitblt model, DISCARD, as Leia's samples)
+16:43:23.373  [bridge] [bridge t7140] SR display is driven by adapter 0 (NVIDIA GeForce RTX 5090 Laptop GPU): the same as the bridge's; output \\.\DISPLAY6 at 60 Hz
+16:43:27.767  [bridge] [bridge t7140] weaver 000001C07A1FE5A0 created
+16:43:28.333  [bridge] [bridge t7140] SR context initialised
+16:43:28.350  [bridge] [bridge t7140] srb_Initialize done
+16:43:28.370  srb_Initialize returned 0 after 9187 ms (10172 ms after Start)
+16:43:28.397  SR platform 1.36.4.35453
+16:43:28.420  SR display 3840 x 2160 px (panel 3840 x 2160), 596.7 x 335.7 mm, recommended view 1920 x 1080 per eye
+16:43:28.438  SR display on the desktop at (0, 0)-(3840, 2160)
+16:43:28.457  The form is on the SR display
+16:43:28.480  Settings: eye separation 63.0 mm (0 = tracked), look-around True, latency 0 frames (0 = SR's), lens mode 0 (0 off over controls, 1 on, 2 off), full screen False
+16:43:28.505  Nothing is woven yet: the bridge's window is hidden and the lens off
+16:43:28.528  View at (0, 0), 1623 x 934 physical pixels (scale 1.50)
+16:43:28.549  View on the SR display: centre (-123.3, 36.4) mm, 252.2 x 145.1 mm
+16:43:28.567  [bridge] [bridge t37036] SR system event 15: Lens has been disabled.
+16:43:28.592  [bridge] [bridge t37036] SR system event 17: User has been lost
+16:43:28.617  [bridge] [bridge t7140] srb_Finalize
+16:43:28.635  [bridge] [bridge t7140] tearing down SR (weaver 000001C07A1FE5A0, context 000001C0795E8D50)
+16:43:29.209  [bridge] [bridge t7140] weaver destroyed
+16:43:30.619  [bridge] [bridge t7140] SR context deleted
+16:43:37.908  LeiaSR stopped
+16:43:37.925  LeiaSR settings saved to C:\Users\simon\AppData\Roaming\Peardox\LeiaSR.json
+16:43:43.673  Checking for the LeiaSR service and display on a background thread (up to 5000 ms)
+16:43:43.783  LeiaSR settings saved to C:\Users\simon\AppData\Roaming\Peardox\LeiaSR.json
+16:43:44.163  LeiaSR check: service running and SR display found, after 390 ms
+16:43:44.171  [bridge] [bridge t7140] log callback set
+16:43:44.179  [bridge] [bridge t7140] external device 0000000000000000 cleared: the bridge makes its own
+16:43:44.187  Starting LeiaSR (srb_Initialize, timeout 5.0 s, lens off); the bridge uses a Direct3D 11 device of its own
+16:43:44.200  [bridge] [bridge t7140] srb_Initialize(parent 00000000006F0E56)
+16:43:44.215  [bridge] [bridge t7140] creating SR context (timeout 5.0 s)
+16:43:44.341  [bridge] [bridge t7140] SR context 000001C0795E8D50
+16:43:44.353  [bridge] [bridge t7140] display 000001C079B882F0 ready: 3840 x 2160 px, 59.7 x 33.6 cm
+16:43:44.601  [bridge] [bridge t7140] SR system event 17: User has been lost
+16:43:44.641  [bridge] [bridge t7140] system listener 000001C031F19B20, lens hint 000001C023D8CD78
+16:43:44.653  [bridge] [bridge t7140] SR display at (0, 0)-(3840, 2160), from SR::Display::getLocation
+16:43:44.666  [bridge] [bridge t7140] SR display is driven by adapter 0 (NVIDIA GeForce RTX 5090 Laptop GPU); output \\.\DISPLAY6 at 60 Hz
+16:43:44.678  [bridge] [bridge t7140] adapter 0: NVIDIA GeForce RTX 5090 Laptop GPU, vendor 0x10DE, 24137 MB dedicated; monitors: \\.\DISPLAY6 (0, 0)-(3840, 2160), \\.\DISPLAY5 (-5360, 7)-(-1920, 1447)
+16:43:44.688  [bridge] [bridge t7140] adapter 1: Intel(R) Graphics, vendor 0x8086, 128 MB dedicated; monitors: \\.\DISPLAY1 (-1920, 0)-(0, 1200)
+16:43:44.701  [bridge] [bridge t7140] adapter 2: Microsoft Basic Render Driver, vendor 0x1414, 0 MB dedicated (software, skipped); monitors: none
+16:43:44.715  [bridge] [bridge t7140] adapter choice: the one driving the SR display
+16:43:48.206  [bridge] [bridge t7140] D3D11 device on NVIDIA GeForce RTX 5090 Laptop GPU
+16:43:48.228  [bridge] [bridge t7140] child window 0000000000800CA2, 1 x 1, D3D device 000001C023EDB480, swap chain 000001C023BEAB60 (bitblt model, DISCARD, as Leia's samples)
+16:43:48.244  [bridge] [bridge t7140] SR display is driven by adapter 0 (NVIDIA GeForce RTX 5090 Laptop GPU): the same as the bridge's; output \\.\DISPLAY6 at 60 Hz
+16:43:53.192  [bridge] [bridge t7140] weaver 000001C023C1E820 created
+16:43:53.749  [bridge] [bridge t7140] SR context initialised
+16:43:53.772  [bridge] [bridge t7140] srb_Initialize done
+16:43:53.792  srb_Initialize returned 0 after 9578 ms (10109 ms after Start)
+16:43:53.806  SR platform 1.36.4.35453
+16:43:53.820  SR display 3840 x 2160 px (panel 3840 x 2160), 596.7 x 335.7 mm, recommended view 1920 x 1080 per eye
+16:43:53.836  SR display on the desktop at (0, 0)-(3840, 2160)
+16:43:53.855  The form is on the SR display
+16:43:53.878  Settings: eye separation 63.0 mm (0 = tracked), look-around True, latency 0 frames (0 = SR's), lens mode 0 (0 off over controls, 1 on, 2 off), full screen False
+16:43:53.898  Nothing is woven yet: the bridge's window is hidden and the lens off
+16:43:53.916  View at (0, 0), 1623 x 934 physical pixels (scale 1.50)
+16:43:53.935  View on the SR display: centre (-123.3, 36.4) mm, 252.2 x 145.1 mm
+16:43:53.954  [bridge] [bridge t6004] SR system event 15: Lens has been disabled.
+16:43:54.069  SR event UserLost: User has been lost
+16:43:54.083  SR event LensOff: Lens has been disabled.
+16:43:54.101  Lens off (SR event LensOff)
+16:43:54.485  [bridge] [bridge t6004] SR system event 16: User has been found
+16:43:54.510  SR event UserFound: User has been found
+16:43:54.723  Eyes found: L(-9.7, 103.5, 541.1) R(-2.3, 104.8, 541.2) mm
+16:43:55.050  Eyes L(-49.9, 90.1, 412.8) R(-20.5, 95.0, 412.7) mm, separation 29.9 mm | view centre (-123.3, 36.4) mm, 252.2 x 145.1 mm
+16:43:56.144  Eyes L(-161.0, -18.8, 425.3) R(-94.5, -8.4, 427.3) mm, separation 67.3 mm | view centre (-123.3, 36.4) mm, 252.2 x 145.1 mm
+16:43:57.233  Eyes L(-179.4, -54.9, 575.5) R(-113.1, -45.5, 583.2) mm, separation 67.4 mm | view centre (-123.3, 36.4) mm, 252.2 x 145.1 mm
+16:43:58.339  Eyes L(-187.5, -70.7, 676.3) R(-117.1, -55.3, 663.2) mm, separation 73.3 mm | view centre (-123.3, 36.4) mm, 252.2 x 145.1 mm
+16:43:59.436  Eyes L(-188.4, -73.2, 728.7) R(-119.1, -60.1, 720.9) mm, separation 70.9 mm | view centre (-123.3, 36.4) mm, 252.2 x 145.1 mm
+16:44:00.437  View at (0, 0), 3840 x 1969 physical pixels (scale 1.50)
+16:44:00.460  View on the SR display: centre (0.0, 4.9) mm, 596.7 x 306.0 mm
+16:44:00.484  Eyes L(-188.3, -73.6, 751.3) R(-119.4, -61.0, 746.5) mm, separation 70.2 mm | view centre (0.0, 4.9) mm, 596.7 x 306.0 mm
+16:44:01.506  Eyes L(-188.2, -73.5, 773.1) R(-119.8, -62.1, 771.7) mm, separation 69.4 mm | view centre (0.0, 4.9) mm, 596.7 x 306.0 mm
+16:44:02.601  Eyes L(-188.0, -74.0, 786.0) R(-120.2, -63.4, 787.0) mm, separation 68.5 mm | view centre (0.0, 4.9) mm, 596.7 x 306.0 mm
+16:44:03.690  Eyes L(-187.4, -74.6, 792.4) R(-120.9, -65.6, 798.5) mm, separation 67.3 mm | view centre (0.0, 4.9) mm, 596.7 x 306.0 mm
+16:44:04.794  Eyes L(-176.9, -68.8, 796.8) R(-109.2, -66.3, 808.6) mm, separation 68.8 mm | view centre (0.0, 4.9) mm, 596.7 x 306.0 mm
+16:44:05.887  Eyes L(-157.2, -58.6, 808.5) R(-89.1, -53.3, 812.7) mm, separation 68.5 mm | view centre (0.0, 4.9) mm, 596.7 x 306.0 mm
+16:44:06.975  Eyes L(-156.7, -59.1, 812.7) R(-88.5, -52.4, 817.3) mm, separation 68.7 mm | view centre (0.0, 4.9) mm, 596.7 x 306.0 mm
+16:44:08.069  Eyes L(-157.5, -60.3, 819.5) R(-87.8, -51.3, 817.1) mm, separation 70.4 mm | view centre (0.0, 4.9) mm, 596.7 x 306.0 mm
+16:44:09.164  Eyes L(-157.5, -60.8, 820.6) R(-87.8, -50.9, 818.3) mm, separation 70.4 mm | view centre (0.0, 4.9) mm, 596.7 x 306.0 mm
+16:44:10.260  Eyes L(-157.8, -59.6, 816.0) R(-90.1, -52.1, 823.2) mm, separation 68.5 mm | view centre (0.0, 4.9) mm, 596.7 x 306.0 mm
+16:44:11.350  Eyes L(-158.5, -60.3, 818.4) R(-89.4, -51.4, 820.9) mm, separation 69.7 mm | view centre (0.0, 4.9) mm, 596.7 x 306.0 mm
+16:44:12.444  Eyes L(-158.1, -60.8, 818.8) R(-89.7, -50.9, 820.6) mm, separation 69.1 mm | view centre (0.0, 4.9) mm, 596.7 x 306.0 mm
+16:44:13.538  Eyes L(-128.9, -58.2, 813.2) R(-62.3, -54.1, 826.7) mm, separation 68.0 mm | view centre (0.0, 4.9) mm, 596.7 x 306.0 mm
+16:44:14.632  Eyes L(-87.2, -56.8, 809.4) R(-21.0, -55.9, 830.9) mm, separation 69.6 mm | view centre (0.0, 4.9) mm, 596.7 x 306.0 mm
+16:44:15.735  Eyes L(-90.4, -58.1, 807.4) R(-23.8, -54.5, 828.5) mm, separation 70.0 mm | view centre (0.0, 4.9) mm, 596.7 x 306.0 mm
+16:44:16.823  Eyes L(-99.1, -59.2, 808.0) R(-30.5, -53.2, 823.9) mm, separation 70.7 mm | view centre (0.0, 4.9) mm, 596.7 x 306.0 mm
+16:44:17.917  Eyes L(-102.4, -59.9, 812.8) R(-33.0, -52.5, 818.8) mm, separation 70.1 mm | view centre (0.0, 4.9) mm, 596.7 x 306.0 mm
+16:44:19.517  View at (0, 0), 1623 x 934 physical pixels (scale 1.50)
+16:44:19.532  View on the SR display: centre (-123.3, 36.4) mm, 252.2 x 145.1 mm
+16:44:19.547  Eyes L(-102.5, -60.5, 813.1) R(-34.1, -51.9, 818.4) mm, separation 69.1 mm | view centre (-123.3, 36.4) mm, 252.2 x 145.1 mm
+16:44:20.638  Eyes L(-112.5, -65.1, 816.9) R(-43.4, -51.8, 804.8) mm, separation 71.4 mm | view centre (-123.3, 36.4) mm, 252.2 x 145.1 mm
+16:44:21.732  Eyes L(-126.6, -64.5, 804.1) R(-59.9, -57.1, 809.0) mm, separation 67.2 mm | view centre (-123.3, 36.4) mm, 252.2 x 145.1 mm
+16:44:22.835  Eyes L(-139.1, -65.7, 805.1) R(-70.4, -57.9, 807.7) mm, separation 69.2 mm | view centre (-123.3, 36.4) mm, 252.2 x 145.1 mm
+16:44:23.897  View at (0, 0), 3840 x 1969 physical pixels (scale 1.50)
+16:44:23.919  View on the SR display: centre (0.0, 4.9) mm, 596.7 x 306.0 mm
+16:44:23.944  Eyes L(-142.6, -66.1, 809.5) R(-72.2, -56.3, 803.3) mm, separation 71.4 mm | view centre (0.0, 4.9) mm, 596.7 x 306.0 mm
+16:44:25.027  Eyes L(-147.5, -65.6, 811.1) R(-76.2, -54.4, 801.7) mm, separation 72.8 mm | view centre (0.0, 4.9) mm, 596.7 x 306.0 mm
+16:44:26.115  Eyes L(-147.5, -56.3, 806.4) R(-77.3, -48.4, 811.4) mm, separation 70.8 mm | view centre (0.0, 4.9) mm, 596.7 x 306.0 mm
+16:44:27.225  Eyes L(-134.9, -51.4, 811.5) R(-67.2, -42.0, 812.3) mm, separation 68.4 mm | view centre (0.0, 4.9) mm, 596.7 x 306.0 mm
+16:44:28.325  Eyes L(-129.2, -58.9, 810.3) R(-61.7, -48.7, 813.3) mm, separation 68.4 mm | view centre (0.0, 4.9) mm, 596.7 x 306.0 mm
+16:44:29.330  [bridge] [bridge t7140] srb_Finalize
+16:44:29.347  [bridge] [bridge t7140] tearing down SR (weaver 000001C023C1E820, context 000001C0795E8D50)
+16:44:29.877  [bridge] [bridge t7140] weaver destroyed
+16:44:31.270  [bridge] [bridge t7140] SR context deleted
+16:44:37.924  LeiaSR stopped
+16:44:37.941  Lens not known (SR stopped)
+16:44:37.956  LeiaSR settings saved to C:\Users\simon\AppData\Roaming\Peardox\LeiaSR.json
+16:45:07.237  Target depth 4.051
+16:45:07.251  Target depth 4.132
+16:45:07.268  Target depth 4.215
+16:45:07.283  Target depth 4.329
+16:45:07.296  Target depth 4.504
+16:45:07.311  Target depth 4.625
+16:45:07.324  Target depth 4.813
+16:45:07.334  Target depth 5.009
+16:45:07.345  Target depth 5.076
+16:45:07.364  Target depth 5.212
+16:45:07.382  Target depth 5.282
+16:45:07.398  Target depth 5.424
+16:45:07.410  Target depth 5.460
+16:45:07.429  Target depth 5.496
+16:45:07.453  Target depth 5.644
+16:45:07.468  Target depth 5.719
+16:45:07.484  Target depth 5.873
+16:45:07.498  Target depth 5.952
+16:45:07.510  Target depth 6.112
+16:45:07.527  Target depth 6.193
+16:45:07.544  Target depth 6.402
+16:45:07.558  Target depth 6.618
+16:45:07.571  Target depth 6.796
+16:45:07.584  Target depth 6.933
+16:45:07.601  Target depth 7.166
+16:45:07.620  Target depth 7.262
+16:45:07.634  Target depth 7.507
+16:45:07.647  Target depth 7.658
+16:45:07.665  Target depth 7.812
+16:45:07.681  Target depth 8.075
+16:45:07.695  Target depth 8.183
+16:45:07.709  Target depth 8.403
+16:45:07.725  Target depth 8.515
+16:45:07.743  Target depth 8.744
+16:45:07.757  Target depth 8.979
+16:45:07.770  Target depth 9.221
+16:45:07.782  Target depth 9.532
+16:45:07.800  Target depth 9.723
+16:45:07.818  Target depth 10.118
+16:45:07.833  Target depth 10.322
+16:45:07.845  Target depth 10.390
+16:45:07.863  Target depth 10.670
+16:45:07.880  Target depth 10.812
+16:45:07.895  Target depth 11.103
+16:45:07.907  Target depth 11.251
+16:45:07.924  Target depth 11.554
+16:45:07.942  Target depth 11.631
+16:45:07.956  Target depth 11.708
+16:45:07.969  Target depth 12.023
+16:45:07.982  Target depth 12.103
+16:45:07.994  Target depth 12.183
+16:45:08.007  Target depth 12.346
+16:45:08.025  Target depth 12.594
+16:45:08.044  Target depth 12.847
+16:45:08.059  Target depth 13.106
+16:45:08.072  Target depth 13.193
+16:45:08.087  Target depth 13.548
+16:45:08.104  Target depth 13.729
+16:45:08.119  Target depth 14.192
+16:45:08.132  Target depth 14.670
+16:45:08.144  Target depth 14.866
+16:45:08.160  Target depth 15.266
+16:45:08.178  Target depth 15.676
+16:45:08.192  Target depth 16.313
+16:45:08.205  Target depth 16.751
+16:45:08.222  Target depth 17.202
+16:45:08.241  Target depth 17.432
+16:45:08.254  Target depth 18.139
+16:45:08.266  Target depth 18.627
+16:45:08.284  Target depth 18.876
+16:45:08.298  Target depth 19.384
+16:45:08.309  Target depth 19.642
+16:45:08.319  Target depth 19.642
+16:45:08.329  Target depth 20.171
+16:45:08.343  Target depth 20.305
+16:45:08.357  Target depth 20.440
+16:45:08.369  Target depth 20.990
+16:45:08.378  Target depth 21.129
+16:45:08.392  Target depth 21.270
+16:45:08.406  Target depth 21.554
+16:45:08.418  Target depth 21.842
+16:45:08.428  Target depth 21.987
+16:45:08.438  Target depth 22.134
+16:45:08.451  Target depth 22.134
+16:45:08.465  Target depth 22.429
+16:45:08.477  Target depth 22.729
+16:45:08.486  Target depth 22.880
+16:45:08.505  Target depth 23.032
+16:45:08.517  Target depth 23.032
+16:45:08.529  Target depth 23.340
+16:45:08.541  Target depth 23.652
+16:45:08.553  Target depth 23.967
+16:45:08.563  Target depth 24.612
+16:45:08.573  Target depth 24.612
+16:45:08.588  Target depth 24.941
+16:45:08.602  Target depth 25.611
+16:45:08.614  Target depth 25.953
+16:45:08.624  Target depth 26.300
+16:45:08.637  Target depth 26.651
+16:45:08.651  Target depth 27.007
+16:45:08.662  Target depth 27.733
+16:45:08.672  Target depth 28.104
+16:45:08.685  Target depth 28.479
+16:45:08.699  Target depth 28.859
+16:45:08.710  Target depth 29.051
+16:45:08.724  Target depth 29.245
+16:45:08.737  Target depth 29.635
+16:45:08.749  Target depth 30.031
+16:45:08.759  Target depth 30.231
+16:45:08.772  Target depth 30.432
+16:45:08.785  Target depth 30.839
+16:45:08.797  Target depth 31.251
+16:45:08.806  Target depth 31.459
+16:45:08.820  Target depth 31.668
+16:45:08.833  Target depth 32.520
+16:45:08.845  Target depth 32.520
+16:45:08.859  Target depth 32.954
+16:45:08.868  Target depth 32.954
+16:45:08.881  Target depth 33.394
+16:45:08.892  Target depth 33.840
+16:45:13.788  Target depth 33.997
+16:45:13.801  Target depth 33.327
+16:45:13.813  Target depth 32.670
+16:45:13.829  Target depth 32.027
+16:45:13.846  Target depth 31.815
+16:45:13.861  Target depth 30.982
+16:45:13.874  Target depth 30.573
+16:45:13.890  Target depth 29.773
+16:45:13.909  Target depth 29.380
+16:45:13.923  Target depth 28.422
+16:45:13.936  Target depth 27.495
+16:45:13.951  Target depth 27.132
+16:45:13.968  Target depth 26.247
+16:45:13.982  Target depth 25.730
+16:45:13.995  Target depth 25.056
+16:45:14.012  Target depth 24.400
+16:45:14.030  Target depth 23.761
+16:45:14.045  Target depth 23.139
+16:45:14.057  Target depth 22.533
+16:45:14.075  Target depth 21.943
+16:45:14.092  Target depth 21.369
+16:45:14.107  Target depth 20.535
+16:45:14.118  Target depth 19.997
+16:45:14.133  Target depth 19.217
+16:45:14.147  Target depth 18.714
+16:45:14.160  Target depth 17.983
+16:45:14.173  Target depth 17.629
+16:45:14.186  Target depth 17.054
+16:45:14.198  Target depth 16.388
+16:45:14.207  Target depth 16.172
+16:45:14.217  Target depth 15.749
+16:45:14.227  Target depth 15.541
+16:45:14.241  Target depth 15.134
+16:45:14.256  Target depth 14.448
+16:45:14.268  Target depth 13.884
+16:45:14.278  Target depth 13.431
+16:45:14.291  Target depth 13.254
+16:45:14.305  Target depth 12.907
+16:45:14.316  Target depth 12.737
+16:45:14.327  Target depth 12.403
+16:45:14.341  Target depth 12.240
+16:45:14.355  Target depth 11.841
+16:45:14.366  Target depth 11.454
+16:45:14.376  Target depth 11.303
+16:45:14.390  Target depth 11.007
+16:45:14.404  Target depth 10.862
+16:45:14.415  Target depth 10.578
+16:45:14.424  Target depth 10.578
+16:45:14.434  Target depth 10.508
+16:45:14.448  Target depth 10.438
+16:45:14.457  Target depth 10.438
+16:45:14.472  Target depth 10.301
+16:45:14.483  Target depth 10.165
+16:45:14.493  Target depth 10.165
+16:45:14.503  Target depth 10.165
+16:45:14.518  Target depth 10.098
+16:45:14.532  Target depth 10.031
+16:45:14.541  Target depth 10.031
+16:45:14.553  Target depth 9.899
+16:45:14.562  Target depth 9.768
+16:45:14.573  Target depth 9.768
+16:45:14.588  Target depth 9.640
+16:45:14.602  Target depth 9.387
+16:45:14.614  Target depth 9.021
+16:45:14.624  Target depth 8.785
+16:45:14.634  Target depth 8.612
+16:45:14.648  Target depth 8.331
+16:45:14.662  Target depth 8.276
+16:45:14.674  Target depth 8.113
+16:45:14.684  Target depth 8.006
+16:45:14.693  Target depth 8.006
+16:45:14.708  Target depth 7.953
+16:45:14.723  Target depth 7.796
+16:45:14.735  Target depth 7.693
+16:45:14.744  Target depth 7.642
+16:45:14.755  Target depth 7.592
+16:45:14.768  Target depth 7.393
+16:45:14.783  Target depth 7.344
+16:45:14.794  Target depth 7.296
+16:45:14.804  Target depth 7.200
+16:45:14.817  Target depth 7.105
+16:45:14.830  Target depth 7.058
+16:45:14.842  Target depth 7.058
+16:45:14.855  Target depth 7.011
+16:45:14.864  Target depth 7.011
+16:45:14.877  Target depth 6.919
+16:45:14.889  Target depth 6.827
+16:45:14.899  Target depth 6.737
+16:45:14.913  Target depth 6.649
+16:45:14.927  Target depth 6.475
+16:45:14.939  Target depth 6.305
+16:45:14.949  Target depth 6.222
+16:45:14.962  Target depth 6.059
+16:45:14.976  Target depth 5.979
+16:45:14.988  Target depth 5.784
+16:45:14.997  Target depth 5.670
+16:45:15.011  Target depth 5.522
+16:45:15.025  Target depth 5.377
+16:45:15.037  Target depth 5.167
+16:45:15.047  Target depth 5.099
+16:45:15.057  Target depth 4.966
+16:45:15.072  Target depth 4.900
+16:45:15.085  Target depth 4.772
+16:45:15.097  Target depth 4.709
+16:45:15.111  Target depth 4.647
+16:45:15.125  Target depth 4.555
+16:45:15.136  Target depth 4.525
+16:45:15.146  Target depth 4.407
+16:45:15.156  Target depth 4.407
+16:45:15.170  Target depth 4.378
+16:45:15.184  Target depth 4.349
+16:45:15.196  Target depth 4.291
+16:45:15.206  Target depth 4.235
+16:45:15.217  Target depth 4.235
+16:45:15.231  Target depth 4.179
+16:45:15.240  Target depth 4.179
+16:45:15.254  Target depth 4.124
+16:45:15.265  Target depth 4.043
+16:45:15.276  Target depth 4.016
+16:45:15.286  Target depth 4.016
+16:45:15.300  Target depth 3.911
+16:45:15.309  Target depth 3.911
+16:45:15.325  Target depth 3.885
+16:45:15.336  Target depth 3.859
+16:45:15.352  Target depth 3.859
+16:45:15.373  Target depth 3.808
+16:45:15.400  Target depth 3.808
+16:45:17.875  Target depth 3.808
+16:45:17.888  Target depth 3.808
+16:45:17.901  Target depth 3.859
+16:45:17.911  Target depth 3.859
+16:45:17.923  Target depth 3.859
+16:45:18.041  Target depth 3.859
+16:45:18.054  Target depth 3.859
+16:45:18.067  Target depth 3.859
+16:45:18.080  Target depth 3.859
+16:45:18.090  Target depth 3.885
+16:45:18.105  Target depth 3.911
+16:45:18.119  Target depth 4.179
+16:45:18.130  Target depth 4.525
+16:45:18.140  Target depth 4.933
+16:45:18.155  Target depth 5.236
+16:45:18.168  Target depth 5.784
+16:45:18.180  Target depth 6.263
+16:45:18.189  Target depth 6.561
+16:45:18.203  Target depth 6.827
+16:45:18.217  Target depth 7.105
+16:45:18.227  Target depth 7.344
+16:45:18.238  Target depth 7.592
+16:45:18.252  Target depth 7.642
+16:45:18.265  Target depth 7.900
+16:45:18.276  Target depth 8.221
+16:45:18.287  Target depth 8.331
+16:45:18.300  Target depth 8.669
+16:45:18.314  Target depth 8.961
+16:45:18.326  Target depth 9.325
+16:45:18.336  Target depth 9.640
+16:45:18.358  Target depth 9.899
+16:45:18.367  Target depth 10.031
+16:45:18.380  Target depth 10.098
+16:45:18.393  Target depth 10.301
+16:45:18.404  Target depth 10.438
+16:45:18.414  Target depth 10.438
+16:45:18.428  Target depth 10.508
+16:45:18.442  Target depth 10.578
+16:45:18.453  Target depth 10.578
+16:45:18.463  Target depth 10.719
+16:45:18.473  Target depth 10.862
+16:45:18.565  Target depth 10.862
+16:45:18.578  Target depth 10.862
+16:45:18.591  Target depth 10.578
+16:45:18.603  Target depth 10.165
+16:45:18.613  Target depth 9.768
+16:45:18.624  Target depth 9.142
+16:45:18.638  Target depth 8.442
+16:45:18.652  Target depth 7.642
+16:45:18.664  Target depth 6.919
+16:45:18.674  Target depth 6.389
+16:45:18.688  Target depth 6.019
+16:45:18.702  Target depth 5.522
+16:45:18.714  Target depth 5.099
+16:45:18.727  Target depth 4.772
+16:45:18.741  Target depth 4.407
+16:45:18.753  Target depth 4.016
+16:45:18.763  Target depth 3.588
+16:45:18.776  Target depth 3.205
+16:45:18.790  Target depth 2.844
+16:45:18.802  Target depth 2.458
+16:45:18.811  Target depth 2.153
+16:45:18.822  Target depth 1.988
+16:45:18.835  Target depth 1.836
+16:45:18.850  Target depth 1.695
+16:45:18.861  Target depth 1.566
+16:45:18.872  Target depth 1.495
+16:45:18.882  Target depth 1.389
+16:45:18.896  Target depth 1.318
+16:45:18.910  Target depth 1.217
+16:45:18.922  Target depth 1.139
+16:45:18.932  Target depth 1.080
+16:45:18.946  Target depth 1.038
+16:45:18.960  Target depth 0.971
+16:45:18.972  Target depth 0.927
+16:45:18.985  Target depth 0.885
+16:45:18.998  Target depth 0.823
+16:45:19.010  Target depth 0.765
+16:45:19.020  Target depth 0.725
+16:45:19.034  Target depth 0.679
+16:45:19.049  Target depth 0.627
+16:45:19.060  Target depth 0.571
+16:45:19.071  Target depth 0.531
+16:45:19.085  Target depth 0.494
+16:45:19.100  Target depth 0.462
+16:45:19.111  Target depth 0.421
+16:45:19.121  Target depth 0.405
+16:45:19.131  Target depth 0.384
+16:45:19.145  Target depth 0.369
+16:45:19.160  Target depth 0.345
+16:45:19.172  Target depth 0.329
+16:45:19.182  Target depth 0.314
+16:45:19.192  Target depth 0.302
+16:45:19.206  Target depth 0.287
+16:45:19.221  Target depth 0.272
+16:45:19.232  Target depth 0.251
+16:45:19.242  Target depth 0.238
+16:45:19.252  Target depth 0.226
+16:45:19.266  Target depth 0.217
+16:45:19.281  Target depth 0.200
+16:45:19.293  Target depth 0.187
+16:45:19.303  Target depth 0.175
+16:45:19.312  Target depth 0.167
+16:45:19.326  Target depth 0.161
+16:45:19.341  Target depth 0.152
+16:45:19.352  Target depth 0.142
+16:45:19.361  Target depth 0.136
+16:45:19.375  Target depth 0.131
+16:45:19.390  Target depth 0.124
+16:45:19.401  Target depth 0.119
+16:45:19.415  Target depth 0.116
+16:45:19.428  Target depth 0.112
+16:45:19.439  Target depth 0.109
+16:45:19.449  Target depth 0.107
+16:45:19.459  Target depth 0.105
+16:45:19.473  Target depth 0.103
+16:45:19.487  Target depth 0.102
+16:45:19.499  Target depth 0.100
+16:45:19.509  Target depth 0.098
+16:45:19.520  Target depth 0.096
+16:45:19.533  Target depth 0.094
+16:45:19.547  Target depth 0.092
+16:45:19.559  Target depth 0.088
+16:45:19.570  Target depth 0.086
+16:45:19.583  Target depth 0.085
+16:45:19.597  Target depth 0.081
+16:45:19.609  Target depth 0.079
+16:45:19.618  Target depth 0.078
+16:45:19.629  Target depth 0.076
+16:45:19.643  Target depth 0.076
+16:45:19.657  Target depth 0.075
+16:45:19.669  Target depth 0.074
+16:45:19.679  Target depth 0.073
+16:45:19.694  Target depth 0.073
+16:45:19.709  Target depth 0.072
+16:45:19.720  Target depth 0.071
+16:45:19.733  Target depth 0.070
+16:45:19.747  Target depth 0.069
+16:45:19.759  Target depth 0.067
+16:45:19.769  Target depth 0.067
+16:45:19.778  Target depth 0.067
+16:45:19.792  Target depth 0.065
+16:45:19.807  Target depth 0.064
+16:45:19.818  Target depth 0.063
+16:45:19.829  Target depth 0.062
+16:45:19.839  Target depth 0.062
+16:45:19.852  Target depth 0.061
+16:45:19.874  Target depth 0.061
+16:45:19.901  Target depth 0.061
+16:45:21.207  Target depth 0.061
+16:45:21.223  Target depth 0.061
+16:45:21.238  Target depth 0.061
+16:45:21.402  Target depth 0.060
+16:45:21.420  Target depth 0.060
+16:45:21.433  Target depth 0.059
+16:45:21.445  Target depth 0.057
+16:45:21.457  Target depth 0.054
+16:45:21.471  Target depth 0.051
+16:45:21.485  Target depth 0.047
+16:45:21.498  Target depth 0.043
+16:45:21.508  Target depth 0.039
+16:45:21.522  Target depth 0.036
+16:45:21.536  Target depth 0.032
+16:45:21.548  Target depth 0.030
+16:45:21.558  Target depth 0.027
+16:45:21.568  Target depth 0.026
+16:45:21.582  Target depth 0.025
+16:45:21.597  Target depth 0.024
+16:45:21.609  Target depth 0.023
+16:45:21.619  Target depth 0.022
+16:45:21.632  Target depth 0.021
+16:45:21.642  Target depth 0.021
+16:45:21.656  Target depth 0.020
+16:45:21.668  Target depth 0.018
+16:45:21.677  Target depth 0.018
+16:45:21.687  Target depth 0.017
+16:45:21.702  Target depth 0.016
+16:45:21.717  Target depth 0.015
+16:45:21.728  Target depth 0.014
+16:45:21.738  Target depth 0.014
+16:45:21.747  Target depth 0.014
+16:45:21.757  Target depth 0.014
+16:45:21.771  Target depth 0.014
+16:45:21.785  Target depth 0.013
+16:45:21.794  Target depth 0.013
+16:45:21.806  Target depth 0.013
+16:45:21.815  Target depth 0.013
+16:45:21.850  Target depth 0.013
+16:45:21.938  Target depth 0.013
+16:45:21.948  Target depth 0.013
+16:45:21.958  Target depth 0.013
+16:45:21.971  Target depth 0.013
+16:45:21.985  Target depth 0.012
+16:45:21.996  Target depth 0.012
+16:45:22.006  Target depth 0.012
+16:45:22.015  Target depth 0.012
+16:45:22.030  Target depth 0.011
+16:45:22.039  Target depth 0.011
+16:45:22.054  Target depth 0.011
+16:45:22.063  Target depth 0.011
+16:45:22.075  Target depth 0.011
+16:45:22.085  Target depth 0.011
+16:45:22.095  Target depth 0.011
+16:45:22.110  Target depth 0.011
+16:45:22.119  Target depth 0.011
+16:45:22.571  Target depth 0.010
+16:45:22.583  Target depth 0.010
+16:45:22.593  Target depth 0.010
+16:45:22.605  Target depth 0.010
+16:45:22.617  Target depth 0.009
+16:45:22.627  Target depth 0.009
+16:45:22.637  Target depth 0.009
+16:45:22.647  Target depth 0.009
+16:45:22.662  Target depth 0.009
+16:45:22.677  Target depth 0.008
+16:45:22.688  Target depth 0.008
+16:45:22.702  Target depth 0.008
+16:45:22.715  Target depth 0.008
+16:45:22.728  Target depth 0.007
+16:45:22.745  Target depth 0.007
+16:45:22.758  Target depth 0.007
+16:45:22.775  Target depth 0.007
+16:45:22.788  Target depth 0.007
+16:45:22.803  Target depth 0.006
+16:45:22.816  Target depth 0.006
+16:45:22.828  Target depth 0.006
+16:45:22.841  Target depth 0.006
+16:45:22.854  Target depth 0.006
+16:45:22.874  Target depth 0.005
+16:45:22.886  Target depth 0.005
+16:45:22.899  Target depth 0.005
+16:45:22.918  Target depth 0.005
+16:45:22.931  Target depth 0.005
+16:45:22.946  Target depth 0.005
+16:45:22.958  Target depth 0.005
+16:45:22.970  Target depth 0.005
+16:45:22.983  Target depth 0.005
+16:45:22.994  Target depth 0.005
+16:45:23.006  Target depth 0.005
+16:45:23.019  Target depth 0.005
+16:45:23.041  Target depth 0.005
+16:45:23.053  Target depth 0.005
+16:45:23.074  Target depth 0.004
+16:45:23.971  Target depth 0.004
+16:45:23.983  Target depth 0.004
+16:45:23.995  Target depth 0.004
+16:45:24.006  Target depth 0.004
+16:45:24.018  Target depth 0.004
+16:45:24.028  Target depth 0.003
+16:45:24.038  Target depth 0.003
+16:45:24.048  Target depth 0.002
+16:45:24.059  Target depth 0.002
+16:45:24.069  Target depth 0.002
+16:45:24.087  Target depth 0.001
+16:45:24.096  Target depth 0.001
+16:45:24.113  Target depth 0.001
+16:45:24.128  Target depth 0.001
+16:45:24.141  Target depth 0.001
+16:45:24.153  Target depth 0.001
+16:45:24.171  Target depth 0.001
+16:45:24.184  Target depth 0.001
+16:45:24.204  Target depth 0.001
+16:45:24.219  Target depth 0.001
+16:45:24.232  Target depth 0.001
+16:45:24.244  Target depth 0.001
+16:45:24.256  Target depth 0.001
+16:45:24.275  Target depth 0.001
+16:45:24.288  Target depth 0.001
+16:45:24.307  Target depth 0.001
+16:45:24.319  Target depth 0.001
+16:45:24.334  Target depth 0.001
+16:45:24.347  Target depth 0.001
+16:45:24.359  Target depth 0.001
+16:45:24.371  Target depth 0.001
+16:45:24.384  Target depth 0.001
+16:45:24.404  Target depth 0.001
+16:45:24.418  Target depth 0.001
+16:45:24.438  Target depth 0.001
+16:45:24.450  Target depth 0.001
+16:45:24.465  Target depth 0.001
+16:45:24.479  Target depth 0.001
+16:45:24.491  Target depth 0.001
+16:45:24.503  Target depth 0.001
+16:45:24.516  Target depth 0.001
+16:45:24.528  Target depth 0.001
+16:45:24.549  Target depth 0.001
+16:45:24.562  Target depth 0.001
+16:45:24.582  Target depth 0.001
+16:45:24.594  Target depth 0.001
+16:45:24.607  Target depth 0.001
+16:45:24.621  Target depth 0.001
+16:45:24.634  Target depth 0.001
+16:45:24.647  Target depth 0.001
+16:45:24.660  Target depth 0.001
+16:45:24.679  Target depth 0.001
+16:45:24.691  Target depth 0.001
+16:45:24.710  Target depth 0.001
+16:45:24.725  Target depth 0.001
+16:45:24.738  Target depth 0.001
+16:45:24.750  Target depth 0.001
+16:45:24.773  Target depth 0.001
+16:45:25.617  Target depth 0.001
+16:45:25.630  Target depth 0.001
+16:45:25.642  Target depth 0.001
+16:45:25.652  Target depth 0.001
+16:45:25.665  Target depth 0.001
+16:45:25.675  Target depth 0.001
+16:45:25.685  Target depth 0.001
+16:45:25.699  Target depth 0.001
+16:45:25.710  Target depth 0.001
+16:45:25.727  Target depth 0.001
+16:45:25.742  Target depth 0.001
+16:45:25.754  Target depth 0.001
+16:45:25.766  Target depth 0.001
+16:45:25.780  Target depth 0.001
+16:45:25.799  Target depth 0.001
+16:45:25.811  Target depth 0.001
+16:45:25.823  Target depth 0.001
+16:45:25.843  Target depth 0.001
+16:45:25.855  Target depth 0.001
+16:45:25.871  Target depth 0.001
+16:45:25.883  Target depth 0.001
+16:45:25.895  Target depth 0.001
+16:45:25.915  Target depth 0.001
+16:45:25.928  Target depth 0.001
+16:45:25.949  Target depth 0.001
+16:45:25.961  Target depth 0.001
+16:45:25.976  Target depth 0.001
+16:45:25.988  Target depth 0.001
+16:45:26.000  Target depth 0.001
+16:45:26.013  Target depth 0.001
+16:45:26.025  Target depth 0.001
+16:45:26.038  Target depth 0.001
+16:45:26.059  Target depth 0.001
+16:45:26.071  Target depth 0.001
+16:45:26.093  Target depth 0.001
+16:45:26.105  Target depth 0.001
+16:45:26.119  Target depth 0.001
+16:45:26.132  Target depth 0.001
+16:45:26.143  Target depth 0.001
+16:45:26.157  Target depth 0.001
+16:45:26.176  Target depth 0.001
+16:45:26.189  Target depth 0.001
+16:45:26.201  Target depth 0.001
+16:45:26.221  Target depth 0.001
+16:45:26.235  Target depth 0.001
+16:45:26.248  Target depth 0.001
+16:45:26.261  Target depth 0.001
+16:45:26.275  Target depth 0.001
+16:45:26.294  Target depth 0.001
+16:45:26.306  Target depth 0.001
+16:45:26.325  Target depth 0.001
+16:45:26.340  Target depth 0.001
+16:45:26.353  Target depth 0.001
+16:45:26.365  Target depth 0.001
+16:45:26.378  Target depth 0.001
+16:45:26.390  Target depth 0.001
+16:45:26.403  Target depth 0.001
+16:45:26.423  Target depth 0.001
+16:45:26.443  Target depth 0.001
+16:45:26.455  Target depth 0.001
+16:45:26.470  Target depth 0.001
+16:45:26.483  Target depth 0.001
+16:45:26.496  Target depth 0.001
+16:45:26.508  Target depth 0.001
+16:45:26.521  Target depth 0.001
+16:45:26.542  Target depth 0.001
+16:45:26.554  Target depth 0.001
+16:45:26.573  Target depth 0.001
+16:45:26.585  Target depth 0.001
+16:45:26.601  Target depth 0.001
+16:45:26.613  Target depth 0.001
+16:45:26.625  Target depth 0.001
+16:45:26.639  Target depth 0.001
+16:45:26.652  Target depth 0.001
+16:45:26.672  Target depth 0.001
+16:45:26.684  Target depth 0.001
+16:45:26.704  Target depth 0.001
+16:45:26.719  Target depth 0.001
+16:45:26.731  Target depth 0.001
+16:45:26.744  Target depth 0.001
+16:45:26.757  Target depth 0.001
+16:45:26.775  Target depth 0.001
+16:45:26.794  Target depth 0.001
+16:45:26.809  Target depth 0.001
+16:45:26.821  Target depth 0.001
+16:45:26.834  Target depth 0.001
+16:45:26.846  Target depth 0.001
+16:45:26.863  Target depth 0.001
+16:45:26.882  Target depth 0.001
+16:45:26.895  Target depth 0.001
+16:45:26.909  Target depth 0.001
+16:45:26.928  Target depth 0.001
+16:45:26.951  Target depth 0.001
+16:45:27.838  Target depth 0.001
+16:45:27.851  Target depth 0.001
+16:45:27.861  Target depth 0.001
+16:45:27.874  Target depth 0.001
+16:45:27.885  Target depth 0.001
+16:45:27.903  Target depth 0.001
+16:45:27.913  Target depth 0.001
+16:45:27.925  Target depth 0.001
+16:45:27.935  Target depth 0.001
+16:45:27.944  Target depth 0.001
+16:45:27.958  Target depth 0.001
+16:45:27.968  Target depth 0.001
+16:45:27.980  Target depth 0.001
+16:45:27.990  Target depth 0.001
+16:45:27.999  Target depth 0.001
+16:45:28.010  Target depth 0.001
+16:45:28.026  Target depth 0.001
+16:45:28.035  Target depth 0.001
+16:45:28.053  Target depth 0.001
+16:45:28.065  Target depth 0.001
+16:45:28.074  Target depth 0.001
+16:45:28.084  Target depth 0.001
+16:45:28.095  Target depth 0.001
+16:45:28.105  Target depth 0.001
+16:45:28.122  Target depth 0.001
+16:45:28.131  Target depth 0.001
+16:45:28.147  Target depth 0.001
+16:45:28.158  Target depth 0.001
+16:45:28.168  Target depth 0.001
+16:45:28.178  Target depth 0.001
+16:45:28.188  Target depth 0.001
+16:45:28.203  Target depth 0.001
+16:45:28.219  Target depth 0.001
+16:45:28.229  Target depth 0.001
+16:45:28.238  Target depth 0.001
+16:45:28.250  Target depth 0.001
+16:45:28.260  Target depth 0.001
+16:45:28.270  Target depth 0.001
+16:45:28.279  Target depth 0.001
+16:45:28.290  Target depth 0.001
+16:45:28.305  Target depth 0.001
+16:45:28.315  Target depth 0.001
+16:45:28.332  Target depth 0.001
+16:45:28.341  Target depth 0.001
+16:45:28.353  Target depth 0.001
+16:45:28.362  Target depth 0.001
+16:45:28.372  Target depth 0.001
+16:45:28.382  Target depth 0.001
+16:45:28.397  Target depth 0.001
+16:45:28.406  Target depth 0.001
+16:45:28.422  Target depth 0.001
+16:45:28.431  Target depth 0.001
+16:45:28.443  Target depth 0.001
+16:45:28.452  Target depth 0.001
+16:45:28.462  Target depth 0.001
+16:45:28.472  Target depth 0.001
+16:45:28.481  Target depth 0.001
+16:45:28.499  Target depth 0.001
+16:45:28.508  Target depth 0.001
+16:45:28.524  Target depth 0.001
+16:45:28.536  Target depth 0.001
+16:45:28.549  Target depth 0.001
+16:45:28.562  Target depth 0.001
+16:45:28.574  Target depth 0.001
+16:45:28.587  Target depth 0.001
+16:45:28.599  Target depth 0.001
+16:45:28.611  Target depth 0.001
+16:45:28.631  Target depth 0.001
+16:45:28.645  Target depth 0.001
+16:45:28.665  Target depth 0.001
+16:45:28.677  Target depth 0.001
+16:45:28.690  Target depth 0.001
+16:45:28.703  Target depth 0.001
+16:45:28.715  Target depth 0.001
+16:45:28.728  Target depth 0.001
+16:45:28.740  Target depth 0.001
+16:45:28.753  Target depth 0.001
+16:45:28.774  Target depth 0.001
+16:45:28.787  Target depth 0.001
+16:45:28.807  Target depth 0.001
+16:45:28.819  Target depth 0.001
+16:45:28.831  Target depth 0.001
+16:45:28.845  Target depth 0.001
+16:45:37.307  Target depth 0.001
+16:45:37.321  Target depth 0.001
+16:45:37.333  Target depth 0.001
+16:45:37.345  Target depth 0.001
+16:45:37.355  Target depth 0.001
+16:45:37.365  Target depth 0.001
+16:45:37.375  Target depth 0.001
+16:45:37.385  Target depth 0.001
+16:45:37.400  Target depth 0.001
+16:45:37.410  Target depth 0.001
+16:45:37.425  Target depth 0.001
+16:45:37.435  Target depth 0.001
+16:45:37.446  Target depth 0.001
+16:45:37.456  Target depth 0.001
+16:45:37.466  Target depth 0.001
+16:45:37.475  Target depth 0.001
+16:45:37.485  Target depth 0.001
+16:45:37.495  Target depth 0.001
+16:45:37.513  Target depth 0.001
+16:45:37.523  Target depth 0.001
+16:45:37.548  Target depth 0.001
+16:45:37.561  Target depth 0.001
+16:45:37.571  Target depth 0.001
+16:45:37.583  Target depth 0.001
+16:45:37.593  Target depth 0.001
+16:45:37.603  Target depth 0.001
+16:45:37.613  Target depth 0.001
+16:45:37.629  Target depth 0.001
+16:45:37.638  Target depth 0.001
+16:45:37.654  Target depth 0.001
+16:45:37.663  Target depth 0.001
+16:45:37.675  Target depth 0.001
+16:45:37.685  Target depth 0.002
+16:45:37.700  Target depth 0.002
+16:45:37.709  Target depth 0.002
+16:45:37.732  Target depth 0.002
+16:45:37.765  Target depth 0.002
+16:45:37.775  Target depth 0.002
+16:45:37.786  Target depth 0.002
+16:45:37.796  Target depth 0.002
+16:45:37.809  Target depth 0.002
+16:45:37.818  Target depth 0.002
+16:45:37.833  Target depth 0.002
+16:45:37.842  Target depth 0.002
+16:45:37.854  Target depth 0.002
+16:45:37.863  Target depth 0.002
+16:45:37.873  Target depth 0.002
+16:45:37.884  Target depth 0.002
+16:45:37.899  Target depth 0.002
+16:45:37.908  Target depth 0.002
+16:45:37.925  Target depth 0.002
+16:45:44.478  Log closed normally

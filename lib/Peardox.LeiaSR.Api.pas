@@ -75,6 +75,12 @@ const
   //** Pixel format: red, green, blue, alpha bytes.
   SRB_FMT_RGBA8 = 1;
 
+  //** TSRBSystemEvent.eventType when the display's lens has come on (SR_LensOn in the
+  //** SDK's C API).
+  SRB_EVENT_LENS_ON = 14;
+  //** TSRBSystemEvent.eventType when the display's lens has gone off (SR_LensOff).
+  SRB_EVENT_LENS_OFF = 15;
+
 type
   //** Physical properties of the SR display.
   TSRBDisplayInfo = record

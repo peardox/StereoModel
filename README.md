@@ -174,18 +174,38 @@ uses). Not included: the Mayo CAD loaders and SketchUp's, which need
 external libraries, and Sketchfab's, which loads from the web.
 
 Mouse: left-drag orbits; right-drag up or down moves the target deeper or
-nearer along the line of sight, the camera staying put (the status line
-shows the depth; orbit afterwards to see the new centre); the wheel zooms
-(stopping at the cube's nearest face, never inside it). A click on its own
+nearer along the line of sight, the camera staying put (orbit afterwards
+to see the new centre). The target's depth is the plane that will lie on the
+display's glass, so the status line also gives the model centre's Z against
+it, along the line of sight: below 0 it is in front of the glass (out of the
+screen: drag up, past the model's own depth), above 0 behind it; while
+LeiaSR runs, in millimetres too. The wheel zooms
+(stopping at the cube's nearest face, never inside it). Each notch moves the
+camera along its line of sight by a share of its distance from the model,
+not from the target, so the steps stay even wherever the target's depth has
+been put; with the target in front of the model the camera stops just short
+of it. A click on its own
 does nothing. A window resize refits the view, putting the target back on
 the cube.
+
+Everything the status line shows is also written, with the time, to
+`StereoModel.log` beside the executable (the documents folder on macOS and
+mobile), flushed line by line; a run that ended normally finishes with
+`Log closed normally`. The first line says whether a debugger was attached
+(timings under one are far slower). The previous run's log is kept as
+`StereoModel.prev.log`.
 
 Glasses-free 3D: where LeiaSR is installed (a Win64 build on a computer
 with the LeiaSR runtime) the **Stereo** button is shown; pressed, it starts
 LeiaSR, released it stops it, and the choice is saved in the shared LeiaSR
 settings. If they say so, it starts by itself once the model has loaded.
-For now it only starts SR and logs, in the status line and FMX's `Log.d`,
+For now it only starts SR and logs, in the status line, FMX's `Log.d` and
+`StereoModel.log`,
 the SR platform, the display, where the view lies on it, SR's events and
-the eyes once a second; the view is not yet woven. Where LeiaSR is not
+the eyes once a second; the view is not yet woven. Left of the button the
+lens indicator shows **LENS ON** in red while the display's lens is on
+(everything on the SR display not woven looks blurred then), *Lens off* in
+grey while it is off, and nothing while SR is not running; it follows SR's
+own LensOn and LensOff events (`TPeardoxLeiaSR.LensState`, `OnLensChange`). Where LeiaSR is not
 installed the button is hidden. `SRBridge.dll` must be beside the
 executable (the Win64 build copies it from `SRDelphiFMX\dll`).

@@ -96,6 +96,16 @@ type
     //** @abstract(SR is running.)
     lssRunning);
 
+  //** @abstract(The display's lens, as TPeardoxLeiaSR.LensState.)
+  TPeardoxLeiaSRLensState = (
+    //** @abstract(Not known: SR is not running, or has not said yet.)
+    lslUnknown,
+    //** @abstract(On: everything on the SR display is seen through the lens, and what is not
+    //** woven looks blurred.)
+    lslOn,
+    //** @abstract(Off: the display is an ordinary flat screen.)
+    lslOff);
+
   //** @abstract(A line for the log.)
   //**
   //** @param(Sender The TPeardoxLeiaSR.)
@@ -176,6 +186,10 @@ type
     FOnProblem: TPeardoxLeiaSRProblemEvent;
     //** @abstract(See OnEyes.)
     FOnEyes: TPeardoxLeiaSREyesEvent;
+    //** @abstract(See LensState.)
+    FLensState: TPeardoxLeiaSRLensState;
+    //** @abstract(See OnLensChange.)
+    FOnLensChange: TNotifyEvent;
     {$IFDEF MSWINDOWS}
     //** @abstract(A hidden window the background check posts its answer to: posted messages
     //** come ahead of paints, while a queued call waits until FMX is idle.)
@@ -216,6 +230,12 @@ type
     //**
     //** @param(ATell Whether to raise OnProblem; False for lspNotInstalled.)
     procedure Fail(AProblem: TPeardoxLeiaSRProblem; const AMessage: string; ATell: Boolean);
+    //** @abstract(Sets LensState, logging and raising OnLensChange when it changes.)
+    //**
+    //** @param(AValue The lens's new state.)
+    //**
+    //** @param(AWhy What says so, for the log.)
+    procedure SetLensState(AValue: TPeardoxLeiaSRLensState; const AWhy: string);
     {$IFDEF MSWINDOWS}
     //** @abstract(Finds the window of the form Control is on.)
     //**
@@ -242,7 +262,8 @@ type
     //** @abstract(Gives the bridge Control's rectangle when it has changed, and logs where it
     //** lies on the SR display whenever that changes.)
     procedure UpdateBounds;
-    //** @abstract(Logs every SR system event waiting in the bridge.)
+    //** @abstract(Logs every SR system event waiting in the bridge, and follows the lens's
+    //** state from its LensOn and LensOff events.)
     procedure PollEvents;
     //** @abstract(Reads the tracked eyes, logs when tracking is found or lost, and raises
     //** OnEyes.)
@@ -312,6 +333,10 @@ type
     //** @abstract(True while the tracker has the viewer's eyes; False before it finds them,
     //** when SR reports both eyes at one point.)
     property EyesTracked: Boolean read FEyesTracked;
+    //** @abstract(The display's lens as SR last reported it (its LensOn and LensOff events);
+    //** lslUnknown while SR is not running and until SR says. OnLensChange tells of each
+    //** change.)
+    property LensState: TPeardoxLeiaSRLensState read FLensState;
     //** @abstract(Control's centre on the SR display, in millimetres from the display's centre,
     //** x right and y up, as last read while SR ran.)
     property WindowCenterMM: TPointF read FWindowCenterMM;
@@ -350,6 +375,9 @@ type
     property OnProblem: TPeardoxLeiaSRProblemEvent read FOnProblem write FOnProblem;
     //** @abstract(New eye positions, at every poll while SR runs.)
     property OnEyes: TPeardoxLeiaSREyesEvent read FOnEyes write FOnEyes;
+    //** @abstract(LensState has changed: the lens has come on or gone off, or SR has stopped
+    //** and it is no longer known.)
+    property OnLensChange: TNotifyEvent read FOnLensChange write FOnLensChange;
   end;
 
 implementation
@@ -518,6 +546,18 @@ begin
     FOnProblem(Self, AProblem, AMessage);
 end;
 
+procedure TPeardoxLeiaSR.SetLensState(AValue: TPeardoxLeiaSRLensState; const AWhy: string);
+const
+  Names: array[TPeardoxLeiaSRLensState] of string = ('not known', 'ON', 'off');
+begin
+  if AValue = FLensState then
+    Exit;
+  FLensState := AValue;
+  Log(Format('Lens %s (%s)', [Names[AValue], AWhy]));
+  if Assigned(FOnLensChange) then
+    FOnLensChange(Self);
+end;
+
 function TPeardoxLeiaSR.Start: Boolean;
 {$IFDEF WIN64}
 var
@@ -608,6 +648,9 @@ begin
   srb_SetLogCallback(nil);
   {$ENDIF}
   Log('LeiaSR stopped');
+  // SR says nothing more once its context is gone
+  if not (csDestroying in ComponentState) then
+    SetLensState(lslUnknown, 'SR stopped');
   if Assigned(FOnStopped) and not (csDestroying in ComponentState) then
     FOnStopped(Self);
 end;
@@ -759,8 +802,13 @@ begin
   // the SR display, and the views will be uploaded to it
   if SRBridgeHasExport('srb_SetExternalDevice') then
     srb_SetExternalDevice(nil);
-  Log(Format('Starting LeiaSR (srb_Initialize, timeout %.1f s); the bridge uses a Direct3D 11 ' +
-    'device of its own', [FInitTimeout]));
+  // The lens off BEFORE SR starts: the bridge makes its lens hint inside
+  // srb_Initialize in the state last asked for, which is on until told
+  // otherwise, so the whole panel was blurred for as long as the start took
+  // (owner, 16:26). Nothing is woven yet, so it stays off
+  srb_SetLens(0);
+  Log(Format('Starting LeiaSR (srb_Initialize, timeout %.1f s, lens off); the bridge uses a ' +
+    'Direct3D 11 device of its own', [FInitTimeout]));
   T0 := TThread.GetTickCount64;
   RC := srb_Initialize(Pointer(FFormWnd), FInitTimeout);
   Log(Format('srb_Initialize returned %d after %d ms (%d ms after Start)',
@@ -781,7 +829,6 @@ begin
   // Nothing is woven yet, so the bridge's window stays hidden (Control shows
   // as Gorilla3D draws it) and the lens off (it would blur the whole panel)
   srb_SetVisible(0);
-  srb_SetLens(0);
   if FSettings.LatencyFrames > 0 then
     srb_SetLatencyInFrames(FSettings.LatencyFrames);
   FState := lssRunning;
@@ -880,8 +927,14 @@ var
   Ev: TSRBSystemEvent;
 begin
   while srb_PollSystemEvent(@Ev) = 1 do
+  begin
     Log(Format('SR event %s: %s', [SREventTypeName(Ev.eventType),
       UTF8ToString(PAnsiChar(@Ev.message[0]))]));
+    if Ev.eventType = SRB_EVENT_LENS_ON then
+      SetLensState(lslOn, 'SR event LensOn')
+    else if Ev.eventType = SRB_EVENT_LENS_OFF then
+      SetLensState(lslOff, 'SR event LensOff');
+  end;
 end;
 
 procedure TPeardoxLeiaSR.ReadEyes;

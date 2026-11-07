@@ -11,7 +11,7 @@
 //**
 //** @preformatted(
 //** src/ui/      the forms
-//** src/common/  helpers shared with other projects (FmxLinuxMenu, from TSteamAPI)
+//** src/common/  helpers: FmxLinuxMenu (from TSteamAPI, shared), StereoModelLog (the log file)
 //** lib/         the Peardox components' sources, built by packages/Peardox.dpk and
 //**              packages/PeardoxLeiaSR.dpk (LeiaSR, glasses-free 3D)
 //** )
@@ -30,7 +30,7 @@ program StereoModel;
   StereoModel_MemoryManager_EventLog.txt beside the executable.
 
     src/ui/      the forms
-    src/common/  helpers shared with other projects (FmxLinuxMenu, from TSteamAPI)
+    src/common/  helpers: FmxLinuxMenu (from TSteamAPI, shared), StereoModelLog (the log file)
     lib/         the Peardox components' sources, built by packages/Peardox.dpk and
                  packages/PeardoxLeiaSR.dpk (LeiaSR, glasses-free 3D)
 }
@@ -44,6 +44,7 @@ uses
   System.StartUpCopy,
   FMX.Forms,
   FmxLinuxMenu in 'common\FmxLinuxMenu.pas',
+  StereoModelLog in 'common\StereoModelLog.pas',
   StereoModelMain in 'ui\StereoModelMain.pas' {Form2};
 
 {$R *.res}

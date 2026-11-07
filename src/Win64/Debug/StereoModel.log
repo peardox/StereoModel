@@ -1,0 +1,1384 @@
+﻿16:51:03.460  StereoModel log, 2026-11-07, Debug build, debugger attached, Windows 11 (Version 26H2, OS Build 26300.9818, 64-bit Edition)
+16:51:03.460  Executable C:\src\StereoModel\src\Win64\Debug\StereoModel.exe
+16:51:03.519  Orbital camera made: FOV 45, distance 10.00, headlight True
+16:51:03.526  LeiaSR settings read from C:\Users\simon\AppData\Roaming\Peardox\LeiaSR.json
+16:51:03.538  LeiaSR installed; glasses-free 3D is off in the settings
+16:51:07.480  Loaded C:\src\StereoModel\models\uvcube.glb; azimuth 0.0, polar 0.0, distance 4.84, headlight True
+16:51:28.700  Checking for the LeiaSR service and display on a background thread (up to 5000 ms)
+16:51:28.830  LeiaSR settings saved to C:\Users\simon\AppData\Roaming\Peardox\LeiaSR.json
+16:51:29.555  LeiaSR check: service running and SR display found, after 859 ms
+16:51:29.566  [bridge] [bridge t40844] log callback set
+16:51:29.575  [bridge] [bridge t40844] external device 0000000000000000 cleared: the bridge makes its own
+16:51:29.590  Starting LeiaSR (srb_Initialize, timeout 5.0 s, lens off); the bridge uses a Direct3D 11 device of its own
+16:51:29.606  [bridge] [bridge t40844] srb_Initialize(parent 000000000070053E)
+16:51:29.620  [bridge] [bridge t40844] creating SR context (timeout 5.0 s)
+16:51:29.760  [bridge] [bridge t40844] SR context 000001F6DF9634D0
+16:51:29.774  [bridge] [bridge t40844] display 000001F6DFB1F4F0 ready: 3840 x 2160 px, 59.7 x 33.6 cm
+16:51:30.004  [bridge] [bridge t40844] SR system event 17: User has been lost
+16:51:30.059  [bridge] [bridge t40844] system listener 000001F756D21250, lens hint 000001F756D96668
+16:51:30.074  [bridge] [bridge t40844] SR display at (0, 0)-(3840, 2160), from SR::Display::getLocation
+16:51:30.089  [bridge] [bridge t40844] SR display is driven by adapter 0 (NVIDIA GeForce RTX 5090 Laptop GPU); output \\.\DISPLAY6 at 60 Hz
+16:51:30.103  [bridge] [bridge t40844] adapter 0: NVIDIA GeForce RTX 5090 Laptop GPU, vendor 0x10DE, 24137 MB dedicated; monitors: \\.\DISPLAY6 (0, 0)-(3840, 2160), \\.\DISPLAY5 (-5360, 7)-(-1920, 1447)
+16:51:30.120  [bridge] [bridge t40844] adapter 1: Intel(R) Graphics, vendor 0x8086, 128 MB dedicated; monitors: \\.\DISPLAY1 (-1920, 0)-(0, 1200)
+16:51:30.135  [bridge] [bridge t40844] adapter 2: Microsoft Basic Render Driver, vendor 0x1414, 0 MB dedicated (software, skipped); monitors: none
+16:51:30.150  [bridge] [bridge t40844] adapter choice: the one driving the SR display
+16:51:33.546  [bridge] [bridge t40844] D3D11 device on NVIDIA GeForce RTX 5090 Laptop GPU
+16:51:33.568  [bridge] [bridge t40844] child window 0000000000441166, 1 x 1, D3D device 000001F756DD2FB0, swap chain 000001F757261CB0 (bitblt model, DISCARD, as Leia's samples)
+16:51:33.588  [bridge] [bridge t40844] SR display is driven by adapter 0 (NVIDIA GeForce RTX 5090 Laptop GPU): the same as the bridge's; output \\.\DISPLAY6 at 60 Hz
+16:51:37.916  [bridge] [bridge t40844] weaver 000001F756DD9BB0 created
+16:51:38.455  [bridge] [bridge t40844] SR context initialised
+16:51:38.471  [bridge] [bridge t40844] srb_Initialize done
+16:51:38.489  srb_Initialize returned 0 after 8875 ms (9781 ms after Start)
+16:51:38.508  SR platform 1.36.4.35453
+16:51:38.528  SR display 3840 x 2160 px (panel 3840 x 2160), 596.7 x 335.7 mm, recommended view 1920 x 1080 per eye
+16:51:38.545  SR display on the desktop at (0, 0)-(3840, 2160)
+16:51:38.564  The form is on the SR display
+16:51:38.583  Settings: eye separation 63.0 mm (0 = tracked), look-around True, latency 0 frames (0 = SR's), lens mode 0 (0 off over controls, 1 on, 2 off), full screen False
+16:51:38.606  Nothing is woven yet: the bridge's window is hidden and the lens off
+16:51:38.629  View at (0, 0), 3840 x 1969 physical pixels (scale 1.50)
+16:51:38.648  View on the SR display: centre (0.0, 4.9) mm, 596.7 x 306.0 mm
+16:51:38.669  [bridge] [bridge t14276] SR system event 15: Lens has been disabled.
+16:51:38.773  SR event UserLost: User has been lost
+16:51:38.791  SR event LensOff: Lens has been disabled.
+16:51:38.809  Lens off (SR event LensOff)
+16:51:38.911  [bridge] [bridge t14276] SR system event 17: User has been lost
+16:51:38.993  SR event UserLost: User has been lost
+16:51:39.665  Eyes L(0.0, 100.0, 600.0) R(0.0, 100.0, 600.0) mm, separation 0.0 mm NOT TRACKED | view centre (0.0, 4.9) mm, 596.7 x 306.0 mm
+16:51:40.352  [bridge] [bridge t14276] SR system event 16: User has been found
+16:51:40.423  SR event UserFound: User has been found
+16:51:40.529  Eyes found: L(-7.0, 103.1, 552.4) R(-1.1, 103.9, 553.5) mm
+16:51:40.630  [bridge] [bridge t40844] srb_Finalize
+16:51:40.650  [bridge] [bridge t40844] tearing down SR (weaver 000001F756DD9BB0, context 000001F6DF9634D0)
+16:51:41.213  [bridge] [bridge t40844] weaver destroyed
+16:51:42.629  [bridge] [bridge t40844] SR context deleted
+16:51:49.695  LeiaSR stopped
+16:51:49.708  Lens not known (SR stopped)
+16:51:49.722  LeiaSR settings saved to C:\Users\simon\AppData\Roaming\Peardox\LeiaSR.json
+16:51:57.818  Target depth 4.837 | model centre at depth 4.837: Z 0.000, behind the glass
+16:51:57.832  Target depth 4.837 | model centre at depth 4.837: Z 0.000, behind the glass
+16:51:57.841  Target depth 4.837 | model centre at depth 4.837: Z 0.000, behind the glass
+16:51:57.851  Target depth 4.837 | model centre at depth 4.837: Z 0.000, behind the glass
+16:51:57.863  Target depth 4.837 | model centre at depth 4.837: Z 0.000, behind the glass
+16:51:57.873  Target depth 4.837 | model centre at depth 4.837: Z 0.000, behind the glass
+16:51:57.886  Target depth 4.773 | model centre at depth 4.837: Z 0.064, behind the glass
+16:51:58.344  Target depth 4.710 | model centre at depth 4.837: Z 0.127, behind the glass
+16:51:58.356  Target depth 4.679 | model centre at depth 4.837: Z 0.158, behind the glass
+16:51:58.367  Target depth 4.648 | model centre at depth 4.837: Z 0.189, behind the glass
+16:51:58.379  Target depth 4.526 | model centre at depth 4.837: Z 0.310, behind the glass
+16:51:58.392  Target depth 4.467 | model centre at depth 4.837: Z 0.370, behind the glass
+16:51:58.404  Target depth 4.350 | model centre at depth 4.837: Z 0.487, behind the glass
+16:51:58.415  Target depth 4.292 | model centre at depth 4.837: Z 0.544, behind the glass
+16:51:58.427  Target depth 4.236 | model centre at depth 4.837: Z 0.601, behind the glass
+16:51:58.442  Target depth 4.152 | model centre at depth 4.837: Z 0.684, behind the glass
+16:51:58.457  Target depth 4.125 | model centre at depth 4.837: Z 0.712, behind the glass
+16:51:58.467  Target depth 4.017 | model centre at depth 4.837: Z 0.820, behind the glass
+16:51:58.477  Target depth 3.990 | model centre at depth 4.837: Z 0.846, behind the glass
+16:51:58.490  Target depth 3.964 | model centre at depth 4.837: Z 0.873, behind the glass
+16:51:58.501  Target depth 3.964 | model centre at depth 4.837: Z 0.873, behind the glass
+16:51:58.515  Target depth 3.860 | model centre at depth 4.837: Z 0.977, behind the glass
+16:51:58.530  Target depth 3.860 | model centre at depth 4.837: Z 0.977, behind the glass
+16:51:58.541  Target depth 3.835 | model centre at depth 4.837: Z 1.002, behind the glass
+16:51:58.567  Target depth 3.809 | model centre at depth 4.837: Z 1.028, behind the glass
+16:51:58.579  Target depth 3.809 | model centre at depth 4.837: Z 1.028, behind the glass
+16:51:58.593  Target depth 3.809 | model centre at depth 4.837: Z 1.028, behind the glass
+16:51:58.605  Target depth 3.710 | model centre at depth 4.837: Z 1.127, behind the glass
+16:51:58.614  Target depth 3.685 | model centre at depth 4.837: Z 1.152, behind the glass
+16:51:58.627  Target depth 3.661 | model centre at depth 4.837: Z 1.176, behind the glass
+16:51:58.639  Target depth 3.612 | model centre at depth 4.837: Z 1.224, behind the glass
+16:51:58.648  Target depth 3.565 | model centre at depth 4.837: Z 1.272, behind the glass
+16:51:58.659  Target depth 3.541 | model centre at depth 4.837: Z 1.296, behind the glass
+16:51:58.671  Target depth 3.518 | model centre at depth 4.837: Z 1.319, behind the glass
+16:51:58.688  Target depth 3.471 | model centre at depth 4.837: Z 1.365, behind the glass
+16:51:58.703  Target depth 3.426 | model centre at depth 4.837: Z 1.411, behind the glass
+16:51:58.715  Target depth 3.381 | model centre at depth 4.837: Z 1.456, behind the glass
+16:51:58.724  Target depth 3.336 | model centre at depth 4.837: Z 1.501, behind the glass
+16:51:58.737  Target depth 3.292 | model centre at depth 4.837: Z 1.545, behind the glass
+16:51:58.749  Target depth 3.270 | model centre at depth 4.837: Z 1.567, behind the glass
+16:51:58.761  Target depth 3.249 | model centre at depth 4.837: Z 1.588, behind the glass
+16:51:58.770  Target depth 3.249 | model centre at depth 4.837: Z 1.588, behind the glass
+16:51:58.876  Target depth 3.206 | model centre at depth 4.837: Z 1.631, behind the glass
+16:51:58.892  Target depth 3.164 | model centre at depth 4.837: Z 1.673, behind the glass
+16:51:58.907  Target depth 3.164 | model centre at depth 4.837: Z 1.673, behind the glass
+16:51:58.931  Target depth 3.143 | model centre at depth 4.837: Z 1.694, behind the glass
+16:51:58.947  Target depth 3.143 | model centre at depth 4.837: Z 1.694, behind the glass
+16:51:58.961  Target depth 3.122 | model centre at depth 4.837: Z 1.715, behind the glass
+16:51:58.975  Target depth 3.040 | model centre at depth 4.837: Z 1.797, behind the glass
+16:51:58.988  Target depth 3.040 | model centre at depth 4.837: Z 1.797, behind the glass
+16:51:59.004  Target depth 3.020 | model centre at depth 4.837: Z 1.817, behind the glass
+16:51:59.019  Target depth 3.000 | model centre at depth 4.837: Z 1.837, behind the glass
+16:51:59.032  Target depth 2.961 | model centre at depth 4.837: Z 1.876, behind the glass
+16:51:59.046  Target depth 2.922 | model centre at depth 4.837: Z 1.915, behind the glass
+16:51:59.074  Target depth 2.902 | model centre at depth 4.837: Z 1.935, behind the glass
+16:51:59.090  Target depth 2.883 | model centre at depth 4.837: Z 1.954, behind the glass
+16:51:59.100  Target depth 2.808 | model centre at depth 4.837: Z 2.029, behind the glass
+16:51:59.110  Target depth 2.808 | model centre at depth 4.837: Z 2.029, behind the glass
+16:51:59.123  Target depth 2.771 | model centre at depth 4.837: Z 2.066, behind the glass
+16:51:59.135  Target depth 2.698 | model centre at depth 4.837: Z 2.139, behind the glass
+16:51:59.144  Target depth 2.680 | model centre at depth 4.837: Z 2.157, behind the glass
+16:51:59.155  Target depth 2.627 | model centre at depth 4.837: Z 2.209, behind the glass
+16:51:59.171  Target depth 2.576 | model centre at depth 4.837: Z 2.261, behind the glass
+16:51:59.185  Target depth 2.492 | model centre at depth 4.837: Z 2.345, behind the glass
+16:51:59.197  Target depth 2.459 | model centre at depth 4.837: Z 2.378, behind the glass
+16:51:59.209  Target depth 2.394 | model centre at depth 4.837: Z 2.443, behind the glass
+16:51:59.219  Target depth 2.363 | model centre at depth 4.837: Z 2.474, behind the glass
+16:51:59.231  Target depth 2.301 | model centre at depth 4.837: Z 2.536, behind the glass
+16:51:59.243  Target depth 2.271 | model centre at depth 4.837: Z 2.566, behind the glass
+16:51:59.257  Target depth 2.241 | model centre at depth 4.837: Z 2.596, behind the glass
+16:51:59.272  Target depth 2.182 | model centre at depth 4.837: Z 2.655, behind the glass
+16:51:59.283  Target depth 2.153 | model centre at depth 4.837: Z 2.684, behind the glass
+16:51:59.292  Target depth 2.111 | model centre at depth 4.837: Z 2.726, behind the glass
+16:51:59.305  Target depth 2.069 | model centre at depth 4.837: Z 2.768, behind the glass
+16:51:59.318  Target depth 2.042 | model centre at depth 4.837: Z 2.795, behind the glass
+16:51:59.327  Target depth 2.015 | model centre at depth 4.837: Z 2.822, behind the glass
+16:51:59.339  Target depth 1.988 | model centre at depth 4.837: Z 2.848, behind the glass
+16:51:59.354  Target depth 1.962 | model centre at depth 4.837: Z 2.875, behind the glass
+16:51:59.370  Target depth 1.936 | model centre at depth 4.837: Z 2.900, behind the glass
+16:51:59.381  Target depth 1.886 | model centre at depth 4.837: Z 2.951, behind the glass
+16:51:59.394  Target depth 1.873 | model centre at depth 4.837: Z 2.964, behind the glass
+16:51:59.403  Target depth 1.861 | model centre at depth 4.837: Z 2.976, behind the glass
+16:51:59.415  Target depth 1.836 | model centre at depth 4.837: Z 3.001, behind the glass
+16:51:59.426  Target depth 1.812 | model centre at depth 4.837: Z 3.025, behind the glass
+16:51:59.441  Target depth 1.788 | model centre at depth 4.837: Z 3.049, behind the glass
+16:51:59.455  Target depth 1.765 | model centre at depth 4.837: Z 3.072, behind the glass
+16:51:59.466  Target depth 1.741 | model centre at depth 4.837: Z 3.095, behind the glass
+16:51:59.475  Target depth 1.730 | model centre at depth 4.837: Z 3.107, behind the glass
+16:51:59.488  Target depth 1.718 | model centre at depth 4.837: Z 3.118, behind the glass
+16:51:59.498  Target depth 1.718 | model centre at depth 4.837: Z 3.118, behind the glass
+16:51:59.518  Target depth 1.696 | model centre at depth 4.837: Z 3.141, behind the glass
+16:51:59.540  Target depth 1.673 | model centre at depth 4.837: Z 3.163, behind the glass
+16:51:59.560  Target depth 1.673 | model centre at depth 4.837: Z 3.163, behind the glass
+16:51:59.572  Target depth 1.673 | model centre at depth 4.837: Z 3.163, behind the glass
+16:51:59.583  Target depth 1.662 | model centre at depth 4.837: Z 3.174, behind the glass
+16:51:59.604  Target depth 1.651 | model centre at depth 4.837: Z 3.185, behind the glass
+16:51:59.620  Target depth 1.651 | model centre at depth 4.837: Z 3.185, behind the glass
+16:51:59.651  Target depth 1.630 | model centre at depth 4.837: Z 3.207, behind the glass
+16:52:00.117  Target depth 1.651 | model centre at depth 4.837: Z 3.185, behind the glass
+16:52:00.129  Target depth 1.673 | model centre at depth 4.837: Z 3.163, behind the glass
+16:52:00.141  Target depth 1.741 | model centre at depth 4.837: Z 3.095, behind the glass
+16:52:00.152  Target depth 1.812 | model centre at depth 4.837: Z 3.025, behind the glass
+16:52:00.162  Target depth 1.861 | model centre at depth 4.837: Z 2.976, behind the glass
+16:52:00.176  Target depth 1.886 | model centre at depth 4.837: Z 2.951, behind the glass
+16:52:00.189  Target depth 1.936 | model centre at depth 4.837: Z 2.900, behind the glass
+16:52:00.207  Target depth 1.936 | model centre at depth 4.837: Z 2.900, behind the glass
+16:52:00.235  Target depth 1.949 | model centre at depth 4.837: Z 2.888, behind the glass
+16:52:00.247  Target depth 1.962 | model centre at depth 4.837: Z 2.875, behind the glass
+16:52:00.259  Target depth 1.988 | model centre at depth 4.837: Z 2.848, behind the glass
+16:52:00.272  Target depth 2.028 | model centre at depth 4.837: Z 2.808, behind the glass
+16:52:00.282  Target depth 2.069 | model centre at depth 4.837: Z 2.768, behind the glass
+16:52:00.295  Target depth 2.097 | model centre at depth 4.837: Z 2.740, behind the glass
+16:52:00.307  Target depth 2.125 | model centre at depth 4.837: Z 2.712, behind the glass
+16:52:00.323  Target depth 2.182 | model centre at depth 4.837: Z 2.655, behind the glass
+16:52:00.339  Target depth 2.196 | model centre at depth 4.837: Z 2.640, behind the glass
+16:52:00.350  Target depth 2.241 | model centre at depth 4.837: Z 2.596, behind the glass
+16:52:00.364  Target depth 2.271 | model centre at depth 4.837: Z 2.566, behind the glass
+16:52:00.374  Target depth 2.301 | model centre at depth 4.837: Z 2.536, behind the glass
+16:52:00.389  Target depth 2.363 | model centre at depth 4.837: Z 2.474, behind the glass
+16:52:00.398  Target depth 2.363 | model centre at depth 4.837: Z 2.474, behind the glass
+16:52:00.676  Target depth 2.378 | model centre at depth 4.837: Z 2.458, behind the glass
+16:52:00.691  Target depth 2.394 | model centre at depth 4.837: Z 2.443, behind the glass
+16:52:00.702  Target depth 2.394 | model centre at depth 4.837: Z 2.443, behind the glass
+16:52:00.714  Target depth 2.459 | model centre at depth 4.837: Z 2.378, behind the glass
+16:52:00.730  Target depth 2.459 | model centre at depth 4.837: Z 2.378, behind the glass
+16:52:00.742  Target depth 2.475 | model centre at depth 4.837: Z 2.362, behind the glass
+16:52:00.755  Target depth 2.492 | model centre at depth 4.837: Z 2.345, behind the glass
+16:52:00.769  Target depth 2.525 | model centre at depth 4.837: Z 2.312, behind the glass
+16:52:00.780  Target depth 2.559 | model centre at depth 4.837: Z 2.278, behind the glass
+16:52:00.790  Target depth 2.576 | model centre at depth 4.837: Z 2.261, behind the glass
+16:52:00.807  Target depth 2.593 | model centre at depth 4.837: Z 2.244, behind the glass
+16:52:00.833  Target depth 2.593 | model centre at depth 4.837: Z 2.244, behind the glass
+16:52:00.850  Target depth 2.627 | model centre at depth 4.837: Z 2.209, behind the glass
+16:52:00.867  Target depth 2.662 | model centre at depth 4.837: Z 2.174, behind the glass
+16:52:00.880  Target depth 2.680 | model centre at depth 4.837: Z 2.157, behind the glass
+16:52:00.890  Target depth 2.734 | model centre at depth 4.837: Z 2.103, behind the glass
+16:52:00.900  Target depth 2.771 | model centre at depth 4.837: Z 2.066, behind the glass
+16:52:00.912  Target depth 2.808 | model centre at depth 4.837: Z 2.029, behind the glass
+16:52:00.925  Target depth 2.845 | model centre at depth 4.837: Z 1.992, behind the glass
+16:52:00.939  Target depth 2.883 | model centre at depth 4.837: Z 1.954, behind the glass
+16:52:00.953  Target depth 2.922 | model centre at depth 4.837: Z 1.915, behind the glass
+16:52:00.965  Target depth 2.961 | model centre at depth 4.837: Z 1.876, behind the glass
+16:52:00.978  Target depth 3.020 | model centre at depth 4.837: Z 1.817, behind the glass
+16:52:00.989  Target depth 3.081 | model centre at depth 4.837: Z 1.756, behind the glass
+16:52:01.000  Target depth 3.164 | model centre at depth 4.837: Z 1.673, behind the glass
+16:52:01.015  Target depth 3.249 | model centre at depth 4.837: Z 1.588, behind the glass
+16:52:01.031  Target depth 3.292 | model centre at depth 4.837: Z 1.545, behind the glass
+16:52:01.042  Target depth 3.381 | model centre at depth 4.837: Z 1.456, behind the glass
+16:52:01.052  Target depth 3.426 | model centre at depth 4.837: Z 1.411, behind the glass
+16:52:01.061  Target depth 3.426 | model centre at depth 4.837: Z 1.411, behind the glass
+16:52:01.096  Target depth 3.471 | model centre at depth 4.837: Z 1.365, behind the glass
+16:52:01.107  Target depth 3.518 | model centre at depth 4.837: Z 1.319, behind the glass
+16:52:01.119  Target depth 3.518 | model centre at depth 4.837: Z 1.319, behind the glass
+16:52:01.130  Target depth 3.541 | model centre at depth 4.837: Z 1.296, behind the glass
+16:52:01.140  Target depth 3.565 | model centre at depth 4.837: Z 1.272, behind the glass
+16:52:01.153  Target depth 3.661 | model centre at depth 4.837: Z 1.176, behind the glass
+16:52:01.164  Target depth 3.685 | model centre at depth 4.837: Z 1.152, behind the glass
+16:52:01.179  Target depth 3.710 | model centre at depth 4.837: Z 1.127, behind the glass
+16:52:01.193  Target depth 3.835 | model centre at depth 4.837: Z 1.002, behind the glass
+16:52:01.204  Target depth 3.860 | model centre at depth 4.837: Z 0.977, behind the glass
+16:52:01.217  Target depth 3.860 | model centre at depth 4.837: Z 0.977, behind the glass
+16:52:01.227  Target depth 3.964 | model centre at depth 4.837: Z 0.873, behind the glass
+16:52:01.238  Target depth 3.990 | model centre at depth 4.837: Z 0.846, behind the glass
+16:52:01.249  Target depth 4.017 | model centre at depth 4.837: Z 0.820, behind the glass
+16:52:01.264  Target depth 4.071 | model centre at depth 4.837: Z 0.766, behind the glass
+16:52:01.279  Target depth 4.180 | model centre at depth 4.837: Z 0.657, behind the glass
+16:52:01.290  Target depth 4.236 | model centre at depth 4.837: Z 0.601, behind the glass
+16:52:01.299  Target depth 4.292 | model centre at depth 4.837: Z 0.544, behind the glass
+16:52:01.313  Target depth 4.350 | model centre at depth 4.837: Z 0.487, behind the glass
+16:52:01.322  Target depth 4.350 | model centre at depth 4.837: Z 0.487, behind the glass
+16:52:01.334  Target depth 4.408 | model centre at depth 4.837: Z 0.429, behind the glass
+16:52:01.343  Target depth 4.467 | model centre at depth 4.837: Z 0.370, behind the glass
+16:52:01.354  Target depth 4.496 | model centre at depth 4.837: Z 0.340, behind the glass
+16:52:01.366  Target depth 4.526 | model centre at depth 4.837: Z 0.310, behind the glass
+16:52:01.388  Target depth 4.526 | model centre at depth 4.837: Z 0.310, behind the glass
+16:52:01.403  Target depth 4.587 | model centre at depth 4.837: Z 0.250, behind the glass
+16:52:01.415  Target depth 4.648 | model centre at depth 4.837: Z 0.189, behind the glass
+16:52:01.424  Target depth 4.648 | model centre at depth 4.837: Z 0.189, behind the glass
+16:52:01.437  Target depth 4.679 | model centre at depth 4.837: Z 0.158, behind the glass
+16:52:01.449  Target depth 4.710 | model centre at depth 4.837: Z 0.127, behind the glass
+16:52:01.459  Target depth 4.773 | model centre at depth 4.837: Z 0.064, behind the glass
+16:52:01.471  Target depth 4.837 | model centre at depth 4.837: Z 0.000, behind the glass
+16:52:01.482  Target depth 4.869 | model centre at depth 4.837: Z -0.032, in front of the glass (out of the screen)
+16:52:01.498  Target depth 4.967 | model centre at depth 4.837: Z -0.130, in front of the glass (out of the screen)
+16:52:01.513  Target depth 5.100 | model centre at depth 4.837: Z -0.264, in front of the glass (out of the screen)
+16:52:01.524  Target depth 5.238 | model centre at depth 4.837: Z -0.401, in front of the glass (out of the screen)
+16:52:01.534  Target depth 5.272 | model centre at depth 4.837: Z -0.436, in front of the glass (out of the screen)
+16:52:01.560  Target depth 5.308 | model centre at depth 4.837: Z -0.471, in front of the glass (out of the screen)
+16:52:01.572  Target depth 5.308 | model centre at depth 4.837: Z -0.471, in front of the glass (out of the screen)
+16:52:01.583  Target depth 5.308 | model centre at depth 4.837: Z -0.471, in front of the glass (out of the screen)
+16:52:01.594  Target depth 5.378 | model centre at depth 4.837: Z -0.542, in front of the glass (out of the screen)
+16:52:01.604  Target depth 5.450 | model centre at depth 4.837: Z -0.613, in front of the glass (out of the screen)
+16:52:01.617  Target depth 5.487 | model centre at depth 4.837: Z -0.650, in front of the glass (out of the screen)
+16:52:01.629  Target depth 5.523 | model centre at depth 4.837: Z -0.686, in front of the glass (out of the screen)
+16:52:01.639  Target depth 5.672 | model centre at depth 4.837: Z -0.835, in front of the glass (out of the screen)
+16:52:02.283  Target depth 5.597 | model centre at depth 4.837: Z -0.760, in front of the glass (out of the screen)
+16:52:02.294  Target depth 5.450 | model centre at depth 4.837: Z -0.613, in front of the glass (out of the screen)
+16:52:02.307  Target depth 5.272 | model centre at depth 4.837: Z -0.436, in front of the glass (out of the screen)
+16:52:02.318  Target depth 5.100 | model centre at depth 4.837: Z -0.264, in front of the glass (out of the screen)
+16:52:02.332  Target depth 5.033 | model centre at depth 4.837: Z -0.196, in front of the glass (out of the screen)
+16:52:02.342  Target depth 4.901 | model centre at depth 4.837: Z -0.065, in front of the glass (out of the screen)
+16:52:02.354  Target depth 4.869 | model centre at depth 4.837: Z -0.032, in front of the glass (out of the screen)
+16:52:02.365  Target depth 4.837 | model centre at depth 4.837: Z 0.000, behind the glass
+16:52:02.381  Target depth 4.710 | model centre at depth 4.837: Z 0.127, behind the glass
+16:52:02.395  Target depth 4.679 | model centre at depth 4.837: Z 0.158, behind the glass
+16:52:02.406  Target depth 4.587 | model centre at depth 4.837: Z 0.250, behind the glass
+16:52:02.415  Target depth 4.526 | model centre at depth 4.837: Z 0.310, behind the glass
+16:52:02.428  Target depth 4.467 | model centre at depth 4.837: Z 0.370, behind the glass
+16:52:02.440  Target depth 4.350 | model centre at depth 4.837: Z 0.487, behind the glass
+16:52:02.449  Target depth 4.350 | model centre at depth 4.837: Z 0.487, behind the glass
+16:52:02.458  Target depth 4.350 | model centre at depth 4.837: Z 0.487, behind the glass
+16:52:02.470  Target depth 4.321 | model centre at depth 4.837: Z 0.516, behind the glass
+16:52:02.490  Target depth 4.292 | model centre at depth 4.837: Z 0.544, behind the glass
+16:52:02.506  Target depth 4.292 | model centre at depth 4.837: Z 0.544, behind the glass
+16:52:02.518  Target depth 4.236 | model centre at depth 4.837: Z 0.601, behind the glass
+16:52:02.529  Target depth 4.180 | model centre at depth 4.837: Z 0.657, behind the glass
+16:52:02.538  Target depth 4.125 | model centre at depth 4.837: Z 0.712, behind the glass
+16:52:02.551  Target depth 4.071 | model centre at depth 4.837: Z 0.766, behind the glass
+16:52:02.562  Target depth 4.017 | model centre at depth 4.837: Z 0.820, behind the glass
+16:52:02.571  Target depth 3.964 | model centre at depth 4.837: Z 0.873, behind the glass
+16:52:02.583  Target depth 3.860 | model centre at depth 4.837: Z 0.977, behind the glass
+16:52:02.592  Target depth 3.860 | model centre at depth 4.837: Z 0.977, behind the glass
+16:52:02.683  Target depth 3.835 | model centre at depth 4.837: Z 1.002, behind the glass
+16:52:02.696  Target depth 3.809 | model centre at depth 4.837: Z 1.028, behind the glass
+16:52:02.705  Target depth 3.759 | model centre at depth 4.837: Z 1.078, behind the glass
+16:52:02.717  Target depth 3.710 | model centre at depth 4.837: Z 1.127, behind the glass
+16:52:02.733  Target depth 3.685 | model centre at depth 4.837: Z 1.152, behind the glass
+16:52:02.746  Target depth 3.661 | model centre at depth 4.837: Z 1.176, behind the glass
+16:52:02.762  Target depth 3.661 | model centre at depth 4.837: Z 1.176, behind the glass
+16:52:02.842  Target depth 3.612 | model centre at depth 4.837: Z 1.224, behind the glass
+16:52:03.636  Target depth 3.565 | model centre at depth 4.837: Z 1.272, behind the glass
+16:52:03.648  Target depth 3.565 | model centre at depth 4.837: Z 1.272, behind the glass
+16:52:03.662  Target depth 3.541 | model centre at depth 4.837: Z 1.296, behind the glass
+16:52:03.674  Target depth 3.518 | model centre at depth 4.837: Z 1.319, behind the glass
+16:52:03.950  Target depth 3.541 | model centre at depth 4.837: Z 1.296, behind the glass
+16:52:03.965  Target depth 3.710 | model centre at depth 4.837: Z 1.127, behind the glass
+16:52:03.977  Target depth 3.964 | model centre at depth 4.837: Z 0.873, behind the glass
+16:52:03.991  Target depth 4.180 | model centre at depth 4.837: Z 0.657, behind the glass
+16:52:04.004  Target depth 4.587 | model centre at depth 4.837: Z 0.250, behind the glass
+16:52:04.016  Target depth 5.169 | model centre at depth 4.837: Z -0.332, in front of the glass (out of the screen)
+16:52:04.027  Target depth 5.709 | model centre at depth 4.837: Z -0.872, in front of the glass (out of the screen)
+16:52:04.040  Target depth 6.141 | model centre at depth 4.837: Z -1.305, in front of the glass (out of the screen)
+16:52:04.052  Target depth 6.476 | model centre at depth 4.837: Z -1.639, in front of the glass (out of the screen)
+16:52:04.067  Target depth 6.739 | model centre at depth 4.837: Z -1.902, in front of the glass (out of the screen)
+16:52:04.081  Target depth 6.920 | model centre at depth 4.837: Z -2.084, in front of the glass (out of the screen)
+16:52:04.092  Target depth 7.013 | model centre at depth 4.837: Z -2.176, in front of the glass (out of the screen)
+16:52:04.101  Target depth 7.013 | model centre at depth 4.837: Z -2.176, in front of the glass (out of the screen)
+16:52:04.151  Target depth 7.013 | model centre at depth 4.837: Z -2.176, in front of the glass (out of the screen)
+16:52:04.165  Target depth 7.201 | model centre at depth 4.837: Z -2.365, in front of the glass (out of the screen)
+16:52:04.181  Target depth 7.494 | model centre at depth 4.837: Z -2.657, in front of the glass (out of the screen)
+16:52:04.196  Target depth 7.695 | model centre at depth 4.837: Z -2.858, in front of the glass (out of the screen)
+16:52:04.210  Target depth 8.008 | model centre at depth 4.837: Z -3.171, in front of the glass (out of the screen)
+16:52:04.223  Target depth 8.444 | model centre at depth 4.837: Z -3.607, in front of the glass (out of the screen)
+16:52:04.238  Target depth 8.671 | model centre at depth 4.837: Z -3.834, in front of the glass (out of the screen)
+16:52:04.254  Target depth 9.205 | model centre at depth 4.837: Z -4.368, in front of the glass (out of the screen)
+16:52:04.268  Target depth 9.578 | model centre at depth 4.837: Z -4.742, in front of the glass (out of the screen)
+16:52:04.281  Target depth 10.034 | model centre at depth 4.837: Z -5.197, in front of the glass (out of the screen)
+16:52:04.297  Target depth 10.372 | model centre at depth 4.837: Z -5.535, in front of the glass (out of the screen)
+16:52:04.311  Target depth 10.865 | model centre at depth 4.837: Z -6.028, in front of the glass (out of the screen)
+16:52:04.332  Target depth 11.231 | model centre at depth 4.837: Z -6.395, in front of the glass (out of the screen)
+16:52:04.352  Target depth 11.765 | model centre at depth 4.837: Z -6.928, in front of the glass (out of the screen)
+16:52:04.365  Target depth 12.407 | model centre at depth 4.837: Z -7.570, in front of the glass (out of the screen)
+16:52:04.378  Target depth 12.910 | model centre at depth 4.837: Z -8.073, in front of the glass (out of the screen)
+16:52:04.394  Target depth 13.257 | model centre at depth 4.837: Z -8.421, in front of the glass (out of the screen)
+16:52:04.409  Target depth 13.705 | model centre at depth 4.837: Z -8.868, in front of the glass (out of the screen)
+16:52:04.421  Target depth 13.980 | model centre at depth 4.837: Z -9.143, in front of the glass (out of the screen)
+16:52:04.436  Target depth 14.261 | model centre at depth 4.837: Z -9.424, in front of the glass (out of the screen)
+16:52:04.452  Target depth 14.356 | model centre at depth 4.837: Z -9.519, in front of the glass (out of the screen)
+16:52:04.464  Target depth 14.742 | model centre at depth 4.837: Z -9.905, in front of the glass (out of the screen)
+16:52:04.478  Target depth 14.939 | model centre at depth 4.837: Z -10.102, in front of the glass (out of the screen)
+16:52:04.492  Target depth 14.939 | model centre at depth 4.837: Z -10.102, in front of the glass (out of the screen)
+16:52:04.512  Target depth 15.340 | model centre at depth 4.837: Z -10.504, in front of the glass (out of the screen)
+16:52:04.532  Target depth 15.545 | model centre at depth 4.837: Z -10.709, in front of the glass (out of the screen)
+16:52:04.545  Target depth 15.545 | model centre at depth 4.837: Z -10.709, in front of the glass (out of the screen)
+16:52:04.559  Target depth 15.963 | model centre at depth 4.837: Z -11.127, in front of the glass (out of the screen)
+16:52:04.570  Target depth 16.177 | model centre at depth 4.837: Z -11.340, in front of the glass (out of the screen)
+16:52:04.587  Target depth 16.612 | model centre at depth 4.837: Z -11.775, in front of the glass (out of the screen)
+16:52:04.602  Target depth 17.058 | model centre at depth 4.837: Z -12.221, in front of the glass (out of the screen)
+16:52:04.614  Target depth 17.517 | model centre at depth 4.837: Z -12.680, in front of the glass (out of the screen)
+16:52:04.634  Target depth 18.108 | model centre at depth 4.837: Z -13.271, in front of the glass (out of the screen)
+16:52:04.653  Target depth 18.968 | model centre at depth 4.837: Z -14.131, in front of the glass (out of the screen)
+16:52:04.666  Target depth 19.738 | model centre at depth 4.837: Z -14.902, in front of the glass (out of the screen)
+16:52:04.683  Target depth 20.269 | model centre at depth 4.837: Z -15.432, in front of the glass (out of the screen)
+16:52:04.697  Target depth 21.092 | model centre at depth 4.837: Z -16.255, in front of the glass (out of the screen)
+16:52:04.709  Target depth 21.949 | model centre at depth 4.837: Z -17.112, in front of the glass (out of the screen)
+16:52:04.722  Target depth 22.242 | model centre at depth 4.837: Z -17.405, in front of the glass (out of the screen)
+16:52:04.738  Target depth 22.992 | model centre at depth 4.837: Z -18.155, in front of the glass (out of the screen)
+16:52:04.757  Target depth 23.767 | model centre at depth 4.837: Z -18.930, in front of the glass (out of the screen)
+16:52:04.775  Target depth 24.732 | model centre at depth 4.837: Z -19.895, in front of the glass (out of the screen)
+16:52:04.790  Target depth 25.397 | model centre at depth 4.837: Z -20.561, in front of the glass (out of the screen)
+16:52:04.805  Target depth 25.908 | model centre at depth 4.837: Z -21.071, in front of the glass (out of the screen)
+16:52:04.820  Target depth 26.429 | model centre at depth 4.837: Z -21.592, in front of the glass (out of the screen)
+16:52:04.833  Target depth 26.960 | model centre at depth 4.837: Z -22.123, in front of the glass (out of the screen)
+16:52:04.847  Target depth 27.139 | model centre at depth 4.837: Z -22.302, in front of the glass (out of the screen)
+16:52:04.866  Target depth 27.869 | model centre at depth 4.837: Z -23.032, in front of the glass (out of the screen)
+16:52:04.883  Target depth 28.241 | model centre at depth 4.837: Z -23.404, in front of the glass (out of the screen)
+16:52:04.898  Target depth 29.001 | model centre at depth 4.837: Z -24.164, in front of the glass (out of the screen)
+16:52:04.913  Target depth 29.388 | model centre at depth 4.837: Z -24.551, in front of the glass (out of the screen)
+16:52:04.925  Target depth 30.178 | model centre at depth 4.837: Z -25.341, in front of the glass (out of the screen)
+16:52:04.940  Target depth 30.581 | model centre at depth 4.837: Z -25.744, in front of the glass (out of the screen)
+16:52:04.955  Target depth 31.403 | model centre at depth 4.837: Z -26.567, in front of the glass (out of the screen)
+16:52:04.967  Target depth 31.823 | model centre at depth 4.837: Z -26.986, in front of the glass (out of the screen)
+16:52:04.982  Target depth 31.823 | model centre at depth 4.837: Z -26.986, in front of the glass (out of the screen)
+16:52:04.997  Target depth 32.679 | model centre at depth 4.837: Z -27.842, in front of the glass (out of the screen)
+16:52:05.010  Target depth 32.896 | model centre at depth 4.837: Z -28.059, in front of the glass (out of the screen)
+16:52:05.022  Target depth 33.557 | model centre at depth 4.837: Z -28.720, in front of the glass (out of the screen)
+16:52:05.037  Target depth 34.232 | model centre at depth 4.837: Z -29.395, in front of the glass (out of the screen)
+16:52:05.057  Target depth 35.386 | model centre at depth 4.837: Z -30.549, in front of the glass (out of the screen)
+16:52:05.078  Target depth 36.823 | model centre at depth 4.837: Z -31.986, in front of the glass (out of the screen)
+16:52:05.092  Target depth 38.318 | model centre at depth 4.837: Z -33.481, in front of the glass (out of the screen)
+16:52:05.108  Target depth 38.830 | model centre at depth 4.837: Z -33.993, in front of the glass (out of the screen)
+16:52:05.121  Target depth 39.874 | model centre at depth 4.837: Z -35.037, in front of the glass (out of the screen)
+16:52:05.135  Target depth 40.407 | model centre at depth 4.837: Z -35.570, in front of the glass (out of the screen)
+16:52:05.149  Target depth 41.493 | model centre at depth 4.837: Z -36.656, in front of the glass (out of the screen)
+16:52:05.162  Target depth 41.769 | model centre at depth 4.837: Z -36.932, in front of the glass (out of the screen)
+16:52:05.178  Target depth 42.609 | model centre at depth 4.837: Z -37.772, in front of the glass (out of the screen)
+16:52:05.193  Target depth 43.465 | model centre at depth 4.837: Z -38.628, in front of the glass (out of the screen)
+16:52:05.204  Target depth 44.931 | model centre at depth 4.837: Z -40.094, in front of the glass (out of the screen)
+16:52:05.218  Target depth 45.531 | model centre at depth 4.837: Z -40.694, in front of the glass (out of the screen)
+16:52:05.227  Target depth 47.067 | model centre at depth 4.837: Z -42.230, in front of the glass (out of the screen)
+16:52:05.239  Target depth 48.654 | model centre at depth 4.837: Z -43.817, in front of the glass (out of the screen)
+16:52:05.250  Target depth 49.962 | model centre at depth 4.837: Z -45.125, in front of the glass (out of the screen)
+16:52:05.265  Target depth 51.991 | model centre at depth 4.837: Z -47.154, in front of the glass (out of the screen)
+16:52:05.279  Target depth 54.825 | model centre at depth 4.837: Z -49.988, in front of the glass (out of the screen)
+16:52:05.291  Target depth 57.813 | model centre at depth 4.837: Z -52.976, in front of the glass (out of the screen)
+16:52:05.304  Target depth 60.160 | model centre at depth 4.837: Z -55.323, in front of the glass (out of the screen)
+16:52:05.314  Target depth 62.603 | model centre at depth 4.837: Z -57.766, in front of the glass (out of the screen)
+16:52:05.329  Target depth 64.286 | model centre at depth 4.837: Z -59.449, in front of the glass (out of the screen)
+16:52:05.342  Target depth 66.015 | model centre at depth 4.837: Z -61.178, in front of the glass (out of the screen)
+16:52:05.354  Target depth 67.790 | model centre at depth 4.837: Z -62.953, in front of the glass (out of the screen)
+16:52:05.366  Target depth 69.613 | model centre at depth 4.837: Z -64.776, in front of the glass (out of the screen)
+16:52:05.377  Target depth 70.542 | model centre at depth 4.837: Z -65.705, in front of the glass (out of the screen)
+16:52:05.388  Target depth 72.921 | model centre at depth 4.837: Z -68.084, in front of the glass (out of the screen)
+16:52:05.398  Target depth 75.380 | model centre at depth 4.837: Z -70.544, in front of the glass (out of the screen)
+16:52:05.409  Target depth 77.407 | model centre at depth 4.837: Z -72.571, in front of the glass (out of the screen)
+16:52:05.424  Target depth 79.489 | model centre at depth 4.837: Z -74.652, in front of the glass (out of the screen)
+16:52:05.440  Target depth 82.716 | model centre at depth 4.837: Z -77.879, in front of the glass (out of the screen)
+16:52:05.450  Target depth 86.075 | model centre at depth 4.837: Z -81.238, in front of the glass (out of the screen)
+16:52:05.463  Target depth 88.389 | model centre at depth 4.837: Z -83.553, in front of the glass (out of the screen)
+16:52:05.473  Target depth 91.978 | model centre at depth 4.837: Z -87.142, in front of the glass (out of the screen)
+16:52:05.484  Target depth 93.207 | model centre at depth 4.837: Z -88.370, in front of the glass (out of the screen)
+16:52:05.495  Target depth 96.350 | model centre at depth 4.837: Z -91.513, in front of the glass (out of the screen)
+16:52:05.511  Target depth 99.599 | model centre at depth 4.837: Z -94.763, in front of the glass (out of the screen)
+16:52:05.526  Target depth 103.644 | model centre at depth 4.837: Z -98.807, in front of the glass (out of the screen)
+16:52:05.537  Target depth 105.028 | model centre at depth 4.837: Z -100.191, in front of the glass (out of the screen)
+16:52:05.547  Target depth 109.292 | model centre at depth 4.837: Z -104.456, in front of the glass (out of the screen)
+16:52:05.559  Target depth 112.231 | model centre at depth 4.837: Z -107.394, in front of the glass (out of the screen)
+16:52:05.571  Target depth 113.730 | model centre at depth 4.837: Z -108.893, in front of the glass (out of the screen)
+16:52:05.579  Target depth 116.788 | model centre at depth 4.837: Z -111.951, in front of the glass (out of the screen)
+16:52:05.591  Target depth 118.348 | model centre at depth 4.837: Z -113.511, in front of the glass (out of the screen)
+16:52:05.606  Target depth 121.530 | model centre at depth 4.837: Z -116.693, in front of the glass (out of the screen)
+16:52:05.621  Target depth 124.798 | model centre at depth 4.837: Z -119.961, in front of the glass (out of the screen)
+16:52:05.632  Target depth 129.865 | model centre at depth 4.837: Z -125.029, in front of the glass (out of the screen)
+16:52:05.645  Target depth 133.357 | model centre at depth 4.837: Z -128.521, in front of the glass (out of the screen)
+16:52:05.655  Target depth 138.772 | model centre at depth 4.837: Z -133.935, in front of the glass (out of the screen)
+16:52:05.666  Target depth 142.504 | model centre at depth 4.837: Z -137.667, in front of the glass (out of the screen)
+16:52:05.678  Target depth 146.336 | model centre at depth 4.837: Z -141.499, in front of the glass (out of the screen)
+16:52:05.692  Target depth 150.270 | model centre at depth 4.837: Z -145.434, in front of the glass (out of the screen)
+16:52:05.707  Target depth 158.461 | model centre at depth 4.837: Z -153.624, in front of the glass (out of the screen)
+16:52:05.718  Target depth 162.721 | model centre at depth 4.837: Z -157.885, in front of the glass (out of the screen)
+16:52:05.728  Target depth 168.209 | model centre at depth 4.837: Z -163.372, in front of the glass (out of the screen)
+16:52:05.740  Target depth 171.590 | model centre at depth 4.837: Z -166.753, in front of the glass (out of the screen)
+16:52:05.752  Target depth 175.039 | model centre at depth 4.837: Z -170.202, in front of the glass (out of the screen)
+16:52:05.763  Target depth 178.557 | model centre at depth 4.837: Z -173.720, in front of the glass (out of the screen)
+16:52:05.772  Target depth 180.942 | model centre at depth 4.837: Z -176.105, in front of the glass (out of the screen)
+16:52:05.783  Target depth 182.146 | model centre at depth 4.837: Z -177.309, in front of the glass (out of the screen)
+16:52:05.798  Target depth 183.359 | model centre at depth 4.837: Z -178.522, in front of the glass (out of the screen)
+16:52:05.815  Target depth 188.289 | model centre at depth 4.837: Z -183.452, in front of the glass (out of the screen)
+16:52:05.826  Target depth 189.542 | model centre at depth 4.837: Z -184.705, in front of the glass (out of the screen)
+16:52:05.840  Target depth 193.352 | model centre at depth 4.837: Z -188.515, in front of the glass (out of the screen)
+16:52:05.850  Target depth 195.934 | model centre at depth 4.837: Z -191.097, in front of the glass (out of the screen)
+16:52:05.860  Target depth 198.551 | model centre at depth 4.837: Z -193.714, in front of the glass (out of the screen)
+16:52:05.872  Target depth 203.890 | model centre at depth 4.837: Z -199.053, in front of the glass (out of the screen)
+16:52:05.888  Target depth 205.247 | model centre at depth 4.837: Z -200.410, in front of the glass (out of the screen)
+16:52:05.898  Target depth 212.169 | model centre at depth 4.837: Z -207.332, in front of the glass (out of the screen)
+16:52:05.913  Target depth 212.169 | model centre at depth 4.837: Z -207.332, in front of the glass (out of the screen)
+16:52:05.925  Target depth 215.002 | model centre at depth 4.837: Z -210.165, in front of the glass (out of the screen)
+16:52:05.935  Target depth 217.874 | model centre at depth 4.837: Z -213.037, in front of the glass (out of the screen)
+16:52:05.944  Target depth 220.784 | model centre at depth 4.837: Z -215.947, in front of the glass (out of the screen)
+16:52:05.957  Target depth 223.732 | model centre at depth 4.837: Z -218.895, in front of the glass (out of the screen)
+16:52:05.969  Target depth 229.748 | model centre at depth 4.837: Z -224.911, in front of the glass (out of the screen)
+16:52:05.978  Target depth 235.926 | model centre at depth 4.837: Z -231.089, in front of the glass (out of the screen)
+16:52:05.990  Target depth 242.270 | model centre at depth 4.837: Z -237.433, in front of the glass (out of the screen)
+16:52:06.001  Target depth 250.440 | model centre at depth 4.837: Z -245.603, in front of the glass (out of the screen)
+16:52:06.018  Target depth 255.474 | model centre at depth 4.837: Z -250.637, in front of the glass (out of the screen)
+16:52:06.034  Target depth 265.848 | model centre at depth 4.837: Z -261.011, in front of the glass (out of the screen)
+16:52:06.045  Target depth 271.191 | model centre at depth 4.837: Z -266.354, in front of the glass (out of the screen)
+16:52:06.055  Target depth 272.996 | model centre at depth 4.837: Z -268.159, in front of the glass (out of the screen)
+16:52:06.067  Target depth 276.642 | model centre at depth 4.837: Z -271.805, in front of the glass (out of the screen)
+16:52:06.078  Target depth 280.337 | model centre at depth 4.837: Z -275.500, in front of the glass (out of the screen)
+16:52:06.088  Target depth 280.337 | model centre at depth 4.837: Z -275.500, in front of the glass (out of the screen)
+16:52:06.099  Target depth 282.203 | model centre at depth 4.837: Z -277.366, in front of the glass (out of the screen)
+16:52:06.110  Target depth 284.081 | model centre at depth 4.837: Z -279.244, in front of the glass (out of the screen)
+16:52:06.126  Target depth 287.875 | model centre at depth 4.837: Z -283.038, in front of the glass (out of the screen)
+16:52:06.141  Target depth 291.719 | model centre at depth 4.837: Z -286.883, in front of the glass (out of the screen)
+16:52:06.153  Target depth 293.661 | model centre at depth 4.837: Z -288.824, in front of the glass (out of the screen)
+16:52:06.165  Target depth 295.615 | model centre at depth 4.837: Z -290.779, in front of the glass (out of the screen)
+16:52:06.175  Target depth 303.564 | model centre at depth 4.837: Z -298.728, in front of the glass (out of the screen)
+16:52:06.187  Target depth 307.619 | model centre at depth 4.837: Z -302.782, in front of the glass (out of the screen)
+16:52:06.198  Target depth 315.890 | model centre at depth 4.837: Z -311.053, in front of the glass (out of the screen)
+16:52:06.208  Target depth 320.109 | model centre at depth 4.837: Z -315.272, in front of the glass (out of the screen)
+16:52:06.219  Target depth 328.717 | model centre at depth 4.837: Z -323.880, in front of the glass (out of the screen)
+16:52:06.232  Target depth 333.107 | model centre at depth 4.837: Z -328.270, in front of the glass (out of the screen)
+16:52:06.248  Target depth 344.341 | model centre at depth 4.837: Z -339.504, in front of the glass (out of the screen)
+16:52:06.263  Target depth 360.707 | model centre at depth 4.837: Z -355.870, in front of the glass (out of the screen)
+16:52:06.275  Target depth 372.872 | model centre at depth 4.837: Z -368.035, in front of the glass (out of the screen)
+16:52:06.287  Target depth 385.446 | model centre at depth 4.837: Z -380.609, in front of the glass (out of the screen)
+16:52:06.299  Target depth 390.594 | model centre at depth 4.837: Z -385.757, in front of the glass (out of the screen)
+16:52:06.314  Target depth 401.097 | model centre at depth 4.837: Z -396.260, in front of the glass (out of the screen)
+16:52:06.328  Target depth 406.454 | model centre at depth 4.837: Z -401.617, in front of the glass (out of the screen)
+16:52:06.339  Target depth 411.882 | model centre at depth 4.837: Z -407.045, in front of the glass (out of the screen)
+16:52:06.350  Target depth 420.161 | model centre at depth 4.837: Z -415.324, in front of the glass (out of the screen)
+16:52:06.360  Target depth 422.957 | model centre at depth 4.837: Z -418.120, in front of the glass (out of the screen)
+16:52:06.372  Target depth 428.606 | model centre at depth 4.837: Z -423.769, in front of the glass (out of the screen)
+16:52:06.384  Target depth 437.221 | model centre at depth 4.837: Z -432.384, in front of the glass (out of the screen)
+16:52:06.393  Target depth 446.010 | model centre at depth 4.837: Z -441.173, in front of the glass (out of the screen)
+16:52:06.405  Target depth 458.002 | model centre at depth 4.837: Z -453.165, in front of the glass (out of the screen)
+16:52:06.415  Target depth 470.318 | model centre at depth 4.837: Z -465.481, in front of the glass (out of the screen)
+16:52:06.433  Target depth 476.599 | model centre at depth 4.837: Z -471.762, in front of the glass (out of the screen)
+16:52:06.449  Target depth 502.575 | model centre at depth 4.837: Z -497.738, in front of the glass (out of the screen)
+16:52:06.461  Target depth 522.981 | model centre at depth 4.837: Z -518.144, in front of the glass (out of the screen)
+16:52:06.470  Target depth 544.216 | model centre at depth 4.837: Z -539.379, in front of the glass (out of the screen)
+16:52:06.483  Target depth 558.850 | model centre at depth 4.837: Z -554.013, in front of the glass (out of the screen)
+16:52:06.495  Target depth 581.542 | model centre at depth 4.837: Z -576.704, in front of the glass (out of the screen)
+16:52:06.507  Target depth 601.153 | model centre at depth 4.837: Z -596.316, in front of the glass (out of the screen)
+16:52:06.516  Target depth 613.237 | model centre at depth 4.837: Z -608.400, in front of the glass (out of the screen)
+16:52:06.528  Target depth 629.726 | model centre at depth 4.837: Z -624.889, in front of the glass (out of the screen)
+16:52:06.544  Target depth 646.659 | model centre at depth 4.837: Z -641.822, in front of the glass (out of the screen)
+16:52:06.561  Target depth 677.395 | model centre at depth 4.837: Z -672.558, in front of the glass (out of the screen)
+16:52:06.572  Target depth 719.068 | model centre at depth 4.837: Z -714.231, in front of the glass (out of the screen)
+16:52:06.586  Target depth 748.265 | model centre at depth 4.837: Z -743.428, in front of the glass (out of the screen)
+16:52:06.595  Target depth 794.299 | model centre at depth 4.837: Z -789.461, in front of the glass (out of the screen)
+16:52:06.607  Target depth 821.085 | model centre at depth 4.837: Z -816.248, in front of the glass (out of the screen)
+16:52:06.619  Target depth 854.425 | model centre at depth 4.837: Z -849.587, in front of the glass (out of the screen)
+16:52:06.634  Target depth 865.836 | model centre at depth 4.837: Z -860.999, in front of the glass (out of the screen)
+16:52:06.649  Target depth 900.992 | model centre at depth 4.837: Z -896.155, in front of the glass (out of the screen)
+16:52:06.660  Target depth 937.576 | model centre at depth 4.837: Z -932.739, in front of the glass (out of the screen)
+16:52:06.670  Target depth 962.787 | model centre at depth 4.837: Z -957.950, in front of the glass (out of the screen)
+16:52:06.683  Target depth 975.646 | model centre at depth 4.837: Z -970.808, in front of the glass (out of the screen)
+16:52:06.695  Target depth 988.676 | model centre at depth 4.837: Z -983.839, in front of the glass (out of the screen)
+16:52:06.704  Target depth 1008.548 | model centre at depth 4.837: Z -1003.711, in front of the glass (out of the screen)
+16:52:06.716  Target depth 1015.261 | model centre at depth 4.837: Z -1010.424, in front of the glass (out of the screen)
+16:52:06.731  Target depth 1015.261 | model centre at depth 4.837: Z -1010.424, in front of the glass (out of the screen)
+16:52:06.746  Target depth 1042.560 | model centre at depth 4.837: Z -1037.723, in front of the glass (out of the screen)
+16:52:06.758  Target depth 1056.484 | model centre at depth 4.837: Z -1051.647, in front of the glass (out of the screen)
+16:52:06.775  Target depth 1056.484 | model centre at depth 4.837: Z -1051.647, in front of the glass (out of the screen)
+16:52:06.784  Target depth 1084.893 | model centre at depth 4.837: Z -1080.055, in front of the glass (out of the screen)
+16:52:06.796  Target depth 1099.382 | model centre at depth 4.837: Z -1094.545, in front of the glass (out of the screen)
+16:52:06.808  Target depth 1114.065 | model centre at depth 4.837: Z -1109.228, in front of the glass (out of the screen)
+16:52:06.823  Target depth 1136.458 | model centre at depth 4.837: Z -1131.620, in front of the glass (out of the screen)
+16:52:06.838  Target depth 1159.300 | model centre at depth 4.837: Z -1154.463, in front of the glass (out of the screen)
+16:52:06.850  Target depth 1190.473 | model centre at depth 4.837: Z -1185.636, in front of the glass (out of the screen)
+16:52:06.859  Target depth 1222.484 | model centre at depth 4.837: Z -1217.647, in front of the glass (out of the screen)
+16:52:06.873  Target depth 1238.811 | model centre at depth 4.837: Z -1233.974, in front of the glass (out of the screen)
+16:52:06.885  Target depth 1280.589 | model centre at depth 4.837: Z -1275.751, in front of the glass (out of the screen)
+16:52:06.894  Target depth 1323.775 | model centre at depth 4.837: Z -1318.938, in front of the glass (out of the screen)
+16:52:06.905  Target depth 1332.586 | model centre at depth 4.837: Z -1327.748, in front of the glass (out of the screen)
+16:52:06.921  Target depth 1377.526 | model centre at depth 4.837: Z -1372.688, in front of the glass (out of the screen)
+16:52:06.937  Target depth 1433.459 | model centre at depth 4.837: Z -1428.621, in front of the glass (out of the screen)
+16:52:06.948  Target depth 1491.663 | model centre at depth 4.837: Z -1486.826, in front of the glass (out of the screen)
+16:52:06.962  Target depth 1511.585 | model centre at depth 4.837: Z -1506.748, in front of the glass (out of the screen)
+16:52:06.972  Target depth 1562.562 | model centre at depth 4.837: Z -1557.724, in front of the glass (out of the screen)
+16:52:06.984  Target depth 1593.969 | model centre at depth 4.837: Z -1589.132, in front of the glass (out of the screen)
+16:52:06.996  Target depth 1615.257 | model centre at depth 4.837: Z -1610.420, in front of the glass (out of the screen)
+16:52:07.011  Target depth 1636.830 | model centre at depth 4.837: Z -1631.993, in front of the glass (out of the screen)
+16:52:07.026  Target depth 1680.843 | model centre at depth 4.837: Z -1676.006, in front of the glass (out of the screen)
+16:52:07.035  Target depth 1680.843 | model centre at depth 4.837: Z -1676.006, in front of the glass (out of the screen)
+16:52:07.047  Target depth 1692.031 | model centre at depth 4.837: Z -1687.193, in front of the glass (out of the screen)
+16:52:07.057  Target depth 1703.292 | model centre at depth 4.837: Z -1698.455, in front of the glass (out of the screen)
+16:52:07.069  Target depth 1703.292 | model centre at depth 4.837: Z -1698.455, in front of the glass (out of the screen)
+16:52:07.081  Target depth 1726.041 | model centre at depth 4.837: Z -1721.203, in front of the glass (out of the screen)
+16:52:07.091  Target depth 1749.092 | model centre at depth 4.837: Z -1744.255, in front of the glass (out of the screen)
+16:52:07.103  Target depth 1749.092 | model centre at depth 4.837: Z -1744.255, in front of the glass (out of the screen)
+16:52:07.115  Target depth 1760.734 | model centre at depth 4.837: Z -1755.896, in front of the glass (out of the screen)
+16:52:07.131  Target depth 1772.453 | model centre at depth 4.837: Z -1767.615, in front of the glass (out of the screen)
+16:52:07.147  Target depth 1796.125 | model centre at depth 4.837: Z -1791.287, in front of the glass (out of the screen)
+16:52:07.158  Target depth 1820.113 | model centre at depth 4.837: Z -1815.275, in front of the glass (out of the screen)
+16:52:07.168  Target depth 1820.113 | model centre at depth 4.837: Z -1815.275, in front of the glass (out of the screen)
+16:52:07.181  Target depth 1832.227 | model centre at depth 4.837: Z -1827.389, in front of the glass (out of the screen)
+16:52:07.193  Target depth 1844.421 | model centre at depth 4.837: Z -1839.584, in front of the glass (out of the screen)
+16:52:07.208  Target depth 1869.055 | model centre at depth 4.837: Z -1864.217, in front of the glass (out of the screen)
+16:52:08.153  Target depth 1894.016 | model centre at depth 4.837: Z -1889.179, in front of the glass (out of the screen)
+16:52:08.212  Target depth 1894.016 | model centre at depth 4.837: Z -1889.179, in front of the glass (out of the screen)
+16:52:08.226  Target depth 1944.946 | model centre at depth 4.837: Z -1940.108, in front of the glass (out of the screen)
+16:52:08.240  Target depth 1997.244 | model centre at depth 4.837: Z -1992.407, in front of the glass (out of the screen)
+16:52:08.257  Target depth 2078.340 | model centre at depth 4.837: Z -2073.503, in front of the glass (out of the screen)
+16:52:08.275  Target depth 2162.729 | model centre at depth 4.837: Z -2157.892, in front of the glass (out of the screen)
+16:52:08.289  Target depth 2326.442 | model centre at depth 4.838: Z -2321.604, in front of the glass (out of the screen)
+16:52:08.301  Target depth 2519.203 | model centre at depth 4.838: Z -2514.366, in front of the glass (out of the screen)
+16:52:08.318  Target depth 2819.932 | model centre at depth 4.838: Z -2815.094, in front of the glass (out of the screen)
+16:52:08.332  Target depth 3328.600 | model centre at depth 4.838: Z -3323.763, in front of the glass (out of the screen)
+16:52:08.344  Target depth 3775.713 | model centre at depth 4.838: Z -3770.876, in front of the glass (out of the screen)
+16:52:08.357  Target depth 4143.162 | model centre at depth 4.838: Z -4138.324, in front of the glass (out of the screen)
+16:52:08.373  Target depth 4427.321 | model centre at depth 4.838: Z -4422.483, in front of the glass (out of the screen)
+16:52:08.387  Target depth 4794.154 | model centre at depth 4.838: Z -4789.316, in front of the glass (out of the screen)
+16:52:08.399  Target depth 4988.816 | model centre at depth 4.838: Z -4983.978, in front of the glass (out of the screen)
+16:52:08.414  Target depth 5055.445 | model centre at depth 4.838: Z -5050.607, in front of the glass (out of the screen)
+16:52:08.428  Target depth 5122.962 | model centre at depth 4.838: Z -5118.124, in front of the glass (out of the screen)
+16:52:08.602  Target depth 5157.060 | model centre at depth 4.838: Z -5152.221, in front of the glass (out of the screen)
+16:52:08.614  Target depth 5191.382 | model centre at depth 4.838: Z -5186.544, in front of the glass (out of the screen)
+16:52:08.626  Target depth 5330.975 | model centre at depth 4.838: Z -5326.136, in front of the glass (out of the screen)
+16:52:08.639  Target depth 5402.173 | model centre at depth 4.839: Z -5397.334, in front of the glass (out of the screen)
+16:52:08.650  Target depth 5547.434 | model centre at depth 4.838: Z -5542.595, in front of the glass (out of the screen)
+16:52:08.660  Target depth 5621.523 | model centre at depth 4.839: Z -5616.685, in front of the glass (out of the screen)
+16:52:08.673  Target depth 5772.682 | model centre at depth 4.839: Z -5767.843, in front of the glass (out of the screen)
+16:52:08.685  Target depth 5849.779 | model centre at depth 4.839: Z -5844.940, in front of the glass (out of the screen)
+16:52:08.699  Target depth 6007.076 | model centre at depth 4.839: Z -6002.237, in front of the glass (out of the screen)
+16:52:08.715  Target depth 6087.304 | model centre at depth 4.839: Z -6082.465, in front of the glass (out of the screen)
+16:52:08.725  Target depth 6087.304 | model centre at depth 4.839: Z -6082.465, in front of the glass (out of the screen)
+16:52:08.738  Target depth 6168.604 | model centre at depth 4.839: Z -6163.765, in front of the glass (out of the screen)
+16:52:08.761  Target depth 6250.987 | model centre at depth 4.839: Z -6246.148, in front of the glass (out of the screen)
+16:52:08.774  Target depth 6250.987 | model centre at depth 4.839: Z -6246.148, in front of the glass (out of the screen)
+16:52:08.785  Target depth 6334.473 | model centre at depth 4.839: Z -6329.634, in front of the glass (out of the screen)
+16:52:08.802  Target depth 6419.074 | model centre at depth 4.839: Z -6414.235, in front of the glass (out of the screen)
+16:52:08.816  Target depth 6548.097 | model centre at depth 4.839: Z -6543.258, in front of the glass (out of the screen)
+16:52:08.834  Target depth 6679.714 | model centre at depth 4.839: Z -6674.875, in front of the glass (out of the screen)
+16:52:08.852  Target depth 6859.327 | model centre at depth 4.839: Z -6854.488, in front of the glass (out of the screen)
+16:52:08.866  Target depth 7090.651 | model centre at depth 4.839: Z -7085.812, in front of the glass (out of the screen)
+16:52:08.878  Target depth 7137.843 | model centre at depth 4.839: Z -7133.003, in front of the glass (out of the screen)
+16:52:08.894  Target depth 7329.775 | model centre at depth 4.839: Z -7324.936, in front of the glass (out of the screen)
+16:52:08.906  Target depth 7329.775 | model centre at depth 4.839: Z -7324.936, in front of the glass (out of the screen)
+16:52:09.000  Target depth 7378.560 | model centre at depth 4.839: Z -7373.721, in front of the glass (out of the screen)
+16:52:09.012  Target depth 7427.668 | model centre at depth 4.839: Z -7422.829, in front of the glass (out of the screen)
+16:52:09.025  Target depth 7678.159 | model centre at depth 4.839: Z -7673.320, in front of the glass (out of the screen)
+16:52:09.035  Target depth 7937.097 | model centre at depth 4.839: Z -7932.257, in front of the glass (out of the screen)
+16:52:09.045  Target depth 8259.375 | model centre at depth 4.840: Z -8254.535, in front of the glass (out of the screen)
+16:52:09.058  Target depth 8369.683 | model centre at depth 4.840: Z -8364.843, in front of the glass (out of the screen)
+16:52:09.070  Target depth 8709.525 | model centre at depth 4.840: Z -8704.686, in front of the glass (out of the screen)
+16:52:09.079  Target depth 9003.246 | model centre at depth 4.840: Z -8998.406, in front of the glass (out of the screen)
+16:52:09.091  Target depth 9063.167 | model centre at depth 4.840: Z -9058.327, in front of the glass (out of the screen)
+16:52:09.102  Target depth 9368.813 | model centre at depth 4.840: Z -9363.974, in front of the glass (out of the screen)
+16:52:09.118  Target depth 9684.767 | model centre at depth 4.840: Z -9679.927, in front of the glass (out of the screen)
+16:52:09.133  Target depth 10078.007 | model centre at depth 4.840: Z -10073.167, in front of the glass (out of the screen)
+16:52:09.144  Target depth 10487.214 | model centre at depth 4.841: Z -10482.373, in front of the glass (out of the screen)
+16:52:09.157  Target depth 10769.209 | model centre at depth 4.841: Z -10764.368, in front of the glass (out of the screen)
+16:52:09.167  Target depth 11058.785 | model centre at depth 4.841: Z -11053.944, in front of the glass (out of the screen)
+16:52:09.178  Target depth 11431.732 | model centre at depth 4.841: Z -11426.892, in front of the glass (out of the screen)
+16:52:09.190  Target depth 11817.255 | model centre at depth 4.841: Z -11812.414, in front of the glass (out of the screen)
+16:52:09.205  Target depth 12297.083 | model centre at depth 4.842: Z -12292.241, in front of the glass (out of the screen)
+16:52:09.220  Target depth 12796.394 | model centre at depth 4.842: Z -12791.552, in front of the glass (out of the screen)
+16:52:09.231  Target depth 13493.819 | model centre at depth 4.842: Z -13488.978, in front of the glass (out of the screen)
+16:52:09.240  Target depth 14419.297 | model centre at depth 4.843: Z -14414.454, in front of the glass (out of the screen)
+16:52:09.254  Target depth 15004.778 | model centre at depth 4.843: Z -14999.936, in front of the glass (out of the screen)
+16:52:09.265  Target depth 16248.024 | model centre at depth 4.843: Z -16243.182, in front of the glass (out of the screen)
+16:52:09.275  Target depth 17133.570 | model centre at depth 4.843: Z -17128.729, in front of the glass (out of the screen)
+16:52:09.286  Target depth 17829.262 | model centre at depth 4.843: Z -17824.420, in front of the glass (out of the screen)
+16:52:09.297  Target depth 19052.086 | model centre at depth 4.843: Z -19047.244, in front of the glass (out of the screen)
+16:52:09.313  Target depth 20090.457 | model centre at depth 4.843: Z -20085.615, in front of the glass (out of the screen)
+16:52:09.328  Target depth 21611.252 | model centre at depth 4.843: Z -21606.410, in front of the glass (out of the screen)
+16:52:09.340  Target depth 22638.430 | model centre at depth 4.843: Z -22633.588, in front of the glass (out of the screen)
+16:52:09.353  Target depth 23872.268 | model centre at depth 4.843: Z -23867.426, in front of the glass (out of the screen)
+16:52:09.362  Target depth 24514.176 | model centre at depth 4.843: Z -24509.332, in front of the glass (out of the screen)
+16:52:09.374  Target depth 24841.578 | model centre at depth 4.843: Z -24836.734, in front of the glass (out of the screen)
+16:52:09.385  Target depth 25173.350 | model centre at depth 4.843: Z -25168.506, in front of the glass (out of the screen)
+16:52:09.394  Target depth 25340.895 | model centre at depth 4.843: Z -25336.051, in front of the glass (out of the screen)
+16:52:09.510  Target depth 25509.551 | model centre at depth 4.845: Z -25504.707, in front of the glass (out of the screen)
+16:52:09.526  Target depth 25850.246 | model centre at depth 4.845: Z -25845.400, in front of the glass (out of the screen)
+16:52:09.539  Target depth 26369.836 | model centre at depth 4.845: Z -26364.990, in front of the glass (out of the screen)
+16:52:09.552  Target depth 26545.342 | model centre at depth 4.845: Z -26540.496, in front of the glass (out of the screen)
+16:52:09.564  Target depth 26545.342 | model centre at depth 4.845: Z -26540.496, in front of the glass (out of the screen)
+16:52:09.754  Target depth 26899.869 | model centre at depth 4.845: Z -26895.023, in front of the glass (out of the screen)
+16:52:09.767  Target depth 27259.129 | model centre at depth 4.845: Z -27254.285, in front of the glass (out of the screen)
+16:52:09.782  Target depth 27440.557 | model centre at depth 4.845: Z -27435.713, in front of the glass (out of the screen)
+16:52:09.797  Target depth 27623.189 | model centre at depth 4.845: Z -27618.346, in front of the glass (out of the screen)
+16:52:09.873  Target depth 27623.189 | model centre at depth 4.845: Z -27618.346, in front of the glass (out of the screen)
+16:52:09.887  Target depth 28365.959 | model centre at depth 4.845: Z -28361.115, in front of the glass (out of the screen)
+16:52:09.896  Target depth 28744.801 | model centre at depth 4.845: Z -28739.957, in front of the glass (out of the screen)
+16:52:09.908  Target depth 29517.730 | model centre at depth 4.845: Z -29512.887, in front of the glass (out of the screen)
+16:52:09.921  Target depth 29714.189 | model centre at depth 4.846: Z -29709.344, in front of the glass (out of the screen)
+16:52:09.935  Target depth 29911.955 | model centre at depth 4.846: Z -29907.109, in front of the glass (out of the screen)
+16:52:11.781  Target depth 29911.955 | model centre at depth 4.846: Z -29907.109, in front of the glass (out of the screen)
+16:52:11.793  Target depth 31126.500 | model centre at depth 4.846: Z -31121.654, in front of the glass (out of the screen)
+16:52:11.805  Target depth 33261.324 | model centre at depth 4.846: Z -33256.477, in front of the glass (out of the screen)
+16:52:11.818  Target depth 36017.246 | model centre at depth 4.846: Z -36012.398, in front of the glass (out of the screen)
+16:52:11.833  Target depth 39261.102 | model centre at depth 4.847: Z -39256.254, in front of the glass (out of the screen)
+16:52:11.849  Target depth 44534.820 | model centre at depth 4.847: Z -44529.973, in front of the glass (out of the screen)
+16:52:11.864  Target depth 51875.340 | model centre at depth 4.847: Z -51870.492, in front of the glass (out of the screen)
+16:52:11.882  Target depth 58843.457 | model centre at depth 4.849: Z -58838.609, in front of the glass (out of the screen)
+16:52:11.899  Target depth 70853.922 | model centre at depth 4.849: Z -70849.070, in front of the glass (out of the screen)
+16:52:11.913  Target depth 83081.797 | model centre at depth 4.850: Z -83076.945, in front of the glass (out of the screen)
+16:52:11.925  Target depth 92384.820 | model centre at depth 4.850: Z -92379.969, in front of the glass (out of the screen)
+16:52:11.942  Target depth 102050.320 | model centre at depth 4.851: Z -102045.469, in front of the glass (out of the screen)
+16:52:11.957  Target depth 115758.156 | model centre at depth 4.853: Z -115753.305, in front of the glass (out of the screen)
+16:52:11.969  Target depth 133946.641 | model centre at depth 4.858: Z -133941.781, in front of the glass (out of the screen)
+16:52:11.984  Target depth 148945.219 | model centre at depth 4.858: Z -148940.359, in front of the glass (out of the screen)
+16:52:11.999  Target depth 165623.156 | model centre at depth 4.860: Z -165618.297, in front of the glass (out of the screen)
+16:52:12.012  Target depth 189120.906 | model centre at depth 4.860: Z -189116.047, in front of the glass (out of the screen)
+16:52:12.025  Target depth 202091.719 | model centre at depth 4.860: Z -202086.859, in front of the glass (out of the screen)
+16:52:12.039  Target depth 218836.375 | model centre at depth 4.860: Z -218831.516, in front of the glass (out of the screen)
+16:52:12.060  Target depth 240133.359 | model centre at depth 4.860: Z -240128.500, in front of the glass (out of the screen)
+16:52:12.081  Target depth 274202.063 | model centre at depth 4.860: Z -274197.188, in front of the glass (out of the screen)
+16:52:12.095  Target depth 311034.250 | model centre at depth 4.874: Z -311029.375, in front of the glass (out of the screen)
+16:52:12.108  Target depth 339047.031 | model centre at depth 4.874: Z -339042.156, in front of the glass (out of the screen)
+16:52:12.124  Target depth 364712.125 | model centre at depth 4.867: Z -364707.250, in front of the glass (out of the screen)
+16:52:12.138  Target depth 402869.094 | model centre at depth 4.867: Z -402864.219, in front of the glass (out of the screen)
+16:52:12.151  Target depth 445018.125 | model centre at depth 4.867: Z -445013.250, in front of the glass (out of the screen)
+16:52:12.163  Target depth 485098.094 | model centre at depth 4.860: Z -485093.219, in front of the glass (out of the screen)
+16:52:12.183  Target depth 525291.750 | model centre at depth 4.860: Z -525286.875, in front of the glass (out of the screen)
+16:52:12.201  Target depth 584110.750 | model centre at depth 4.860: Z -584105.875, in front of the glass (out of the screen)
+16:52:12.215  Target depth 640955.750 | model centre at depth 4.860: Z -640950.875, in front of the glass (out of the screen)
+16:52:12.231  Target depth 694063.250 | model centre at depth 4.881: Z -694058.375, in front of the glass (out of the screen)
+16:52:12.243  Target depth 746602.063 | model centre at depth 4.881: Z -746597.188, in front of the glass (out of the screen)
+16:52:12.257  Target depth 782087.875 | model centre at depth 4.902: Z -782083.000, in front of the glass (out of the screen)
+16:52:12.275  Target depth 841289.875 | model centre at depth 4.902: Z -841285.000, in front of the glass (out of the screen)
+16:52:12.293  Target depth 917059.500 | model centre at depth 4.902: Z -917054.625, in front of the glass (out of the screen)
+16:52:12.306  Target depth 1006306.750 | model centre at depth 4.902: Z -1006301.875, in front of the glass (out of the screen)
+16:52:12.327  Target depth 1068214.875 | model centre at depth 4.902: Z -1068210.000, in front of the glass (out of the screen)
+16:52:12.340  Target depth 1164422.250 | model centre at depth 4.902: Z -1164417.375, in front of the glass (out of the screen)
+16:52:12.353  Target depth 1252566.000 | model centre at depth 4.889: Z -1252561.125, in front of the glass (out of the screen)
+16:52:12.367  Target depth 1347381.625 | model centre at depth 4.889: Z -1347376.750, in front of the glass (out of the screen)
+16:52:12.383  Target depth 1459021.250 | model centre at depth 4.889: Z -1459016.375, in front of the glass (out of the screen)
+16:52:12.403  Target depth 1579911.000 | model centre at depth 4.889: Z -1579906.125, in front of the glass (out of the screen)
+16:52:12.422  Target depth 1710817.250 | model centre at depth 4.889: Z -1710812.375, in front of the glass (out of the screen)
+16:52:12.436  Target depth 1804060.000 | model centre at depth 4.889: Z -1804055.125, in front of the glass (out of the screen)
+16:52:12.449  Target depth 1877312.125 | model centre at depth 4.889: Z -1877307.250, in front of the glass (out of the screen)
+16:52:12.465  Target depth 1953538.500 | model centre at depth 4.889: Z -1953533.625, in front of the glass (out of the screen)
+16:52:12.479  Target depth 2019419.750 | model centre at depth 4.889: Z -2019414.875, in front of the glass (out of the screen)
+16:52:12.497  Target depth 2087522.125 | model centre at depth 4.861: Z -2087517.250, in front of the glass (out of the screen)
+16:52:12.514  Target depth 2172284.000 | model centre at depth 4.946: Z -2172279.000, in front of the glass (out of the screen)
+16:52:12.529  Target depth 2275532.750 | model centre at depth 4.919: Z -2275527.750, in front of the glass (out of the screen)
+16:52:12.545  Target depth 2367928.500 | model centre at depth 4.919: Z -2367923.500, in front of the glass (out of the screen)
+16:52:12.560  Target depth 2513603.750 | model centre at depth 4.891: Z -2513598.750, in front of the glass (out of the screen)
+16:52:12.572  Target depth 2650599.250 | model centre at depth 4.891: Z -2650594.250, in front of the glass (out of the screen)
+16:52:12.588  Target depth 2776582.500 | model centre at depth 4.976: Z -2776577.500, in front of the glass (out of the screen)
+16:52:12.602  Target depth 2908552.750 | model centre at depth 4.976: Z -2908547.750, in front of the glass (out of the screen)
+16:52:12.614  Target depth 3067074.500 | model centre at depth 5.061: Z -3067069.500, in front of the glass (out of the screen)
+16:52:12.629  Target depth 3149546.000 | model centre at depth 5.061: Z -3149541.000, in front of the glass (out of the screen)
+16:52:12.649  Target depth 3234235.000 | model centre at depth 5.006: Z -3234230.000, in front of the glass (out of the screen)
+16:52:12.670  Target depth 3277430.250 | model centre at depth 5.080: Z -3277425.250, in front of the glass (out of the screen)
+16:52:12.684  Target depth 3365558.000 | model centre at depth 5.080: Z -3365553.000, in front of the glass (out of the screen)
+16:52:12.700  Target depth 3410507.000 | model centre at depth 5.080: Z -3410502.000, in front of the glass (out of the screen)
+16:52:12.712  Target depth 3525523.250 | model centre at depth 5.154: Z -3525518.000, in front of the glass (out of the screen)
+16:52:12.725  Target depth 3596386.250 | model centre at depth 5.227: Z -3596381.000, in front of the glass (out of the screen)
+16:52:12.739  Target depth 3693090.500 | model centre at depth 5.397: Z -3693085.000, in front of the glass (out of the screen)
+16:52:12.754  Target depth 3792395.000 | model centre at depth 5.342: Z -3792389.750, in front of the glass (out of the screen)
+16:52:12.773  Target depth 3843044.750 | model centre at depth 5.457: Z -3843039.250, in front of the glass (out of the screen)
+16:52:12.793  Target depth 3972647.750 | model centre at depth 5.457: Z -3972642.250, in front of the glass (out of the screen)
+16:52:12.807  Target depth 4052498.000 | model centre at depth 5.457: Z -4052492.500, in front of the glass (out of the screen)
+16:52:12.823  Target depth 4133953.250 | model centre at depth 5.626: Z -4133947.500, in front of the glass (out of the screen)
+16:52:12.838  Target depth 4161466.750 | model centre at depth 5.774: Z -4161461.000, in front of the glass (out of the screen)
+16:52:12.853  Target depth 4273365.500 | model centre at depth 5.774: Z -4273359.500, in front of the glass (out of the screen)
+16:52:12.871  Target depth 4330439.000 | model centre at depth 5.774: Z -4330433.000, in front of the glass (out of the screen)
+16:52:12.890  Target depth 4476479.000 | model centre at depth 6.091: Z -4476473.000, in front of the glass (out of the screen)
+16:52:12.904  Target depth 4506272.000 | model centre at depth 6.091: Z -4506266.000, in front of the glass (out of the screen)
+16:52:12.919  Target depth 4627443.000 | model centre at depth 6.091: Z -4627437.000, in front of the glass (out of the screen)
+16:52:12.932  Target depth 4689244.500 | model centre at depth 6.091: Z -4689238.500, in front of the glass (out of the screen)
+16:52:12.944  Target depth 4689244.500 | model centre at depth 6.091: Z -4689238.500, in front of the glass (out of the screen)
+16:52:12.959  Target depth 4815335.500 | model centre at depth 6.260: Z -4815329.000, in front of the glass (out of the screen)
+16:52:12.972  Target depth 4847384.500 | model centre at depth 6.430: Z -4847378.000, in front of the glass (out of the screen)
+16:52:12.986  Target depth 4879646.500 | model centre at depth 6.600: Z -4879640.000, in front of the glass (out of the screen)
+16:52:13.000  Target depth 4944817.000 | model centre at depth 6.769: Z -4944810.000, in front of the glass (out of the screen)
+16:52:13.020  Target depth 5044208.000 | model centre at depth 6.939: Z -5044201.000, in front of the glass (out of the screen)
+16:52:13.037  Target depth 5145596.500 | model centre at depth 6.939: Z -5145589.500, in front of the glass (out of the screen)
+16:52:13.049  Target depth 5214318.500 | model centre at depth 7.108: Z -5214311.500, in front of the glass (out of the screen)
+16:52:13.058  Target depth 5249023.000 | model centre at depth 7.108: Z -5249016.000, in front of the glass (out of the screen)
+16:52:13.093  Target depth 5283958.000 | model centre at depth 7.278: Z -5283950.500, in front of the glass (out of the screen)
+16:52:13.109  Target depth 5283958.000 | model centre at depth 7.448: Z -5283950.500, in front of the glass (out of the screen)
+16:52:13.123  Target depth 5354528.500 | model centre at depth 7.448: Z -5354521.000, in front of the glass (out of the screen)
+16:52:13.135  Target depth 5426040.500 | model centre at depth 7.448: Z -5426033.000, in front of the glass (out of the screen)
+16:52:13.147  Target depth 5462154.500 | model centre at depth 7.617: Z -5462147.000, in front of the glass (out of the screen)
+16:52:13.158  Target depth 5498508.000 | model centre at depth 7.617: Z -5498500.500, in front of the glass (out of the screen)
+16:52:13.169  Target depth 5646360.000 | model centre at depth 7.617: Z -5646352.500, in front of the glass (out of the screen)
+16:52:13.181  Target depth 5683940.000 | model centre at depth 7.617: Z -5683932.500, in front of the glass (out of the screen)
+16:52:13.193  Target depth 5798187.000 | model centre at depth 7.617: Z -5798179.500, in front of the glass (out of the screen)
+16:52:13.207  Target depth 5914730.500 | model centre at depth 7.617: Z -5914723.000, in front of the glass (out of the screen)
+16:52:13.222  Target depth 6033616.500 | model centre at depth 7.765: Z -6033608.500, in front of the glass (out of the screen)
+16:52:13.233  Target depth 6114198.000 | model centre at depth 7.765: Z -6114190.000, in front of the glass (out of the screen)
+16:52:13.243  Target depth 6195856.000 | model centre at depth 7.765: Z -6195848.000, in front of the glass (out of the screen)
+16:52:13.255  Target depth 6362459.000 | model centre at depth 7.765: Z -6362451.000, in front of the glass (out of the screen)
+16:52:13.267  Target depth 6620800.500 | model centre at depth 7.765: Z -6620792.500, in front of the glass (out of the screen)
+16:52:13.276  Target depth 6664866.500 | model centre at depth 7.765: Z -6664858.500, in front of the glass (out of the screen)
+16:52:13.288  Target depth 6889632.000 | model centre at depth 7.765: Z -6889624.000, in front of the glass (out of the screen)
+16:52:13.303  Target depth 7074890.500 | model centre at depth 7.655: Z -7074883.000, in front of the glass (out of the screen)
+16:52:13.318  Target depth 7265129.000 | model centre at depth 7.994: Z -7265121.000, in front of the glass (out of the screen)
+16:52:13.330  Target depth 7510138.500 | model centre at depth 7.994: Z -7510130.500, in front of the glass (out of the screen)
+16:52:13.343  Target depth 7661092.500 | model centre at depth 7.994: Z -7661084.500, in front of the glass (out of the screen)
+16:52:13.352  Target depth 7763410.000 | model centre at depth 7.994: Z -7763402.000, in front of the glass (out of the screen)
+16:52:13.809  Target depth 7763410.000 | model centre at depth 7.994: Z -7763402.000, in front of the glass (out of the screen)
+16:52:13.823  Target depth 7661092.500 | model centre at depth 7.994: Z -7661084.500, in front of the glass (out of the screen)
+16:52:13.832  Target depth 7510138.500 | model centre at depth 7.994: Z -7510130.500, in front of the glass (out of the screen)
+16:52:13.844  Target depth 7362159.000 | model centre at depth 7.994: Z -7362151.000, in front of the glass (out of the screen)
+16:52:13.858  Target depth 7169378.500 | model centre at depth 8.289: Z -7169370.000, in front of the glass (out of the screen)
+16:52:13.871  Target depth 6981646.000 | model centre at depth 8.289: Z -6981637.500, in front of the glass (out of the screen)
+16:52:13.883  Target depth 6935487.000 | model centre at depth 8.628: Z -6935478.500, in front of the glass (out of the screen)
+16:52:13.895  Target depth 6889632.000 | model centre at depth 8.628: Z -6889623.500, in front of the glass (out of the screen)
+16:52:13.905  Target depth 6798830.500 | model centre at depth 8.858: Z -6798821.500, in front of the glass (out of the screen)
+16:52:13.917  Target depth 6709224.500 | model centre at depth 8.858: Z -6709215.500, in front of the glass (out of the screen)
+16:52:13.928  Target depth 6664866.500 | model centre at depth 8.858: Z -6664857.500, in front of the glass (out of the screen)
+16:52:13.943  Target depth 6447433.000 | model centre at depth 8.748: Z -6447424.500, in front of the glass (out of the screen)
+16:52:13.957  Target depth 6362459.500 | model centre at depth 8.748: Z -6362451.000, in front of the glass (out of the screen)
+16:52:13.968  Target depth 6114198.500 | model centre at depth 8.918: Z -6114189.500, in front of the glass (out of the screen)
+16:52:13.979  Target depth 5914730.500 | model centre at depth 8.918: Z -5914721.500, in front of the glass (out of the screen)
+16:52:13.993  Target depth 5721769.000 | model centre at depth 8.918: Z -5721760.000, in front of the glass (out of the screen)
+16:52:14.004  Target depth 5571943.500 | model centre at depth 9.235: Z -5571934.500, in front of the glass (out of the screen)
+16:52:14.014  Target depth 5426040.500 | model centre at depth 9.235: Z -5426031.500, in front of the glass (out of the screen)
+16:52:14.025  Target depth 5283958.000 | model centre at depth 9.404: Z -5283948.500, in front of the glass (out of the screen)
+16:52:14.041  Target depth 5214318.500 | model centre at depth 9.574: Z -5214309.000, in front of the glass (out of the screen)
+16:52:14.057  Target depth 5145596.500 | model centre at depth 9.574: Z -5145587.000, in front of the glass (out of the screen)
+16:52:14.069  Target depth 5044208.000 | model centre at depth 9.743: Z -5044198.500, in front of the glass (out of the screen)
+16:52:14.082  Target depth 5010857.500 | model centre at depth 9.743: Z -5010848.000, in front of the glass (out of the screen)
+16:52:14.091  Target depth 4879646.500 | model centre at depth 9.913: Z -4879636.500, in front of the glass (out of the screen)
+16:52:14.102  Target depth 4879646.500 | model centre at depth 10.083: Z -4879636.500, in front of the glass (out of the screen)
+16:52:14.114  Target depth 4815335.500 | model centre at depth 10.252: Z -4815325.000, in front of the glass (out of the screen)
+16:52:14.129  Target depth 4751872.000 | model centre at depth 10.252: Z -4751861.500, in front of the glass (out of the screen)
+16:52:14.142  Target depth 4627442.500 | model centre at depth 10.252: Z -4627432.000, in front of the glass (out of the screen)
+16:52:14.154  Target depth 4506271.500 | model centre at depth 10.400: Z -4506261.000, in front of the glass (out of the screen)
+16:52:14.164  Target depth 4446880.500 | model centre at depth 10.569: Z -4446870.000, in front of the glass (out of the screen)
+16:52:14.177  Target depth 4330438.000 | model centre at depth 10.569: Z -4330427.500, in front of the glass (out of the screen)
+16:52:14.188  Target depth 4273364.500 | model centre at depth 10.569: Z -4273354.000, in front of the glass (out of the screen)
+16:52:14.205  Target depth 4161465.750 | model centre at depth 10.569: Z -4161455.250, in front of the glass (out of the screen)
+16:52:14.222  Target depth 4052497.000 | model centre at depth 10.569: Z -4052486.500, in front of the glass (out of the screen)
+16:52:14.236  Target depth 3972646.750 | model centre at depth 10.739: Z -3972636.000, in front of the glass (out of the screen)
+16:52:14.252  Target depth 3843043.750 | model centre at depth 10.739: Z -3843033.000, in front of the glass (out of the screen)
+16:52:14.264  Target depth 3817635.500 | model centre at depth 10.739: Z -3817624.750, in front of the glass (out of the screen)
+16:52:14.274  Target depth 3792394.000 | model centre at depth 10.739: Z -3792383.250, in front of the glass (out of the screen)
+16:52:14.287  Target depth 3693089.500 | model centre at depth 10.739: Z -3693078.750, in front of the glass (out of the screen)
+16:52:14.299  Target depth 3668672.750 | model centre at depth 10.908: Z -3668661.750, in front of the glass (out of the screen)
+16:52:14.314  Target depth 3596385.500 | model centre at depth 11.078: Z -3596374.500, in front of the glass (out of the screen)
+16:52:14.329  Target depth 3525522.500 | model centre at depth 11.078: Z -3525511.500, in front of the glass (out of the screen)
+16:52:14.341  Target depth 3502212.500 | model centre at depth 11.078: Z -3502201.500, in front of the glass (out of the screen)
+16:52:14.351  Target depth 3410506.500 | model centre at depth 11.321: Z -3410495.250, in front of the glass (out of the screen)
+16:52:14.364  Target depth 3387958.000 | model centre at depth 11.321: Z -3387946.750, in front of the glass (out of the screen)
+16:52:14.375  Target depth 3277429.750 | model centre at depth 11.491: Z -3277418.250, in front of the glass (out of the screen)
+16:52:14.391  Target depth 3277429.750 | model centre at depth 11.660: Z -3277418.000, in front of the glass (out of the screen)
+16:52:14.405  Target depth 3149545.500 | model centre at depth 11.660: Z -3149533.750, in front of the glass (out of the screen)
+16:52:14.416  Target depth 3108035.750 | model centre at depth 11.830: Z -3108024.000, in front of the glass (out of the screen)
+16:52:14.426  Target depth 3026651.250 | model centre at depth 11.915: Z -3026639.250, in front of the glass (out of the screen)
+16:52:14.439  Target depth 3006640.500 | model centre at depth 11.999: Z -3006628.500, in front of the glass (out of the screen)
+16:52:14.450  Target depth 2908552.250 | model centre at depth 11.999: Z -2908540.250, in front of the glass (out of the screen)
+16:52:14.459  Target depth 2870218.750 | model centre at depth 12.158: Z -2870206.500, in front of the glass (out of the screen)
+16:52:14.471  Target depth 2795061.500 | model centre at depth 12.232: Z -2795049.250, in front of the glass (out of the screen)
+16:52:14.482  Target depth 2758223.750 | model centre at depth 12.316: Z -2758211.500, in front of the glass (out of the screen)
+16:52:14.497  Target depth 2685999.250 | model centre at depth 12.316: Z -2685987.000, in front of the glass (out of the screen)
+16:52:14.512  Target depth 2650599.000 | model centre at depth 12.316: Z -2650586.750, in front of the glass (out of the screen)
+16:52:14.524  Target depth 2581192.500 | model centre at depth 12.316: Z -2581180.250, in front of the glass (out of the screen)
+16:52:14.533  Target depth 2547173.500 | model centre at depth 12.390: Z -2547161.000, in front of the glass (out of the screen)
+16:52:14.545  Target depth 2480475.250 | model centre at depth 12.390: Z -2480462.750, in front of the glass (out of the screen)
+16:52:14.557  Target depth 2447783.500 | model centre at depth 12.464: Z -2447771.000, in front of the glass (out of the screen)
+16:52:14.568  Target depth 2383687.750 | model centre at depth 12.464: Z -2383675.250, in front of the glass (out of the screen)
+16:52:14.577  Target depth 2367928.000 | model centre at depth 12.538: Z -2367915.500, in front of the glass (out of the screen)
+16:52:14.589  Target depth 2352271.750 | model centre at depth 12.538: Z -2352259.250, in front of the glass (out of the screen)
+16:52:14.605  Target depth 2290677.000 | model centre at depth 12.538: Z -2290664.500, in front of the glass (out of the screen)
+16:52:14.620  Target depth 2275532.250 | model centre at depth 12.538: Z -2275519.750, in front of the glass (out of the screen)
+16:52:14.631  Target depth 2230695.250 | model centre at depth 12.622: Z -2230682.750, in front of the glass (out of the screen)
+16:52:14.643  Target depth 2201295.500 | model centre at depth 12.622: Z -2201283.000, in front of the glass (out of the screen)
+16:52:14.653  Target depth 2172283.250 | model centre at depth 12.707: Z -2172270.500, in front of the glass (out of the screen)
+16:52:14.665  Target depth 2143654.000 | model centre at depth 12.707: Z -2143641.250, in front of the glass (out of the screen)
+16:52:14.675  Target depth 2115401.500 | model centre at depth 12.707: Z -2115388.750, in front of the glass (out of the screen)
+16:52:14.690  Target depth 2087521.375 | model centre at depth 12.781: Z -2087508.625, in front of the glass (out of the screen)
+16:52:14.705  Target depth 2032859.250 | model centre at depth 12.753: Z -2032846.500, in front of the glass (out of the screen)
+16:52:14.716  Target depth 1979628.500 | model centre at depth 12.753: Z -1979615.750, in front of the glass (out of the screen)
+16:52:14.725  Target depth 1953537.875 | model centre at depth 12.753: Z -1953525.125, in front of the glass (out of the screen)
+16:52:14.738  Target depth 1902384.125 | model centre at depth 12.753: Z -1902371.375, in front of the glass (out of the screen)
+16:52:14.750  Target depth 1864899.625 | model centre at depth 12.753: Z -1864886.875, in front of the glass (out of the screen)
+16:52:14.764  Target depth 1828153.750 | model centre at depth 12.753: Z -1828141.000, in front of the glass (out of the screen)
+16:52:14.778  Target depth 1780282.625 | model centre at depth 12.827: Z -1780269.750, in front of the glass (out of the screen)
+16:52:14.790  Target depth 1722203.500 | model centre at depth 12.827: Z -1722190.625, in front of the glass (out of the screen)
+16:52:14.800  Target depth 1688269.250 | model centre at depth 12.800: Z -1688256.500, in front of the glass (out of the screen)
+16:52:14.812  Target depth 1666018.500 | model centre at depth 12.800: Z -1666005.750, in front of the glass (out of the screen)
+16:52:14.824  Target depth 1644061.125 | model centre at depth 12.772: Z -1644048.375, in front of the glass (out of the screen)
+16:52:14.833  Target depth 1601011.125 | model centre at depth 12.772: Z -1600998.375, in front of the glass (out of the screen)
+16:52:14.844  Target depth 1601011.125 | model centre at depth 12.772: Z -1600998.375, in front of the glass (out of the screen)
+16:52:14.855  Target depth 1579910.500 | model centre at depth 12.772: Z -1579897.750, in front of the glass (out of the screen)
+16:52:14.871  Target depth 1559088.375 | model centre at depth 12.772: Z -1559075.625, in front of the glass (out of the screen)
+16:52:14.887  Target depth 1518262.875 | model centre at depth 12.772: Z -1518250.125, in front of the glass (out of the screen)
+16:52:14.898  Target depth 1478506.875 | model centre at depth 12.772: Z -1478494.125, in front of the glass (out of the screen)
+16:52:14.908  Target depth 1459020.750 | model centre at depth 12.809: Z -1459008.000, in front of the glass (out of the screen)
+16:52:14.921  Target depth 1439791.875 | model centre at depth 12.782: Z -1439779.125, in front of the glass (out of the screen)
+16:52:14.932  Target depth 1402090.250 | model centre at depth 12.861: Z -1402077.375, in front of the glass (out of the screen)
+16:52:14.944  Target depth 1365376.250 | model centre at depth 12.861: Z -1365363.375, in front of the glass (out of the screen)
+16:52:14.953  Target depth 1329623.625 | model centre at depth 12.898: Z -1329610.750, in front of the glass (out of the screen)
+16:52:14.965  Target depth 1312099.750 | model centre at depth 12.898: Z -1312086.875, in front of the glass (out of the screen)
+16:52:14.981  Target depth 1277742.125 | model centre at depth 12.913: Z -1277729.250, in front of the glass (out of the screen)
+16:52:14.997  Target depth 1244283.875 | model centre at depth 12.913: Z -1244271.000, in front of the glass (out of the screen)
+16:52:15.009  Target depth 1203690.875 | model centre at depth 12.992: Z -1203677.875, in front of the glass (out of the screen)
+16:52:15.022  Target depth 1179973.375 | model centre at depth 13.035: Z -1179960.375, in front of the glass (out of the screen)
+16:52:15.031  Target depth 1156723.250 | model centre at depth 13.035: Z -1156710.250, in front of the glass (out of the screen)
+16:52:15.043  Target depth 1149075.250 | model centre at depth 13.035: Z -1149062.250, in front of the glass (out of the screen)
+16:52:15.055  Target depth 1118986.500 | model centre at depth 13.035: Z -1118973.500, in front of the glass (out of the screen)
+16:52:15.070  Target depth 1104238.750 | model centre at depth 13.035: Z -1104225.750, in front of the glass (out of the screen)
+16:52:15.084  Target depth 1089685.625 | model centre at depth 13.035: Z -1089672.625, in front of the glass (out of the screen)
+16:52:15.094  Target depth 1068214.500 | model centre at depth 13.035: Z -1068201.500, in front of the glass (out of the screen)
+16:52:15.105  Target depth 1061151.625 | model centre at depth 13.077: Z -1061138.500, in front of the glass (out of the screen)
+16:52:15.118  Target depth 1033365.188 | model centre at depth 13.063: Z -1033352.125, in front of the glass (out of the screen)
+16:52:15.129  Target depth 1006306.313 | model centre at depth 13.106: Z -1006293.188, in front of the glass (out of the screen)
+16:52:15.138  Target depth 979955.688 | model centre at depth 13.106: Z -979942.563, in front of the glass (out of the screen)
+16:52:15.150  Target depth 954295.375 | model centre at depth 13.148: Z -954282.250, in front of the glass (out of the screen)
+16:52:15.166  Target depth 941718.125 | model centre at depth 13.148: Z -941705.000, in front of the glass (out of the screen)
+16:52:15.180  Target depth 904972.625 | model centre at depth 13.134: Z -904959.500, in front of the glass (out of the screen)
+16:52:15.191  Target depth 881275.750 | model centre at depth 13.134: Z -881262.625, in front of the glass (out of the screen)
+16:52:15.204  Target depth 869660.875 | model centre at depth 13.177: Z -869647.688, in front of the glass (out of the screen)
+16:52:15.214  Target depth 841289.438 | model centre at depth 13.163: Z -841276.250, in front of the glass (out of the screen)
+16:52:15.225  Target depth 835727.000 | model centre at depth 13.205: Z -835713.813, in front of the glass (out of the screen)
+16:52:15.237  Target depth 803117.250 | model centre at depth 13.205: Z -803104.063, in front of the glass (out of the screen)
+16:52:15.251  Target depth 792532.750 | model centre at depth 13.205: Z -792519.563, in front of the glass (out of the screen)
+16:52:15.265  Target depth 771779.875 | model centre at depth 13.205: Z -771766.688, in front of the glass (out of the screen)
+16:52:15.278  Target depth 751570.688 | model centre at depth 13.205: Z -751557.500, in front of the glass (out of the screen)
+16:52:15.287  Target depth 741665.313 | model centre at depth 13.205: Z -741652.125, in front of the glass (out of the screen)
+16:52:15.300  Target depth 731890.688 | model centre at depth 13.205: Z -731877.500, in front of the glass (out of the screen)
+16:52:15.312  Target depth 712725.813 | model centre at depth 13.245: Z -712712.563, in front of the glass (out of the screen)
+16:52:15.327  Target depth 712725.813 | model centre at depth 13.285: Z -712712.500, in front of the glass (out of the screen)
+16:52:15.341  Target depth 689474.188 | model centre at depth 13.285: Z -689460.875, in front of the glass (out of the screen)
+16:52:15.353  Target depth 666980.875 | model centre at depth 13.292: Z -666967.563, in front of the glass (out of the screen)
+16:52:15.362  Target depth 662571.125 | model centre at depth 13.292: Z -662557.813, in front of the glass (out of the screen)
+16:52:15.375  Target depth 649515.875 | model centre at depth 13.292: Z -649502.563, in front of the glass (out of the screen)
+16:52:15.387  Target depth 636717.875 | model centre at depth 13.313: Z -636704.563, in front of the glass (out of the screen)
+16:52:15.396  Target depth 624172.000 | model centre at depth 13.332: Z -624158.688, in front of the glass (out of the screen)
+16:52:15.408  Target depth 611873.375 | model centre at depth 13.350: Z -611860.000, in front of the glass (out of the screen)
+16:52:15.418  Target depth 607827.813 | model centre at depth 13.350: Z -607814.438, in front of the glass (out of the screen)
+16:52:15.435  Target depth 591911.750 | model centre at depth 13.350: Z -591898.375, in front of the glass (out of the screen)
+16:52:15.451  Target depth 576412.438 | model centre at depth 13.350: Z -576399.063, in front of the glass (out of the screen)
+16:52:15.462  Target depth 561318.813 | model centre at depth 13.350: Z -561305.438, in front of the glass (out of the screen)
+16:52:15.471  Target depth 546620.563 | model centre at depth 13.350: Z -546607.188, in front of the glass (out of the screen)
+16:52:15.489  Target depth 539416.313 | model centre at depth 13.350: Z -539402.938, in front of the glass (out of the screen)
+16:52:15.500  Target depth 518368.469 | model centre at depth 13.350: Z -518355.125, in front of the glass (out of the screen)
+16:52:15.515  Target depth 504794.906 | model centre at depth 13.343: Z -504781.563, in front of the glass (out of the screen)
+16:52:15.529  Target depth 498141.906 | model centre at depth 13.337: Z -498128.563, in front of the glass (out of the screen)
+16:52:15.541  Target depth 485097.969 | model centre at depth 13.337: Z -485084.625, in front of the glass (out of the screen)
+16:52:15.554  Target depth 478704.563 | model centre at depth 13.337: Z -478691.219, in front of the glass (out of the screen)
+16:52:15.565  Target depth 466169.594 | model centre at depth 13.337: Z -466156.250, in front of the glass (out of the screen)
+16:52:15.575  Target depth 460025.656 | model centre at depth 13.330: Z -460012.313, in front of the glass (out of the screen)
+16:52:15.586  Target depth 447979.813 | model centre at depth 13.330: Z -447966.469, in front of the glass (out of the screen)
+16:52:15.598  Target depth 442075.625 | model centre at depth 13.330: Z -442062.281, in front of the glass (out of the screen)
+16:52:15.613  Target depth 430499.781 | model centre at depth 13.330: Z -430486.438, in front of the glass (out of the screen)
+16:52:15.628  Target depth 419227.063 | model centre at depth 13.330: Z -419213.719, in front of the glass (out of the screen)
+16:52:15.639  Target depth 410966.625 | model centre at depth 13.351: Z -410953.281, in front of the glass (out of the screen)
+16:52:15.649  Target depth 402868.969 | model centre at depth 13.344: Z -402855.625, in front of the glass (out of the screen)
+16:52:15.662  Target depth 397559.313 | model centre at depth 13.365: Z -397545.938, in front of the glass (out of the screen)
+16:52:15.673  Target depth 392319.656 | model centre at depth 13.374: Z -392306.281, in front of the glass (out of the screen)
+16:52:15.688  Target depth 387149.156 | model centre at depth 13.375: Z -387135.781, in front of the glass (out of the screen)
+16:52:15.702  Target depth 382046.688 | model centre at depth 13.384: Z -382033.313, in front of the glass (out of the screen)
+16:52:15.713  Target depth 377011.469 | model centre at depth 13.393: Z -376998.063, in front of the glass (out of the screen)
+16:52:15.725  Target depth 367139.344 | model centre at depth 13.393: Z -367125.938, in front of the glass (out of the screen)
+16:52:15.735  Target depth 362300.594 | model centre at depth 13.404: Z -362287.188, in front of the glass (out of the screen)
+16:52:15.747  Target depth 352813.594 | model centre at depth 13.404: Z -352800.188, in front of the glass (out of the screen)
+16:52:15.758  Target depth 339046.938 | model centre at depth 13.404: Z -339033.531, in front of the glass (out of the screen)
+16:52:15.768  Target depth 334578.531 | model centre at depth 13.404: Z -334565.125, in front of the glass (out of the screen)
+16:52:15.779  Target depth 323663.375 | model centre at depth 13.404: Z -323649.969, in front of the glass (out of the screen)
+16:52:15.791  Target depth 313104.125 | model centre at depth 13.404: Z -313090.719, in front of the glass (out of the screen)
+16:52:15.808  Target depth 308977.625 | model centre at depth 13.413: Z -308964.219, in front of the glass (out of the screen)
+16:52:15.823  Target depth 296921.438 | model centre at depth 13.413: Z -296908.031, in front of the glass (out of the screen)
+16:52:15.834  Target depth 285335.656 | model centre at depth 13.413: Z -285322.250, in front of the glass (out of the screen)
+16:52:15.845  Target depth 277864.000 | model centre at depth 13.413: Z -277850.594, in front of the glass (out of the screen)
+16:52:15.858  Target depth 274201.938 | model centre at depth 13.423: Z -274188.500, in front of the glass (out of the screen)
+16:52:15.869  Target depth 267021.844 | model centre at depth 13.423: Z -267008.406, in front of the glass (out of the screen)
+16:52:15.880  Target depth 260029.906 | model centre at depth 13.423: Z -260016.484, in front of the glass (out of the screen)
+16:52:15.890  Target depth 253220.906 | model centre at depth 13.423: Z -253207.484, in front of the glass (out of the screen)
+16:52:15.901  Target depth 249883.641 | model centre at depth 13.423: Z -249870.219, in front of the glass (out of the screen)
+16:52:15.918  Target depth 243340.313 | model centre at depth 13.423: Z -243326.891, in front of the glass (out of the screen)
+16:52:15.933  Target depth 235401.688 | model centre at depth 13.431: Z -235388.250, in front of the glass (out of the screen)
+16:52:15.945  Target depth 227721.906 | model centre at depth 13.440: Z -227708.469, in front of the glass (out of the screen)
+16:52:15.958  Target depth 224720.688 | model centre at depth 13.436: Z -224707.250, in front of the glass (out of the screen)
+16:52:15.967  Target depth 217389.500 | model centre at depth 13.433: Z -217376.063, in front of the glass (out of the screen)
+16:52:15.979  Target depth 213106.063 | model centre at depth 13.433: Z -213092.625, in front of the glass (out of the screen)
+16:52:15.990  Target depth 207525.781 | model centre at depth 13.437: Z -207512.344, in front of the glass (out of the screen)
+16:52:16.005  Target depth 199428.203 | model centre at depth 13.437: Z -199414.766, in front of the glass (out of the screen)
+16:52:16.021  Target depth 191646.578 | model centre at depth 13.437: Z -191633.141, in front of the glass (out of the screen)
+16:52:16.032  Target depth 184168.594 | model centre at depth 13.437: Z -184155.156, in front of the glass (out of the screen)
+16:52:16.040  Target depth 176982.406 | model centre at depth 13.434: Z -176968.969, in front of the glass (out of the screen)
+16:52:16.054  Target depth 172348.031 | model centre at depth 13.439: Z -172334.594, in front of the glass (out of the screen)
+16:52:16.066  Target depth 165623.078 | model centre at depth 13.441: Z -165609.641, in front of the glass (out of the screen)
+16:52:16.075  Target depth 163440.281 | model centre at depth 13.438: Z -163426.844, in front of the glass (out of the screen)
+16:52:16.086  Target depth 159160.516 | model centre at depth 13.438: Z -159147.078, in front of the glass (out of the screen)
+16:52:16.102  Target depth 157062.891 | model centre at depth 13.439: Z -157049.453, in front of the glass (out of the screen)
+16:52:16.117  Target depth 151938.938 | model centre at depth 13.439: Z -151925.500, in front of the glass (out of the screen)
+16:52:16.127  Target depth 148945.141 | model centre at depth 13.439: Z -148931.703, in front of the glass (out of the screen)
+16:52:16.140  Target depth 146982.063 | model centre at depth 13.444: Z -146968.625, in front of the glass (out of the screen)
+16:52:16.149  Target depth 145044.938 | model centre at depth 13.444: Z -145031.500, in front of the glass (out of the screen)
+16:52:16.161  Target depth 143133.344 | model centre at depth 13.444: Z -143119.906, in front of the glass (out of the screen)
+16:52:16.172  Target depth 140313.047 | model centre at depth 13.444: Z -140299.609, in front of the glass (out of the screen)
+16:52:16.186  Target depth 139385.328 | model centre at depth 13.449: Z -139371.875, in front of the glass (out of the screen)
+16:52:16.201  Target depth 134838.078 | model centre at depth 13.447: Z -134824.625, in front of the glass (out of the screen)
+16:52:16.212  Target depth 130439.102 | model centre at depth 13.447: Z -130425.656, in front of the glass (out of the screen)
+16:52:16.221  Target depth 129576.742 | model centre at depth 13.445: Z -129563.297, in front of the glass (out of the screen)
+16:52:16.234  Target depth 127023.570 | model centre at depth 13.445: Z -127010.125, in front of the glass (out of the screen)
+16:52:16.245  Target depth 124520.703 | model centre at depth 13.445: Z -124507.258, in front of the glass (out of the screen)
+16:52:16.257  Target depth 120458.320 | model centre at depth 13.445: Z -120444.875, in front of the glass (out of the screen)
+16:52:16.266  Target depth 118870.766 | model centre at depth 13.445: Z -118857.320, in front of the glass (out of the screen)
+16:52:16.277  Target depth 117304.133 | model centre at depth 13.445: Z -117290.688, in front of the glass (out of the screen)
+16:52:16.293  Target depth 114992.781 | model centre at depth 13.444: Z -114979.336, in front of the glass (out of the screen)
+16:52:16.309  Target depth 112726.969 | model centre at depth 13.444: Z -112713.523, in front of the glass (out of the screen)
+16:52:16.320  Target depth 111241.242 | model centre at depth 13.442: Z -111227.797, in front of the glass (out of the screen)
+16:52:16.333  Target depth 108328.406 | model centre at depth 13.442: Z -108314.961, in front of the glass (out of the screen)
+16:52:16.343  Target depth 106193.906 | model centre at depth 13.442: Z -106180.461, in front of the glass (out of the screen)
+16:52:16.355  Target depth 105491.773 | model centre at depth 13.442: Z -105478.328, in front of the glass (out of the screen)
+16:52:16.367  Target depth 102729.422 | model centre at depth 13.442: Z -102715.977, in front of the glass (out of the screen)
+16:52:16.381  Target depth 101375.523 | model centre at depth 13.447: Z -101362.078, in front of the glass (out of the screen)
+16:52:16.395  Target depth 98720.961 | model centre at depth 13.447: Z -98707.516, in front of the glass (out of the screen)
+16:52:16.407  Target depth 97419.891 | model centre at depth 13.447: Z -97406.445, in front of the glass (out of the screen)
+16:52:16.416  Target depth 94868.906 | model centre at depth 13.450: Z -94855.453, in front of the glass (out of the screen)
+16:52:16.429  Target depth 93618.602 | model centre at depth 13.453: Z -93605.148, in front of the glass (out of the screen)
+16:52:16.440  Target depth 91167.156 | model centre at depth 13.453: Z -91153.703, in front of the glass (out of the screen)
+16:52:16.450  Target depth 88779.953 | model centre at depth 13.453: Z -88766.500, in front of the glass (out of the screen)
+16:52:16.461  Target depth 87030.641 | model centre at depth 13.453: Z -87017.188, in front of the glass (out of the screen)
+16:52:16.477  Target depth 84191.344 | model centre at depth 13.455: Z -84177.891, in front of the glass (out of the screen)
+16:52:16.492  Target depth 80371.336 | model centre at depth 13.455: Z -80357.883, in front of the glass (out of the screen)
+16:52:16.503  Target depth 75713.438 | model centre at depth 13.455: Z -75699.984, in front of the glass (out of the screen)
+16:52:16.515  Target depth 71800.172 | model centre at depth 13.457: Z -71786.719, in front of the glass (out of the screen)
+16:52:16.525  Target depth 68998.555 | model centre at depth 13.456: Z -68985.102, in front of the glass (out of the screen)
+16:52:16.537  Target depth 66306.258 | model centre at depth 13.456: Z -66292.805, in front of the glass (out of the screen)
+16:52:16.549  Target depth 63719.012 | model centre at depth 13.456: Z -63705.555, in front of the glass (out of the screen)
+16:52:16.564  Target depth 61232.719 | model centre at depth 13.455: Z -61219.266, in front of the glass (out of the screen)
+16:52:16.579  Target depth 58843.438 | model centre at depth 13.455: Z -58829.984, in front of the glass (out of the screen)
+16:52:16.591  Target depth 55802.133 | model centre at depth 13.455: Z -55788.680, in front of the glass (out of the screen)
+16:52:16.600  Target depth 53624.754 | model centre at depth 13.455: Z -53611.301, in front of the glass (out of the screen)
+16:52:16.614  Target depth 51875.324 | model centre at depth 13.455: Z -51861.867, in front of the glass (out of the screen)
+16:52:16.625  Target depth 49521.563 | model centre at depth 13.456: Z -49508.105, in front of the glass (out of the screen)
+16:52:16.640  Target depth 47905.992 | model centre at depth 13.456: Z -47892.535, in front of the glass (out of the screen)
+16:52:16.655  Target depth 46343.102 | model centre at depth 13.458: Z -46329.645, in front of the glass (out of the screen)
+16:52:16.666  Target depth 45732.332 | model centre at depth 13.458: Z -45718.875, in front of the glass (out of the screen)
+16:52:16.675  Target depth 44534.809 | model centre at depth 13.458: Z -44521.352, in front of the glass (out of the screen)
+16:52:16.689  Target depth 43947.871 | model centre at depth 13.459: Z -43934.414, in front of the glass (out of the screen)
+16:52:16.707  Target depth 43947.871 | model centre at depth 13.460: Z -43934.410, in front of the glass (out of the screen)
+16:52:16.721  Target depth 43368.668 | model centre at depth 13.460: Z -43355.207, in front of the glass (out of the screen)
+16:52:16.732  Target depth 42797.074 | model centre at depth 13.461: Z -42783.613, in front of the glass (out of the screen)
+16:52:16.745  Target depth 42514.133 | model centre at depth 13.461: Z -42500.672, in front of the glass (out of the screen)
+16:52:16.759  Target depth 42233.039 | model centre at depth 13.461: Z -42219.578, in front of the glass (out of the screen)
+16:52:16.769  Target depth 42233.039 | model centre at depth 13.461: Z -42219.578, in front of the glass (out of the screen)
+16:52:16.782  Target depth 41676.438 | model centre at depth 13.463: Z -41662.977, in front of the glass (out of the screen)
+16:52:16.794  Target depth 41127.148 | model centre at depth 13.463: Z -41113.688, in front of the glass (out of the screen)
+16:52:16.811  Target depth 40855.250 | model centre at depth 13.463: Z -40841.789, in front of the glass (out of the screen)
+16:52:16.827  Target depth 40585.125 | model centre at depth 13.463: Z -40571.664, in front of the glass (out of the screen)
+16:52:16.846  Target depth 40585.125 | model centre at depth 13.463: Z -40571.664, in front of the glass (out of the screen)
+16:52:16.858  Target depth 40050.242 | model centre at depth 13.463: Z -40036.781, in front of the glass (out of the screen)
+16:52:16.870  Target depth 39522.383 | model centre at depth 13.464: Z -39508.918, in front of the glass (out of the screen)
+16:52:16.882  Target depth 39522.383 | model centre at depth 13.465: Z -39508.918, in front of the glass (out of the screen)
+16:52:16.949  Target depth 39261.094 | model centre at depth 13.465: Z -39247.629, in front of the glass (out of the screen)
+16:52:16.963  Target depth 39001.508 | model centre at depth 13.466: Z -38988.043, in front of the glass (out of the screen)
+16:52:16.977  Target depth 37980.234 | model centre at depth 13.466: Z -37966.770, in front of the glass (out of the screen)
+16:52:16.993  Target depth 37479.684 | model centre at depth 13.467: Z -37466.215, in front of the glass (out of the screen)
+16:52:17.009  Target depth 36498.262 | model centre at depth 13.469: Z -36484.793, in front of the glass (out of the screen)
+16:52:17.024  Target depth 35542.559 | model centre at depth 13.470: Z -35529.090, in front of the glass (out of the screen)
+16:52:17.040  Target depth 34611.859 | model centre at depth 13.470: Z -34598.391, in front of the glass (out of the screen)
+16:52:17.052  Target depth 33482.699 | model centre at depth 13.470: Z -33469.230, in front of the glass (out of the screen)
+16:52:17.068  Target depth 32390.355 | model centre at depth 13.471: Z -32376.885, in front of the glass (out of the screen)
+16:52:17.082  Target depth 31542.219 | model centre at depth 13.471: Z -31528.748, in front of the glass (out of the screen)
+16:52:17.094  Target depth 30716.271 | model centre at depth 13.471: Z -30702.801, in front of the glass (out of the screen)
+16:52:17.110  Target depth 29911.951 | model centre at depth 13.472: Z -29898.479, in front of the glass (out of the screen)
+16:52:17.125  Target depth 28365.961 | model centre at depth 13.473: Z -28352.488, in front of the glass (out of the screen)
+16:52:17.146  Target depth 26899.875 | model centre at depth 13.473: Z -26886.402, in front of the glass (out of the screen)
+16:52:17.163  Target depth 25173.350 | model centre at depth 13.473: Z -25159.877, in front of the glass (out of the screen)
+16:52:17.174  Target depth 23557.639 | model centre at depth 13.473: Z -23544.166, in front of the glass (out of the screen)
+16:52:17.183  Target depth 22940.785 | model centre at depth 13.473: Z -22927.313, in front of the glass (out of the screen)
+16:52:17.195  Target depth 22340.070 | model centre at depth 13.473: Z -22326.598, in front of the glass (out of the screen)
+16:52:17.206  Target depth 21755.086 | model centre at depth 13.473: Z -21741.613, in front of the glass (out of the screen)
+16:52:17.216  Target depth 21468.369 | model centre at depth 13.474: Z -21454.895, in front of the glass (out of the screen)
+16:52:17.228  Target depth 20906.209 | model centre at depth 13.474: Z -20892.734, in front of the glass (out of the screen)
+16:52:17.240  Target depth 20630.680 | model centre at depth 13.474: Z -20617.205, in front of the glass (out of the screen)
+16:52:17.255  Target depth 20090.455 | model centre at depth 13.474: Z -20076.980, in front of the glass (out of the screen)
+16:52:17.271  Target depth 19825.678 | model centre at depth 13.474: Z -19812.203, in front of the glass (out of the screen)
+16:52:17.283  Target depth 19306.533 | model centre at depth 13.474: Z -19293.059, in front of the glass (out of the screen)
+16:52:17.292  Target depth 19052.086 | model centre at depth 13.474: Z -19038.611, in front of the glass (out of the screen)
+16:52:17.305  Target depth 19052.086 | model centre at depth 13.474: Z -19038.611, in front of the glass (out of the screen)
+16:52:17.317  Target depth 18430.539 | model centre at depth 13.474: Z -18417.064, in front of the glass (out of the screen)
+16:52:17.327  Target depth 17829.258 | model centre at depth 13.474: Z -17815.783, in front of the glass (out of the screen)
+16:52:17.338  Target depth 17594.281 | model centre at depth 13.474: Z -17580.807, in front of the glass (out of the screen)
+16:52:17.349  Target depth 17020.293 | model centre at depth 13.475: Z -17006.818, in front of the glass (out of the screen)
+16:52:17.364  Target depth 16465.021 | model centre at depth 13.475: Z -16451.547, in front of the glass (out of the screen)
+16:52:17.380  Target depth 15717.956 | model centre at depth 13.476: Z -15704.479, in front of the glass (out of the screen)
+16:52:17.390  Target depth 14807.025 | model centre at depth 13.476: Z -14793.549, in front of the glass (out of the screen)
+16:52:17.403  Target depth 13948.888 | model centre at depth 13.477: Z -13935.411, in front of the glass (out of the screen)
+16:52:17.415  Target depth 12967.293 | model centre at depth 13.477: Z -12953.816, in front of the glass (out of the screen)
+16:52:17.427  Target depth 12297.082 | model centre at depth 13.477: Z -12283.605, in front of the glass (out of the screen)
+16:52:17.441  Target depth 11431.733 | model centre at depth 13.477: Z -11418.257, in front of the glass (out of the screen)
+16:52:17.455  Target depth 10487.213 | model centre at depth 13.477: Z -10473.736, in front of the glass (out of the screen)
+16:52:17.467  Target depth 9557.127 | model centre at depth 13.477: Z -9543.650, in front of the glass (out of the screen)
+16:52:17.477  Target depth 9003.246 | model centre at depth 13.477: Z -8989.770, in front of the glass (out of the screen)
+16:52:17.489  Target depth 8594.737 | model centre at depth 13.477: Z -8581.260, in front of the glass (out of the screen)
+16:52:17.501  Target depth 7989.923 | model centre at depth 13.477: Z -7976.446, in front of the glass (out of the screen)
+16:52:17.510  Target depth 7627.393 | model centre at depth 13.477: Z -7613.915, in front of the glass (out of the screen)
+16:52:17.522  Target depth 7427.666 | model centre at depth 13.477: Z -7414.188, in front of the glass (out of the screen)
+16:52:17.533  Target depth 7137.841 | model centre at depth 13.478: Z -7124.363, in front of the glass (out of the screen)
+16:52:17.549  Target depth 6859.325 | model centre at depth 13.478: Z -6845.847, in front of the glass (out of the screen)
+16:52:17.565  Target depth 6591.676 | model centre at depth 13.478: Z -6578.199, in front of the glass (out of the screen)
+16:52:17.575  Target depth 6334.471 | model centre at depth 13.478: Z -6320.994, in front of the glass (out of the screen)
+16:52:17.589  Target depth 6168.604 | model centre at depth 13.478: Z -6155.126, in front of the glass (out of the screen)
+16:52:17.599  Target depth 6007.076 | model centre at depth 13.478: Z -5993.599, in front of the glass (out of the screen)
+16:52:17.610  Target depth 5811.104 | model centre at depth 13.478: Z -5797.626, in front of the glass (out of the screen)
+16:52:17.622  Target depth 5621.521 | model centre at depth 13.478: Z -5608.044, in front of the glass (out of the screen)
+16:52:17.639  Target depth 5402.172 | model centre at depth 13.478: Z -5388.694, in front of the glass (out of the screen)
+16:52:17.654  Target depth 5122.962 | model centre at depth 13.478: Z -5109.484, in front of the glass (out of the screen)
+16:52:17.665  Target depth 4858.184 | model centre at depth 13.478: Z -4844.706, in front of the glass (out of the screen)
+16:52:17.675  Target depth 4730.970 | model centre at depth 13.478: Z -4717.492, in front of the glass (out of the screen)
+16:52:17.688  Target depth 4576.629 | model centre at depth 13.478: Z -4563.151, in front of the glass (out of the screen)
+16:52:17.700  Target depth 4368.971 | model centre at depth 13.478: Z -4355.493, in front of the glass (out of the screen)
+16:52:17.710  Target depth 4143.162 | model centre at depth 13.478: Z -4129.684, in front of the glass (out of the screen)
+16:52:17.721  Target depth 3981.497 | model centre at depth 13.478: Z -3968.019, in front of the glass (out of the screen)
+16:52:17.737  Target depth 3775.713 | model centre at depth 13.478: Z -3762.234, in front of the glass (out of the screen)
+16:52:17.752  Target depth 3533.377 | model centre at depth 13.478: Z -3519.898, in front of the glass (out of the screen)
+16:52:17.763  Target depth 3306.593 | model centre at depth 13.478: Z -3293.114, in front of the glass (out of the screen)
+16:52:17.776  Target depth 3094.364 | model centre at depth 13.478: Z -3080.886, in front of the glass (out of the screen)
+16:52:17.786  Target depth 2934.433 | model centre at depth 13.478: Z -2920.955, in front of the glass (out of the screen)
+16:52:17.797  Target depth 2782.768 | model centre at depth 13.478: Z -2769.290, in front of the glass (out of the screen)
+16:52:17.809  Target depth 2674.185 | model centre at depth 13.478: Z -2660.707, in front of the glass (out of the screen)
+16:52:17.824  Target depth 2535.969 | model centre at depth 13.478: Z -2522.491, in front of the glass (out of the screen)
+16:52:17.839  Target depth 2404.898 | model centre at depth 13.478: Z -2391.420, in front of the glass (out of the screen)
+16:52:17.850  Target depth 2280.602 | model centre at depth 13.478: Z -2267.124, in front of the glass (out of the screen)
+16:52:17.859  Target depth 2191.614 | model centre at depth 13.478: Z -2178.135, in front of the glass (out of the screen)
+16:52:17.872  Target depth 2134.224 | model centre at depth 13.478: Z -2120.746, in front of the glass (out of the screen)
+16:52:17.884  Target depth 2023.918 | model centre at depth 13.478: Z -2010.440, in front of the glass (out of the screen)
+16:52:17.894  Target depth 1970.920 | model centre at depth 13.478: Z -1957.442, in front of the glass (out of the screen)
+16:52:17.906  Target depth 1906.623 | model centre at depth 13.478: Z -1893.145, in front of the glass (out of the screen)
+16:52:17.917  Target depth 1820.112 | model centre at depth 13.478: Z -1806.633, in front of the glass (out of the screen)
+16:52:17.933  Target depth 1749.091 | model centre at depth 13.478: Z -1735.613, in front of the glass (out of the screen)
+16:52:17.949  Target depth 1593.970 | model centre at depth 13.478: Z -1580.491, in front of the glass (out of the screen)
+16:52:17.960  Target depth 1452.603 | model centre at depth 13.478: Z -1439.125, in front of the glass (out of the screen)
+16:52:17.973  Target depth 1377.525 | model centre at depth 13.478: Z -1364.047, in front of the glass (out of the screen)
+16:52:17.982  Target depth 1272.121 | model centre at depth 13.478: Z -1258.643, in front of the glass (out of the screen)
+16:52:17.994  Target depth 1206.373 | model centre at depth 13.478: Z -1192.895, in front of the glass (out of the screen)
+16:52:18.005  Target depth 1128.943 | model centre at depth 13.478: Z -1115.465, in front of the glass (out of the screen)
+16:52:18.015  Target depth 1084.892 | model centre at depth 13.478: Z -1071.414, in front of the glass (out of the screen)
+16:52:18.027  Target depth 1042.560 | model centre at depth 13.478: Z -1029.082, in front of the glass (out of the screen)
+16:52:18.039  Target depth 1001.880 | model centre at depth 13.478: Z -988.401, in front of the glass (out of the screen)
+16:52:18.055  Target depth 969.195 | model centre at depth 13.478: Z -955.717, in front of the glass (out of the screen)
+16:52:18.072  Target depth 937.576 | model centre at depth 13.478: Z -924.098, in front of the glass (out of the screen)
+16:52:18.083  Target depth 925.219 | model centre at depth 13.478: Z -911.741, in front of the glass (out of the screen)
+16:52:18.095  Target depth 925.219 | model centre at depth 13.478: Z -911.741, in front of the glass (out of the screen)
+16:52:18.175  Target depth 913.026 | model centre at depth 13.478: Z -899.547, in front of the glass (out of the screen)
+16:52:18.188  Target depth 889.117 | model centre at depth 13.478: Z -875.639, in front of the glass (out of the screen)
+16:52:18.200  Target depth 854.424 | model centre at depth 13.478: Z -840.946, in front of the glass (out of the screen)
+16:52:18.211  Target depth 826.550 | model centre at depth 13.478: Z -813.072, in front of the glass (out of the screen)
+16:52:18.221  Target depth 810.264 | model centre at depth 13.478: Z -796.786, in front of the glass (out of the screen)
+16:52:18.234  Target depth 789.046 | model centre at depth 13.478: Z -775.568, in front of the glass (out of the screen)
+16:52:18.253  Target depth 763.305 | model centre at depth 13.478: Z -749.827, in front of the glass (out of the screen)
+16:52:18.262  Target depth 758.258 | model centre at depth 13.478: Z -744.780, in front of the glass (out of the screen)
+16:52:18.274  Target depth 738.403 | model centre at depth 13.478: Z -724.925, in front of the glass (out of the screen)
+16:52:18.286  Target depth 728.671 | model centre at depth 13.479: Z -715.193, in front of the glass (out of the screen)
+16:52:18.299  Target depth 709.591 | model centre at depth 13.479: Z -696.112, in front of the glass (out of the screen)
+16:52:18.312  Target depth 681.903 | model centre at depth 13.479: Z -668.424, in front of the glass (out of the screen)
+16:52:18.324  Target depth 664.047 | model centre at depth 13.479: Z -650.569, in front of the glass (out of the screen)
+16:52:18.336  Target depth 629.726 | model centre at depth 13.479: Z -616.247, in front of the glass (out of the screen)
+16:52:18.345  Target depth 613.237 | model centre at depth 13.479: Z -599.758, in front of the glass (out of the screen)
+16:52:18.357  Target depth 597.178 | model centre at depth 13.479: Z -583.700, in front of the glass (out of the screen)
+16:52:18.368  Target depth 581.541 | model centre at depth 13.479: Z -568.063, in front of the glass (out of the screen)
+16:52:18.383  Target depth 573.877 | model centre at depth 13.479: Z -560.398, in front of the glass (out of the screen)
+16:52:18.397  Target depth 566.314 | model centre at depth 13.479: Z -552.835, in front of the glass (out of the screen)
+16:52:19.833  Target depth 566.314 | model centre at depth 13.479: Z -552.835, in front of the glass (out of the screen)
+16:52:19.842  Target depth 566.314 | model centre at depth 13.479: Z -552.835, in front of the glass (out of the screen)
+16:52:19.856  Target depth 558.850 | model centre at depth 13.479: Z -545.371, in front of the glass (out of the screen)
+16:52:19.865  Target depth 558.850 | model centre at depth 13.479: Z -545.371, in front of the glass (out of the screen)
+16:52:19.877  Target depth 551.485 | model centre at depth 13.479: Z -538.006, in front of the glass (out of the screen)
+16:52:19.890  Target depth 544.216 | model centre at depth 13.479: Z -530.738, in front of the glass (out of the screen)
+16:52:19.908  Target depth 537.044 | model centre at depth 13.479: Z -523.565, in front of the glass (out of the screen)
+16:52:19.922  Target depth 533.493 | model centre at depth 13.479: Z -520.015, in front of the glass (out of the screen)
+16:52:19.935  Target depth 529.966 | model centre at depth 13.479: Z -516.487, in front of the glass (out of the screen)
+16:52:19.952  Target depth 522.981 | model centre at depth 13.479: Z -509.503, in front of the glass (out of the screen)
+16:52:19.966  Target depth 516.089 | model centre at depth 13.479: Z -502.610, in front of the glass (out of the screen)
+16:52:19.978  Target depth 509.287 | model centre at depth 13.479: Z -495.808, in front of the glass (out of the screen)
+16:52:19.993  Target depth 495.951 | model centre at depth 13.479: Z -482.472, in front of the glass (out of the screen)
+16:52:20.012  Target depth 470.318 | model centre at depth 13.479: Z -456.839, in front of the glass (out of the screen)
+16:52:20.033  Target depth 437.221 | model centre at depth 13.479: Z -423.743, in front of the glass (out of the screen)
+16:52:20.047  Target depth 406.454 | model centre at depth 13.479: Z -392.975, in front of the glass (out of the screen)
+16:52:20.064  Target depth 380.367 | model centre at depth 13.479: Z -366.888, in front of the glass (out of the screen)
+16:52:20.077  Target depth 351.262 | model centre at depth 13.479: Z -337.784, in front of the glass (out of the screen)
+16:52:20.091  Target depth 330.905 | model centre at depth 13.479: Z -317.426, in front of the glass (out of the screen)
+16:52:20.104  Target depth 307.619 | model centre at depth 13.479: Z -294.140, in front of the glass (out of the screen)
+16:52:20.118  Target depth 293.661 | model centre at depth 13.479: Z -280.183, in front of the glass (out of the screen)
+16:52:20.138  Target depth 276.642 | model centre at depth 13.479: Z -263.164, in front of the glass (out of the screen)
+16:52:20.157  Target depth 258.886 | model centre at depth 13.479: Z -245.408, in front of the glass (out of the screen)
+16:52:20.171  Target depth 248.785 | model centre at depth 13.479: Z -235.306, in front of the glass (out of the screen)
+16:52:20.187  Target depth 240.668 | model centre at depth 13.479: Z -227.190, in front of the glass (out of the screen)
+16:52:20.199  Target depth 232.817 | model centre at depth 13.479: Z -219.338, in front of the glass (out of the screen)
+16:52:20.213  Target depth 229.748 | model centre at depth 13.479: Z -216.270, in front of the glass (out of the screen)
+16:52:20.228  Target depth 222.253 | model centre at depth 13.479: Z -208.775, in front of the glass (out of the screen)
+16:52:20.240  Target depth 213.581 | model centre at depth 13.479: Z -200.102, in front of the glass (out of the screen)
+16:52:20.259  Target depth 205.247 | model centre at depth 13.479: Z -191.769, in front of the glass (out of the screen)
+16:52:20.277  Target depth 195.934 | model centre at depth 13.479: Z -182.456, in front of the glass (out of the screen)
+16:52:20.291  Target depth 188.289 | model centre at depth 13.479: Z -174.811, in front of the glass (out of the screen)
+16:52:20.307  Target depth 182.146 | model centre at depth 13.479: Z -168.668, in front of the glass (out of the screen)
+16:52:20.322  Target depth 175.039 | model centre at depth 13.479: Z -161.561, in front of the glass (out of the screen)
+16:52:20.334  Target depth 167.097 | model centre at depth 13.479: Z -153.618, in front of the glass (out of the screen)
+16:52:20.348  Target depth 158.461 | model centre at depth 13.479: Z -144.982, in front of the glass (out of the screen)
+16:52:20.363  Target depth 148.290 | model centre at depth 13.479: Z -134.812, in front of the glass (out of the screen)
+16:52:20.376  Target depth 138.772 | model centre at depth 13.479: Z -125.294, in front of the glass (out of the screen)
+16:52:20.390  Target depth 133.357 | model centre at depth 13.479: Z -119.879, in front of the glass (out of the screen)
+16:52:20.404  Target depth 128.154 | model centre at depth 13.479: Z -114.675, in front of the glass (out of the screen)
+16:52:20.417  Target depth 124.798 | model centre at depth 13.479: Z -111.320, in front of the glass (out of the screen)
+16:52:20.436  Target depth 121.530 | model centre at depth 13.479: Z -108.052, in front of the glass (out of the screen)
+16:52:20.456  Target depth 116.788 | model centre at depth 13.479: Z -103.310, in front of the glass (out of the screen)
+16:52:20.471  Target depth 112.231 | model centre at depth 13.479: Z -98.753, in front of the glass (out of the screen)
+16:52:20.487  Target depth 106.431 | model centre at depth 13.479: Z -92.952, in front of the glass (out of the screen)
+16:52:20.502  Target depth 100.930 | model centre at depth 13.479: Z -87.451, in front of the glass (out of the screen)
+16:52:20.514  Target depth 96.991 | model centre at depth 13.479: Z -83.513, in front of the glass (out of the screen)
+16:52:20.529  Target depth 93.207 | model centre at depth 13.479: Z -79.728, in front of the glass (out of the screen)
+16:52:20.545  Target depth 88.978 | model centre at depth 13.479: Z -75.499, in front of the glass (out of the screen)
+16:52:20.565  Target depth 84.941 | model centre at depth 13.479: Z -71.462, in front of the glass (out of the screen)
+16:52:20.584  Target depth 80.550 | model centre at depth 13.479: Z -67.072, in front of the glass (out of the screen)
+16:52:20.598  Target depth 76.387 | model centre at depth 13.479: Z -62.909, in front of the glass (out of the screen)
+16:52:20.614  Target depth 72.439 | model centre at depth 13.479: Z -58.961, in front of the glass (out of the screen)
+16:52:20.629  Target depth 66.896 | model centre at depth 13.479: Z -53.418, in front of the glass (out of the screen)
+16:52:20.641  Target depth 63.439 | model centre at depth 13.479: Z -49.960, in front of the glass (out of the screen)
+16:52:20.655  Target depth 60.160 | model centre at depth 13.479: Z -46.681, in front of the glass (out of the screen)
+16:52:20.672  Target depth 57.813 | model centre at depth 13.479: Z -44.334, in front of the glass (out of the screen)
+16:52:20.684  Target depth 55.557 | model centre at depth 13.479: Z -42.078, in front of the glass (out of the screen)
+16:52:20.697  Target depth 54.825 | model centre at depth 13.479: Z -41.346, in front of the glass (out of the screen)
+16:52:20.711  Target depth 53.389 | model centre at depth 13.479: Z -39.910, in front of the glass (out of the screen)
+16:52:20.723  Target depth 52.685 | model centre at depth 13.479: Z -39.207, in front of the glass (out of the screen)
+16:52:20.736  Target depth 52.685 | model centre at depth 13.479: Z -39.207, in front of the glass (out of the screen)
+16:52:20.749  Target depth 51.991 | model centre at depth 13.479: Z -38.512, in front of the glass (out of the screen)
+16:52:20.764  Target depth 51.306 | model centre at depth 13.479: Z -37.827, in front of the glass (out of the screen)
+16:52:20.779  Target depth 51.306 | model centre at depth 13.479: Z -37.827, in front of the glass (out of the screen)
+16:52:20.791  Target depth 50.630 | model centre at depth 13.479: Z -37.151, in front of the glass (out of the screen)
+16:52:20.811  Target depth 49.304 | model centre at depth 13.479: Z -35.825, in front of the glass (out of the screen)
+16:52:20.830  Target depth 48.654 | model centre at depth 13.479: Z -35.175, in front of the glass (out of the screen)
+16:52:20.844  Target depth 46.756 | model centre at depth 13.479: Z -33.277, in front of the glass (out of the screen)
+16:52:20.860  Target depth 45.531 | model centre at depth 13.479: Z -32.053, in front of the glass (out of the screen)
+16:52:20.875  Target depth 44.931 | model centre at depth 13.479: Z -31.453, in front of the glass (out of the screen)
+16:52:20.888  Target depth 43.755 | model centre at depth 13.479: Z -30.276, in front of the glass (out of the screen)
+16:52:20.902  Target depth 43.178 | model centre at depth 13.479: Z -29.699, in front of the glass (out of the screen)
+16:52:20.918  Target depth 42.047 | model centre at depth 13.479: Z -28.569, in front of the glass (out of the screen)
+16:52:20.930  Target depth 40.946 | model centre at depth 13.479: Z -27.468, in front of the glass (out of the screen)
+16:52:20.944  Target depth 40.139 | model centre at depth 13.479: Z -26.661, in front of the glass (out of the screen)
+16:52:20.965  Target depth 39.349 | model centre at depth 13.479: Z -25.870, in front of the glass (out of the screen)
+16:52:20.984  Target depth 37.315 | model centre at depth 13.479: Z -23.836, in front of the glass (out of the screen)
+16:52:20.998  Target depth 36.338 | model centre at depth 13.479: Z -22.859, in front of the glass (out of the screen)
+16:52:21.014  Target depth 35.386 | model centre at depth 13.479: Z -21.908, in front of the glass (out of the screen)
+16:52:21.026  Target depth 34.460 | model centre at depth 13.479: Z -20.981, in front of the glass (out of the screen)
+16:52:21.041  Target depth 34.005 | model centre at depth 13.479: Z -20.527, in front of the glass (out of the screen)
+16:52:21.055  Target depth 32.896 | model centre at depth 13.479: Z -19.418, in front of the glass (out of the screen)
+16:52:21.073  Target depth 32.679 | model centre at depth 13.479: Z -19.200, in front of the glass (out of the screen)
+16:52:21.090  Target depth 31.823 | model centre at depth 13.479: Z -18.344, in front of the glass (out of the screen)
+16:52:21.102  Target depth 31.403 | model centre at depth 13.479: Z -17.925, in front of the glass (out of the screen)
+16:52:21.111  Target depth 31.403 | model centre at depth 13.479: Z -17.925, in front of the glass (out of the screen)
+16:52:21.125  Target depth 30.990 | model centre at depth 13.479: Z -17.511, in front of the glass (out of the screen)
+16:52:21.137  Target depth 30.379 | model centre at depth 13.479: Z -16.900, in front of the glass (out of the screen)
+16:52:21.149  Target depth 30.178 | model centre at depth 13.479: Z -16.700, in front of the glass (out of the screen)
+16:52:21.158  Target depth 29.194 | model centre at depth 13.479: Z -15.715, in front of the glass (out of the screen)
+16:52:21.170  Target depth 29.001 | model centre at depth 13.479: Z -15.522, in front of the glass (out of the screen)
+16:52:21.182  Target depth 28.241 | model centre at depth 13.479: Z -14.763, in front of the glass (out of the screen)
+16:52:21.199  Target depth 27.869 | model centre at depth 13.479: Z -14.390, in front of the glass (out of the screen)
+16:52:21.215  Target depth 27.139 | model centre at depth 13.479: Z -13.661, in front of the glass (out of the screen)
+16:52:21.225  Target depth 26.782 | model centre at depth 13.479: Z -13.303, in front of the glass (out of the screen)
+16:52:21.235  Target depth 26.429 | model centre at depth 13.479: Z -12.950, in front of the glass (out of the screen)
+16:52:21.248  Target depth 25.908 | model centre at depth 13.479: Z -12.429, in front of the glass (out of the screen)
+16:52:21.260  Target depth 25.397 | model centre at depth 13.479: Z -11.919, in front of the glass (out of the screen)
+16:52:21.269  Target depth 24.897 | model centre at depth 13.479: Z -11.418, in front of the glass (out of the screen)
+16:52:21.281  Target depth 24.406 | model centre at depth 13.479: Z -10.928, in front of the glass (out of the screen)
+16:52:21.293  Target depth 23.767 | model centre at depth 13.479: Z -10.289, in front of the glass (out of the screen)
+16:52:21.309  Target depth 23.145 | model centre at depth 13.479: Z -9.666, in front of the glass (out of the screen)
+16:52:21.324  Target depth 22.242 | model centre at depth 13.479: Z -8.763, in front of the glass (out of the screen)
+16:52:21.335  Target depth 21.374 | model centre at depth 13.479: Z -7.895, in front of the glass (out of the screen)
+16:52:21.348  Target depth 21.092 | model centre at depth 13.479: Z -7.614, in front of the glass (out of the screen)
+16:52:21.357  Target depth 20.269 | model centre at depth 13.479: Z -6.791, in front of the glass (out of the screen)
+16:52:21.369  Target depth 19.738 | model centre at depth 13.479: Z -6.260, in front of the glass (out of the screen)
+16:52:21.380  Target depth 18.968 | model centre at depth 13.479: Z -5.490, in front of the glass (out of the screen)
+16:52:21.395  Target depth 18.472 | model centre at depth 13.479: Z -4.993, in front of the glass (out of the screen)
+16:52:21.409  Target depth 17.751 | model centre at depth 13.479: Z -4.272, in front of the glass (out of the screen)
+16:52:21.420  Target depth 16.833 | model centre at depth 13.479: Z -3.355, in front of the glass (out of the screen)
+16:52:21.430  Target depth 16.612 | model centre at depth 13.479: Z -3.133, in front of the glass (out of the screen)
+16:52:21.442  Target depth 16.177 | model centre at depth 13.479: Z -2.698, in front of the glass (out of the screen)
+16:52:21.453  Target depth 15.963 | model centre at depth 13.479: Z -2.485, in front of the glass (out of the screen)
+16:52:21.462  Target depth 15.753 | model centre at depth 13.479: Z -2.274, in front of the glass (out of the screen)
+16:52:25.960  Target depth 15.753 | model centre at depth 13.479: Z -2.274, in front of the glass (out of the screen)
+16:52:25.971  Target depth 15.753 | model centre at depth 13.479: Z -2.274, in front of the glass (out of the screen)
+16:52:25.984  Target depth 15.545 | model centre at depth 13.479: Z -2.067, in front of the glass (out of the screen)
+16:52:25.997  Target depth 15.340 | model centre at depth 13.479: Z -1.862, in front of the glass (out of the screen)
+16:52:26.006  Target depth 15.340 | model centre at depth 13.479: Z -1.862, in front of the glass (out of the screen)
+16:52:26.018  Target depth 15.340 | model centre at depth 13.479: Z -1.862, in front of the glass (out of the screen)
+16:52:26.032  Target depth 15.340 | model centre at depth 13.479: Z -1.862, in front of the glass (out of the screen)
+16:52:26.044  Target depth 15.239 | model centre at depth 13.479: Z -1.760, in front of the glass (out of the screen)
+16:52:26.055  Target depth 15.138 | model centre at depth 13.479: Z -1.660, in front of the glass (out of the screen)
+16:52:26.065  Target depth 15.138 | model centre at depth 13.479: Z -1.660, in front of the glass (out of the screen)
+16:52:26.081  Target depth 14.939 | model centre at depth 13.479: Z -1.460, in front of the glass (out of the screen)
+16:52:26.096  Target depth 14.742 | model centre at depth 13.479: Z -1.263, in front of the glass (out of the screen)
+16:52:26.108  Target depth 14.548 | model centre at depth 13.479: Z -1.069, in front of the glass (out of the screen)
+16:52:26.117  Target depth 14.167 | model centre at depth 13.479: Z -0.688, in front of the glass (out of the screen)
+16:52:26.130  Target depth 14.167 | model centre at depth 13.479: Z -0.688, in front of the glass (out of the screen)
+16:52:26.142  Target depth 13.980 | model centre at depth 13.479: Z -0.501, in front of the glass (out of the screen)
+16:52:26.152  Target depth 13.614 | model centre at depth 13.479: Z -0.135, in front of the glass (out of the screen)
+16:52:26.163  Target depth 13.614 | model centre at depth 13.479: Z -0.135, in front of the glass (out of the screen)
+16:52:26.178  Target depth 13.434 | model centre at depth 13.479: Z 0.044, behind the glass
+16:52:26.194  Target depth 13.083 | model centre at depth 13.479: Z 0.396, behind the glass
+16:52:26.203  Target depth 13.083 | model centre at depth 13.479: Z 0.396, behind the glass
+16:52:26.214  Target depth 12.996 | model centre at depth 13.479: Z 0.482, behind the glass
+16:52:26.227  Target depth 12.910 | model centre at depth 13.479: Z 0.568, behind the glass
+16:52:26.236  Target depth 12.910 | model centre at depth 13.479: Z 0.568, behind the glass
+16:52:26.248  Target depth 12.740 | model centre at depth 13.479: Z 0.738, behind the glass
+16:52:26.268  Target depth 12.572 | model centre at depth 13.479: Z 0.906, behind the glass
+16:52:26.302  Target depth 12.572 | model centre at depth 13.479: Z 0.906, behind the glass
+16:52:26.313  Target depth 12.572 | model centre at depth 13.479: Z 0.906, behind the glass
+16:52:26.325  Target depth 12.407 | model centre at depth 13.479: Z 1.072, behind the glass
+16:52:26.334  Target depth 12.407 | model centre at depth 13.479: Z 1.072, behind the glass
+16:52:26.345  Target depth 12.243 | model centre at depth 13.479: Z 1.236, behind the glass
+16:52:26.365  Target depth 12.082 | model centre at depth 13.479: Z 1.397, behind the glass
+16:52:26.375  Target depth 12.082 | model centre at depth 13.479: Z 1.397, behind the glass
+16:52:26.387  Target depth 12.002 | model centre at depth 13.479: Z 1.477, behind the glass
+16:52:26.399  Target depth 11.922 | model centre at depth 13.479: Z 1.556, behind the glass
+16:52:26.408  Target depth 11.922 | model centre at depth 13.479: Z 1.556, behind the glass
+16:52:26.426  Target depth 11.765 | model centre at depth 13.479: Z 1.713, behind the glass
+16:52:26.445  Target depth 11.610 | model centre at depth 13.479: Z 1.868, behind the glass
+16:52:26.455  Target depth 11.610 | model centre at depth 13.479: Z 1.868, behind the glass
+16:52:26.469  Target depth 11.610 | model centre at depth 13.479: Z 1.868, behind the glass
+16:52:26.480  Target depth 11.533 | model centre at depth 13.479: Z 1.945, behind the glass
+16:52:26.501  Target depth 11.457 | model centre at depth 13.479: Z 2.021, behind the glass
+16:52:26.514  Target depth 11.457 | model centre at depth 13.479: Z 2.021, behind the glass
+16:52:26.525  Target depth 11.306 | model centre at depth 13.479: Z 2.172, behind the glass
+16:52:26.550  Target depth 11.306 | model centre at depth 13.479: Z 2.172, behind the glass
+16:52:26.561  Target depth 11.157 | model centre at depth 13.479: Z 2.321, behind the glass
+16:52:26.571  Target depth 11.157 | model centre at depth 13.479: Z 2.321, behind the glass
+16:52:26.580  Target depth 11.157 | model centre at depth 13.479: Z 2.321, behind the glass
+16:52:26.591  Target depth 11.083 | model centre at depth 13.479: Z 2.395, behind the glass
+16:52:28.555  Target depth 11.157 | model centre at depth 13.479: Z 2.321, behind the glass
+16:52:28.567  Target depth 11.306 | model centre at depth 13.479: Z 2.172, behind the glass
+16:52:28.579  Target depth 11.533 | model centre at depth 13.479: Z 1.945, behind the glass
+16:52:28.589  Target depth 11.610 | model centre at depth 13.479: Z 1.868, behind the glass
+16:52:28.599  Target depth 11.765 | model centre at depth 13.479: Z 1.713, behind the glass
+16:52:28.613  Target depth 11.922 | model centre at depth 13.479: Z 1.556, behind the glass
+16:52:28.625  Target depth 12.082 | model centre at depth 13.479: Z 1.397, behind the glass
+16:52:28.635  Target depth 12.082 | model centre at depth 13.479: Z 1.397, behind the glass
+16:52:28.650  Target depth 12.243 | model centre at depth 13.479: Z 1.236, behind the glass
+16:52:28.664  Target depth 12.407 | model centre at depth 13.479: Z 1.072, behind the glass
+16:52:28.675  Target depth 12.572 | model centre at depth 13.479: Z 0.906, behind the glass
+16:52:28.685  Target depth 12.572 | model centre at depth 13.479: Z 0.906, behind the glass
+16:52:28.698  Target depth 12.740 | model centre at depth 13.479: Z 0.738, behind the glass
+16:52:28.709  Target depth 12.910 | model centre at depth 13.479: Z 0.568, behind the glass
+16:52:28.719  Target depth 12.910 | model centre at depth 13.479: Z 0.568, behind the glass
+16:52:28.730  Target depth 12.996 | model centre at depth 13.479: Z 0.482, behind the glass
+16:52:28.741  Target depth 13.083 | model centre at depth 13.479: Z 0.396, behind the glass
+16:52:28.765  Target depth 13.083 | model centre at depth 13.479: Z 0.396, behind the glass
+16:52:28.782  Target depth 13.257 | model centre at depth 13.479: Z 0.221, behind the glass
+16:52:28.799  Target depth 13.434 | model centre at depth 13.479: Z 0.044, behind the glass
+16:52:28.813  Target depth 13.434 | model centre at depth 13.479: Z 0.044, behind the glass
+16:52:28.831  Target depth 13.524 | model centre at depth 13.479: Z -0.045, in front of the glass (out of the screen)
+16:52:28.847  Target depth 13.614 | model centre at depth 13.479: Z -0.135, in front of the glass (out of the screen)
+16:52:28.879  Target depth 13.614 | model centre at depth 13.479: Z -0.135, in front of the glass (out of the screen)
+16:52:28.898  Target depth 13.796 | model centre at depth 13.479: Z -0.317, in front of the glass (out of the screen)
+16:52:28.915  Target depth 13.980 | model centre at depth 13.479: Z -0.501, in front of the glass (out of the screen)
+16:52:28.930  Target depth 13.980 | model centre at depth 13.479: Z -0.501, in front of the glass (out of the screen)
+16:52:39.843  Target depth 26.446 | model centre at depth 25.931: Z -0.515, in front of the glass (out of the screen)
+16:52:39.855  Target depth 26.799 | model centre at depth 25.931: Z -0.868, in front of the glass (out of the screen)
+16:52:39.868  Target depth 26.799 | model centre at depth 25.931: Z -0.868, in front of the glass (out of the screen)
+16:52:39.877  Target depth 26.799 | model centre at depth 25.931: Z -0.868, in front of the glass (out of the screen)
+16:52:40.262  Target depth 26.977 | model centre at depth 25.931: Z -1.046, in front of the glass (out of the screen)
+16:52:40.275  Target depth 27.157 | model centre at depth 25.931: Z -1.226, in front of the glass (out of the screen)
+16:52:40.288  Target depth 27.520 | model centre at depth 25.931: Z -1.589, in front of the glass (out of the screen)
+16:52:40.301  Target depth 27.887 | model centre at depth 25.931: Z -1.956, in front of the glass (out of the screen)
+16:52:40.313  Target depth 28.260 | model centre at depth 25.931: Z -2.329, in front of the glass (out of the screen)
+16:52:40.324  Target depth 28.260 | model centre at depth 25.931: Z -2.329, in front of the glass (out of the screen)
+16:52:40.347  Target depth 28.260 | model centre at depth 25.931: Z -2.329, in front of the glass (out of the screen)
+16:52:40.377  Target depth 28.637 | model centre at depth 25.931: Z -2.706, in front of the glass (out of the screen)
+16:52:40.775  Target depth 29.020 | model centre at depth 25.931: Z -3.089, in front of the glass (out of the screen)
+16:52:40.790  Target depth 29.407 | model centre at depth 25.931: Z -3.476, in front of the glass (out of the screen)
+16:52:40.805  Target depth 29.407 | model centre at depth 25.931: Z -3.476, in front of the glass (out of the screen)
+16:52:40.819  Target depth 30.198 | model centre at depth 25.931: Z -4.267, in front of the glass (out of the screen)
+16:52:40.835  Target depth 30.399 | model centre at depth 25.931: Z -4.468, in front of the glass (out of the screen)
+16:52:40.848  Target depth 30.601 | model centre at depth 25.931: Z -4.670, in front of the glass (out of the screen)
+16:52:40.860  Target depth 30.601 | model centre at depth 25.931: Z -4.670, in front of the glass (out of the screen)
+16:52:40.873  Target depth 31.010 | model centre at depth 25.931: Z -5.079, in front of the glass (out of the screen)
+16:52:40.889  Target depth 31.424 | model centre at depth 25.931: Z -5.493, in front of the glass (out of the screen)
+16:52:40.901  Target depth 31.633 | model centre at depth 25.931: Z -5.702, in front of the glass (out of the screen)
+16:52:40.915  Target depth 31.844 | model centre at depth 25.931: Z -5.913, in front of the glass (out of the screen)
+16:52:40.938  Target depth 31.844 | model centre at depth 25.931: Z -5.913, in front of the glass (out of the screen)
+16:52:40.956  Target depth 32.269 | model centre at depth 25.931: Z -6.338, in front of the glass (out of the screen)
+16:52:40.967  Target depth 32.700 | model centre at depth 25.931: Z -6.769, in front of the glass (out of the screen)
+16:52:40.976  Target depth 32.700 | model centre at depth 25.931: Z -6.769, in front of the glass (out of the screen)
+16:52:40.998  Target depth 32.918 | model centre at depth 25.931: Z -6.987, in front of the glass (out of the screen)
+16:52:41.015  Target depth 33.137 | model centre at depth 25.931: Z -7.206, in front of the glass (out of the screen)
+16:52:41.025  Target depth 33.137 | model centre at depth 25.931: Z -7.206, in front of the glass (out of the screen)
+16:52:41.047  Target depth 33.137 | model centre at depth 25.931: Z -7.206, in front of the glass (out of the screen)
+16:52:41.062  Target depth 33.579 | model centre at depth 25.931: Z -7.648, in front of the glass (out of the screen)
+16:52:41.289  Target depth 34.028 | model centre at depth 25.931: Z -8.097, in front of the glass (out of the screen)
+16:52:41.300  Target depth 34.028 | model centre at depth 25.931: Z -8.097, in front of the glass (out of the screen)
+16:52:41.312  Target depth 34.254 | model centre at depth 25.931: Z -8.323, in front of the glass (out of the screen)
+16:52:41.325  Target depth 34.482 | model centre at depth 25.931: Z -8.551, in front of the glass (out of the screen)
+16:52:41.337  Target depth 34.943 | model centre at depth 25.931: Z -9.012, in front of the glass (out of the screen)
+16:52:41.347  Target depth 35.409 | model centre at depth 25.931: Z -9.478, in front of the glass (out of the screen)
+16:52:41.361  Target depth 35.409 | model centre at depth 25.931: Z -9.478, in front of the glass (out of the screen)
+16:52:41.373  Target depth 35.645 | model centre at depth 25.931: Z -9.714, in front of the glass (out of the screen)
+16:52:41.390  Target depth 35.645 | model centre at depth 25.931: Z -9.714, in front of the glass (out of the screen)
+16:52:41.405  Target depth 35.882 | model centre at depth 25.931: Z -9.951, in front of the glass (out of the screen)
+16:52:41.414  Target depth 35.882 | model centre at depth 25.931: Z -9.951, in front of the glass (out of the screen)
+16:52:41.425  Target depth 36.361 | model centre at depth 25.931: Z -10.430, in front of the glass (out of the screen)
+16:52:41.438  Target depth 36.847 | model centre at depth 25.931: Z -10.916, in front of the glass (out of the screen)
+16:52:41.455  Target depth 36.847 | model centre at depth 25.931: Z -10.916, in front of the glass (out of the screen)
+16:52:41.470  Target depth 37.092 | model centre at depth 25.931: Z -11.161, in front of the glass (out of the screen)
+16:52:41.489  Target depth 37.339 | model centre at depth 25.931: Z -11.408, in front of the glass (out of the screen)
+16:52:41.502  Target depth 37.339 | model centre at depth 25.931: Z -11.408, in front of the glass (out of the screen)
+16:52:41.512  Target depth 37.339 | model centre at depth 25.931: Z -11.408, in front of the glass (out of the screen)
+16:52:41.523  Target depth 37.838 | model centre at depth 25.931: Z -11.907, in front of the glass (out of the screen)
+16:52:41.533  Target depth 38.343 | model centre at depth 25.931: Z -12.412, in front of the glass (out of the screen)
+16:52:41.555  Target depth 38.343 | model centre at depth 25.931: Z -12.412, in front of the glass (out of the screen)
+16:52:41.569  Target depth 38.598 | model centre at depth 25.931: Z -12.667, in front of the glass (out of the screen)
+16:52:41.609  Target depth 38.855 | model centre at depth 25.931: Z -12.924, in front of the glass (out of the screen)
+16:52:41.632  Target depth 38.855 | model centre at depth 25.931: Z -12.924, in front of the glass (out of the screen)
+16:52:41.664  Target depth 39.374 | model centre at depth 25.931: Z -13.443, in front of the glass (out of the screen)
+16:52:41.686  Target depth 39.900 | model centre at depth 25.931: Z -13.969, in front of the glass (out of the screen)
+16:52:41.703  Target depth 39.900 | model centre at depth 25.931: Z -13.969, in front of the glass (out of the screen)
+16:52:41.719  Target depth 40.166 | model centre at depth 25.931: Z -14.235, in front of the glass (out of the screen)
+16:52:41.918  Target depth 40.433 | model centre at depth 25.931: Z -14.502, in front of the glass (out of the screen)
+16:52:41.933  Target depth 41.520 | model centre at depth 25.931: Z -15.589, in front of the glass (out of the screen)
+16:52:41.948  Target depth 41.520 | model centre at depth 25.931: Z -15.589, in front of the glass (out of the screen)
+16:52:41.962  Target depth 42.075 | model centre at depth 25.931: Z -16.144, in front of the glass (out of the screen)
+16:52:41.978  Target depth 42.637 | model centre at depth 25.931: Z -16.706, in front of the glass (out of the screen)
+16:52:41.990  Target depth 43.206 | model centre at depth 25.931: Z -17.275, in front of the glass (out of the screen)
+16:52:42.005  Target depth 43.494 | model centre at depth 25.931: Z -17.563, in front of the glass (out of the screen)
+16:52:42.021  Target depth 43.783 | model centre at depth 25.931: Z -17.852, in front of the glass (out of the screen)
+16:52:42.033  Target depth 44.960 | model centre at depth 25.931: Z -19.029, in front of the glass (out of the screen)
+16:52:42.048  Target depth 45.561 | model centre at depth 25.931: Z -19.630, in front of the glass (out of the screen)
+16:52:42.062  Target depth 46.786 | model centre at depth 25.931: Z -20.855, in front of the glass (out of the screen)
+16:52:42.082  Target depth 47.097 | model centre at depth 25.931: Z -21.166, in front of the glass (out of the screen)
+16:52:42.102  Target depth 47.411 | model centre at depth 25.931: Z -21.480, in front of the glass (out of the screen)
+16:52:42.116  Target depth 48.044 | model centre at depth 25.931: Z -22.113, in front of the glass (out of the screen)
+16:52:42.129  Target depth 48.686 | model centre at depth 25.931: Z -22.755, in front of the glass (out of the screen)
+16:52:42.148  Target depth 48.686 | model centre at depth 25.931: Z -22.755, in front of the glass (out of the screen)
+16:52:42.161  Target depth 48.686 | model centre at depth 25.931: Z -22.755, in front of the glass (out of the screen)
+16:52:42.363  Target depth 49.010 | model centre at depth 25.931: Z -23.079, in front of the glass (out of the screen)
+16:52:42.375  Target depth 49.336 | model centre at depth 25.931: Z -23.405, in front of the glass (out of the screen)
+16:52:42.387  Target depth 50.663 | model centre at depth 25.931: Z -24.732, in front of the glass (out of the screen)
+16:52:42.399  Target depth 51.339 | model centre at depth 25.931: Z -25.408, in front of the glass (out of the screen)
+16:52:42.410  Target depth 52.025 | model centre at depth 25.931: Z -26.094, in front of the glass (out of the screen)
+16:52:42.423  Target depth 52.720 | model centre at depth 25.931: Z -26.789, in front of the glass (out of the screen)
+16:52:42.433  Target depth 52.720 | model centre at depth 25.931: Z -26.789, in front of the glass (out of the screen)
+16:52:42.445  Target depth 53.071 | model centre at depth 25.931: Z -27.140, in front of the glass (out of the screen)
+16:52:43.466  Target depth 53.424 | model centre at depth 25.931: Z -27.493, in front of the glass (out of the screen)
+16:52:43.478  Target depth 54.860 | model centre at depth 25.931: Z -28.929, in front of the glass (out of the screen)
+16:52:43.490  Target depth 57.088 | model centre at depth 25.931: Z -31.157, in front of the glass (out of the screen)
+16:52:43.502  Target depth 57.850 | model centre at depth 25.931: Z -31.919, in front of the glass (out of the screen)
+16:52:43.515  Target depth 61.003 | model centre at depth 25.931: Z -35.072, in front of the glass (out of the screen)
+16:52:43.526  Target depth 62.644 | model centre at depth 25.931: Z -36.713, in front of the glass (out of the screen)
+16:52:43.538  Target depth 64.756 | model centre at depth 25.931: Z -38.825, in front of the glass (out of the screen)
+16:52:43.549  Target depth 66.940 | model centre at depth 25.931: Z -41.009, in front of the glass (out of the screen)
+16:52:43.564  Target depth 67.834 | model centre at depth 25.931: Z -41.903, in front of the glass (out of the screen)
+16:52:43.578  Target depth 69.658 | model centre at depth 25.931: Z -43.727, in front of the glass (out of the screen)
+16:52:43.590  Target depth 70.588 | model centre at depth 25.931: Z -44.657, in front of the glass (out of the screen)
+16:52:43.600  Target depth 72.486 | model centre at depth 25.931: Z -46.556, in front of the glass (out of the screen)
+16:52:43.613  Target depth 72.486 | model centre at depth 25.931: Z -46.556, in front of the glass (out of the screen)
+16:52:43.631  Target depth 72.969 | model centre at depth 25.931: Z -47.038, in front of the glass (out of the screen)
+16:52:57.301  Log closed normally

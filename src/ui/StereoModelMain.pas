@@ -9,7 +9,8 @@
 //** down moves the target, the point the camera orbits, deeper or nearer along the line of
 //** sight without moving the camera (SetTargetDepth); the wheel brings the view nearer or
 //** takes it farther, stopping at the model's nearest face. A click on its own does nothing.
-//** Status and problems are shown in the strip at the bottom and logged with FMX's Log.d.
+//** Status and problems are shown in the strip at the bottom, logged with FMX's Log.d and
+//** written to StereoModel.log (StereoModelLog), beside the executable on Windows.
 //**
 //** Glasses-free 3D (step 0): a TPeardoxLeiaSR, from the PeardoxLeiaSR package, made in code
 //** for now. Where LeiaSR is installed the Stereo button turns it on and off, and the choice
@@ -32,8 +33,9 @@ unit StereoModelMain;
   deeper or nearer along the line of sight without moving the camera
   (SetTargetDepth); the wheel brings the view nearer or takes it farther,
   stopping at the model's nearest face. A click on its own does nothing.
-  Status and problems are shown in the strip at the bottom and logged with
-  FMX's Log.d.
+  Status and problems are shown in the strip at the bottom, logged with
+  FMX's Log.d and written to StereoModel.log (StereoModelLog), beside the
+  executable on Windows.
 
   Glasses-free 3D (step 0): a TPeardoxLeiaSR, made in code for now. Where
   LeiaSR is installed the Stereo button turns it on and off, and the
@@ -59,7 +61,7 @@ uses
   Gorilla.DAE.Loader, Gorilla.STL.Loader, Gorilla.PLY.Loader, Gorilla.USD.Loader,
   Gorilla.Babylon.Loader, Gorilla.G3D.Loader,
   FMX.Controls.Presentation, FMX.StdCtrls, FMX.Menus, FMX.Layouts,
-  Peardox.OrbitalCamera, Peardox.LeiaSR, Peardox.LeiaSR.Settings, FmxLinuxMenu;
+  Peardox.OrbitalCamera, Peardox.LeiaSR, Peardox.LeiaSR.Settings, FmxLinuxMenu, StereoModelLog;
 
 type
   //** @abstract(The main form: the 3D view and the control strip below it.)
@@ -102,7 +104,7 @@ type
     //**
     //** @param(Sender OpenMenuItem.)
     procedure OpenMenuItemClick(Sender: TObject);
-    //** @abstract(Stops glasses-free 3D while the window still exists.)
+    //** @abstract(Stops glasses-free 3D while the window still exists, and closes the log.)
     //**
     //** @param(Sender The form.)
     //**
@@ -120,6 +122,9 @@ type
     FModelPath: string;
     //** @abstract(The status line in the control strip.)
     FStatus: TLabel;
+    //** @abstract(The lens indicator, left of btnStereo: LENS ON in red while the display's
+    //** lens is on, Lens off in grey, nothing while SR is not running.)
+    FLensLabel: TLabel;
     //** @abstract(True once the test model's load has been queued, so FormShow queues it
     //** only once.)
     FLoadQueued: Boolean;
@@ -137,7 +142,8 @@ type
     //** @abstract(Glasses-free 3D: LeiaSR for GorillaViewport1, made in code for now; owned by
     //** the form.)
     FLeiaSR: TPeardoxLeiaSR;
-    //** @abstract(Shows a line in the status strip and logs it.)
+    //** @abstract(Shows a line in the status strip, and logs it with Log.d and in
+    //** StereoModel.log.)
     //**
     //** @param(AText The line.)
     procedure ShowStatus(const AText: string);
@@ -183,6 +189,10 @@ type
     //** @param(AMessage The details.)
     procedure LeiaSRProblem(Sender: TObject; AProblem: TPeardoxLeiaSRProblem;
       const AMessage: string);
+    //** @abstract(FLeiaSR's lens has come on or gone off: FLensLabel shows it.)
+    //**
+    //** @param(Sender FLeiaSR.)
+    procedure LeiaSRLensChange(Sender: TObject);
     //** @abstract(Loads a model file into the viewport in place of the one shown, stands it
     //** upright and frames it.)
     //**
@@ -213,6 +223,18 @@ type
     procedure FitView;
     //** @abstract(Puts the starting view back: all three angles 0, the fitted size.)
     procedure ResetView;
+    //** @abstract(The status line for a right drag: the target's depth, and where the model
+    //** lies against the glass.)
+    //**
+    //** The target's depth is the plane that will lie on the display's glass. The model's
+    //** centre, measured along the line of sight, is then that much in front of the glass
+    //** (out of the screen, Z below 0) or behind it (Z above 0): Z = model depth - target
+    //** depth. While LeiaSR runs it is also given in millimetres, at the scale that puts the
+    //** view's height in the camera's field of view at the target's depth onto the view's height
+    //** on the display.
+    //**
+    //** @returns(The line.)
+    function DepthStatus: string;
     //** @abstract(Viewport OnResize: refits, as the fit depends on the view's shape.)
     //**
     //** @param(Sender The viewport.)
@@ -256,6 +278,10 @@ type
     procedure ViewMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState;
       X, Y: Single);
     //** @abstract(Viewport OnMouseWheel: brings the view nearer or takes it farther.)
+    //**
+    //** In perspective each notch moves the camera along its line of sight by a share of its
+    //** distance from the model, so the steps stay the same size wherever the target's depth
+    //** has been put; orthographic views are scaled instead.
     //**
     //** @param(Sender The viewport.)
     //**
@@ -311,16 +337,24 @@ const
   ZOOM_MIN = 0.2;
   //** @abstract(The farthest the wheel can take the view, as a multiple of the fit.)
   ZOOM_MAX = 10.0;
+  //** @abstract(The nearest the wheel takes the camera to the target, as a share of its
+  //** distance before the notch, when the target is in front of the model.)
+  MIN_TARGET_SHARE = 0.05;
   //** @abstract(The wheel delta of one notch.)
   WHEEL_NOTCH = 120;
-  //** @abstract(Room in the control strip kept clear of the status line for btnStereo.)
+  //** @abstract(Room at the right of the control strip kept for btnStereo, right of the lens
+  //** indicator.)
   STATUS_RIGHT_MARGIN = 96;
+  //** @abstract(The lens indicator's width, in pixels.)
+  LENS_LABEL_WIDTH = 80;
   //** @abstract(Gap at the status line's left, in pixels.)
   STATUS_LEFT_MARGIN = 8;
 
 procedure TForm2.FormCreate(Sender: TObject);
 begin
-  // FIRST: on desktop Linux the main menu is moved onto an FMX menu bar,
+  // The log first, so it has everything
+  LogOpen;
+  // Then: on desktop Linux the main menu is moved onto an FMX menu bar,
   // as GTK's native bar shows only first letters (FmxLinuxMenu, from
   // TSteamAPI); it does nothing elsewhere
   ReplaceMainMenu(Self, MainMenu1);
@@ -333,8 +367,20 @@ begin
   FStatus.Parent := ControlLayout;
   FStatus.Align := TAlignLayout.Client;
   FStatus.Margins.Left := STATUS_LEFT_MARGIN;
-  FStatus.Margins.Right := STATUS_RIGHT_MARGIN;
+  FStatus.Margins.Right := STATUS_LEFT_MARGIN;
   FStatus.WordWrap := False;
+  // The lens indicator sits between the status line and btnStereo; its
+  // colour and weight are its own, not the style's
+  FLensLabel := TLabel.Create(Self);
+  FLensLabel.Parent := ControlLayout;
+  FLensLabel.Align := TAlignLayout.Right;
+  FLensLabel.Width := LENS_LABEL_WIDTH;
+  FLensLabel.Margins.Right := STATUS_RIGHT_MARGIN;
+  FLensLabel.WordWrap := False;
+  FLensLabel.TextSettings.HorzAlign := TTextAlign.Trailing;
+  FLensLabel.StyledSettings := FLensLabel.StyledSettings -
+    [TStyledSetting.FontColor, TStyledSetting.Style];
+  FLensLabel.Text := '';
   // The component is on the form: by now it has made its camera, and its
   // headlight, in the viewport, as the form loaded
   if PeardoxOrbitalCamera1.Camera = nil then
@@ -361,6 +407,7 @@ begin
   FLeiaSR.OnStarted := LeiaSRStarted;
   FLeiaSR.OnStopped := LeiaSRStopped;
   FLeiaSR.OnProblem := LeiaSRProblem;
+  FLeiaSR.OnLensChange := LeiaSRLensChange;
   ShowStatus(FLeiaSR.SettingsStatus);
   // No LeiaSR here: nothing about glasses-free 3D is shown
   btnStereo.Visible := TPeardoxLeiaSR.Installed;
@@ -388,6 +435,7 @@ procedure TForm2.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   // While the form's window, the parent of the bridge's, still exists
   FLeiaSR.Stop;
+  LogClose;
 end;
 
 procedure TForm2.btnStereoClick(Sender: TObject);
@@ -422,6 +470,26 @@ begin
   btnStereo.IsPressed := False;
 end;
 
+procedure TForm2.LeiaSRLensChange(Sender: TObject);
+begin
+  case FLeiaSR.LensState of
+    lslOn:
+      begin
+        FLensLabel.Text := 'LENS ON';
+        FLensLabel.TextSettings.FontColor := TAlphaColors.Red;
+        FLensLabel.TextSettings.Font.Style := [TFontStyle.fsBold];
+      end;
+    lslOff:
+      begin
+        FLensLabel.Text := 'Lens off';
+        FLensLabel.TextSettings.FontColor := TAlphaColors.Gray;
+        FLensLabel.TextSettings.Font.Style := [];
+      end;
+  else
+    FLensLabel.Text := '';
+  end;
+end;
+
 procedure TForm2.LeiaSRProblem(Sender: TObject; AProblem: TPeardoxLeiaSRProblem;
   const AMessage: string);
 begin
@@ -443,6 +511,7 @@ procedure TForm2.ShowStatus(const AText: string);
 begin
   FStatus.Text := AText;
   Log.d(AText);
+  LogLine(AText);
 end;
 
 function TForm2.FindTestModel(out ATried: string): string;
@@ -615,6 +684,42 @@ begin
   FitView;
 end;
 
+function TForm2.DepthStatus: string;
+var
+  Cam: TPeardoxOrbitalCamera;
+  Eye, Forward, Centre: TPoint3D;
+  Box: TBoundingBox;
+  Depth, Z, MMPerUnit: Single;
+  Where: string;
+begin
+  Cam := PeardoxOrbitalCamera1;
+  Result := Format('Target depth %.3f', [Cam.Distance]);
+  if (FModel = nil) or (Cam.Camera = nil) or (Cam.Distance <= 0) then
+    Exit;
+  Eye := Cam.Camera.CameraPosition;
+  Forward := (Cam.Camera.OrbitCenter.Point - Eye).Normalize;
+  Box := FModel.GetAbsoluteBoundingBox;
+  Centre := Point3D(Box.TopLeftNear.X + (Box.Width / 2), Box.TopLeftNear.Y + (Box.Height / 2),
+    Box.TopLeftNear.Z + (Box.Depth / 2));
+  // Along the line of sight, as the glass is square to it
+  Depth := (Centre - Eye).DotProduct(Forward);
+  Z := Depth - Cam.Distance;
+  if Z < 0 then
+    Where := 'in front of the glass (out of the screen)'
+  else
+    Where := 'behind the glass';
+  Result := Format('%s | model centre at depth %.3f: Z %.3f, %s',
+    [Result, Depth, Z, Where]);
+  // The view's height at the target's depth is the view's height on the
+  // display; FOV is the vertical field of view
+  if FLeiaSR.Running and (FLeiaSR.WindowSizeMM.Height > 0) then
+  begin
+    MMPerUnit := FLeiaSR.WindowSizeMM.Height /
+      (2 * Cam.Distance * Tan(DegToRad(Cam.FOV) / 2));
+    Result := Result + Format(', %.0f mm', [Z * MMPerUnit]);
+  end;
+end;
+
 procedure TForm2.ViewResize(Sender: TObject);
 begin
   FitView;
@@ -651,7 +756,7 @@ begin
     // depth will matter for the SR display). Across is not used
     PeardoxOrbitalCamera1.SetTargetDepth(PeardoxOrbitalCamera1.Distance
       * Power(DEPTH_STEP_PER_PIXEL, FDragLast.Y - Y));
-    ShowStatus(Format('Target depth %.3f', [PeardoxOrbitalCamera1.Distance]));
+    ShowStatus(DepthStatus);
   end
   else
     // Dragging right turns the camera right round the centre (owner, 7
@@ -674,22 +779,52 @@ end;
 procedure TForm2.ViewMouseWheel(Sender: TObject; Shift: TShiftState; WheelDelta: Integer;
   var Handled: Boolean);
 var
-  NewZoom, Before: Single;
+  Cam: TPeardoxOrbitalCamera;
+  NewZoom, Before, ToModel, NewToModel, NewDistance: Single;
+  Box: TBoundingBox;
+  Centre: TPoint3D;
 begin
   Handled := True;
+  Cam := PeardoxOrbitalCamera1;
   // Rolling the wheel away (positive) brings the view nearer
   NewZoom := EnsureRange(FZoom * Power(ZOOM_STEP, -WheelDelta / WHEEL_NOTCH), ZOOM_MIN, ZOOM_MAX);
-  // Zoom multiplies what is there now, in perspective or orthographic, so
-  // only the change is passed on
-  Before := PeardoxOrbitalCamera1.Distance;
-  PeardoxOrbitalCamera1.Zoom(NewZoom / FZoom);
-  // In perspective the camera stops at the model's nearest face, so the
-  // zoom is what the distance really changed by; then the first notch
-  // back out moves the camera at once, however far the wheel went in
-  if (PeardoxOrbitalCamera1.ProjectionMode = TGorillaCameraProjection.cpPerspective) and (Before > 0) then
-    FZoom := EnsureRange(FZoom * PeardoxOrbitalCamera1.Distance / Before, ZOOM_MIN, ZOOM_MAX)
-  else
+  if (FModel = nil) or (Cam.Camera = nil) or
+    (Cam.ProjectionMode <> TGorillaCameraProjection.cpPerspective) then
+  begin
+    // Orthographic: Zoom scales the view's size, which is how big things
+    // look, so only the change is passed on
+    Cam.Zoom(NewZoom / FZoom);
     FZoom := NewZoom;
+    Exit;
+  end;
+  // Perspective: the step is a share of the camera's distance from the
+  // MODEL, not from the target. Once a right drag has put the target far
+  // deeper (or nearer) than the model, a share of the target's distance
+  // made each notch a huge jump (owner, 16:40). The camera still moves
+  // along its line of sight, towards or away from the target, by that step
+  Box := FModel.GetAbsoluteBoundingBox;
+  Centre := Point3D(Box.TopLeftNear.X + (Box.Width / 2), Box.TopLeftNear.Y + (Box.Height / 2),
+    Box.TopLeftNear.Z + (Box.Depth / 2));
+  ToModel := Cam.Camera.CameraPosition.Distance(Centre);
+  Before := Cam.Distance;
+  if (ToModel <= 0) or (Before <= 0) then
+    Exit;
+  NewToModel := ToModel * NewZoom / FZoom;
+  NewDistance := Before - (ToModel - NewToModel);
+  // With the target nearer than the model the camera cannot pass it: it
+  // stops just short (a right drag down moves the target deeper again)
+  if NewDistance < Before * MIN_TARGET_SHARE then
+  begin
+    NewDistance := Before * MIN_TARGET_SHARE;
+    ShowStatus(Format('Zoom stopped: the target (depth %.3f) is in front of the model; ' +
+      'right-drag up to move it deeper', [Before]));
+  end;
+  // The camera also stops at the model's nearest face (Subject)
+  Cam.Zoom(NewDistance / Before);
+  // What the distance to the model really became, so the first notch back
+  // out moves the camera at once however far the wheel went in
+  FZoom := EnsureRange(FZoom * Cam.Camera.CameraPosition.Distance(Centre) / ToModel,
+    ZOOM_MIN, ZOOM_MAX);
 end;
 
 end.
