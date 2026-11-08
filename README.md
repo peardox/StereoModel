@@ -9,10 +9,10 @@ orbital camera, as the first step towards showing it on a glasses-free
 
 | Folder | What is in it |
 |---|---|
-| `src/` | The program: `StereoModel.dpr` / `.dproj`, forms in `src/ui/`, helpers in `src/common/` (`FmxLinuxMenu`, an unchanged copy from G3DGames/TSteamAPI: the main menu as an FMX menu bar on desktop Linux) |
+| `src/` | The programs: `StereoModel.dpr` / `.dproj` and the `ProjectionTest.dpr` / `.dproj` test (see [The projection test](#the-projection-test)), forms in `src/ui/`, helpers in `src/common/` (`FmxLinuxMenu`, an unchanged copy from G3DGames/TSteamAPI: the main menu as an FMX menu bar on desktop Linux) |
 | `lib/` | The Peardox components, kept apart because other projects reuse them |
 | `lib/icons/` | Their palette icons (`.ico`, and the `.svg` sources in `svg/`) |
-| `models/` | Test models: `uvcube.glb` (a cube with a UV test texture), `Mage.glb`, and `SRDemoScene.glb` / `SRDemoSceneNoWall.glb` (SRDelphiFMX's demo scene, written by `tools/gen_srdemo_scene.py`) |
+| `models/` | Test models: `uvcube.glb` (a cube with a UV test texture), `Mage.glb`, `SRDemoScene.glb` / `SRDemoSceneNoWall.glb` (SRDelphiFMX's demo scene, written by `tools/gen_srdemo_scene.py`) and `DollyHallway.glb` (the dolly-zoom test, written by `tools/gen_dolly_hallway.py`) |
 | `packages/` | The Peardox packages: `Peardox` (runtime) and `dclPeardox` (design time) |
 | `tools/` | Scripts: the packages, the palette icons, and the PasDoc reference |
 | `delphi-neon/` | Neon, the JSON library (submodule), compiled into the PeardoxLeiaSR package |
@@ -43,6 +43,7 @@ it only keeps its settings.
 | `OrthoHeight`, `OrthoWidth` | The view's size in orthographic and isometric mode; 0 leaves Gorilla3D's own height, and a width of 0 follows the height |
 | `Locked` | While True nothing moves or turns the camera |
 | `Subject` | A model the camera may not go inside: the wheel, `Distance`, orbits and angles stop at the face nearest the camera (its bounding box, plus a gap of twice the viewport's near plane) |
+| `Projection` | A `TPeardoxProjection` that draws this camera's view: it takes `Distance` as its target plane and moves the camera for the dolly zoom, and the fits and `ProjectToView` follow the lens, shift, rise and parallel views it draws (the camera's `ProjectionMode` must stay perspective) |
 
 Methods: `FitToBounds` frames a subject for the current angles, and
 `FitToBoundsMax` for every angle (orbit freely afterwards). Both work as
@@ -80,6 +81,26 @@ camera placed on a form it would never be written to the `.fmx`.
 The camera came from Sprite3D's `Sprite3DCamera` unit
 (<https://github.com/peardox/Sprite3D>), renamed so both can be used in one
 program.
+
+### TPeardoxProjection (`lib/Peardox.Projection.pas`)
+
+A projection for any FireMonkey 3D viewport (`TViewport3D`, `TGorillaViewport`): FMX and Gorilla3D offer only perspective (with the camera's own angle of view) and orthographic. FMX keeps the projection it draws with private (`TContext3D.FProjectionMatrix`); the component finds it inside the first frame, by its value, and writes its own over it in every frame, through an empty 3D object first in the viewport. It is made from FMX's own each time, so resizes and a new angle of view are followed, and FMX's goes back when nothing is changed or `Active` is False. Found and measured with the ProjectionTest program (below).
+
+| Property | |
+|---|---|
+| `Viewport` | The viewport to draw for |
+| `Kind` | `pjPerspective` (default), `pjOrthographic`, `pjCavalier` (depth at full length, 45 degrees), `pjCabinet` (half length, 63.4 degrees), `pjMilitary` (full length straight down the picture: with the camera straight above, height is drawn straight up and the plan keeps its shape), `pjPlanOblique` (with the camera straight above and the plan square to the picture, height drawn up and to the left at 45 degrees, full length, as many hand-drawn top-down game maps are), `pjTrueIsometric` (orthographic from azimuth 45, inclination 35.264: the three axes equally foreshortened, 120 degrees apart), `pjDimetric` (2:1 dimetric, the "isometric" of pixel-art games: orthographic from azimuth 45, inclination 30, ground squares drawn twice as wide as high), `pjTrimetric` (orthographic from azimuth 35, inclination 45, the look of many pre-rendered role-playing maps) or `pjOblique` (`ObliqueAngle`, `ObliqueScale`) |
+| `CameraPreset` | True (default): choosing a `Kind` with preset angles turns the `Focus` to them (`PresetAngles`: cavalier and cabinet level at a face, military straight above with the plan turned 45 degrees, plan oblique straight above, and the three orthographic presets above); `ApplyCameraPreset` does it again |
+| `FieldOfView` | The lens: vertical field of view in degrees; 0 (default) keeps the camera's own |
+| `Dolly` | True (default): a new `FieldOfView` also moves the `Focus` so the target plane keeps its size - the dolly zoom |
+| `ShiftX`, `ShiftY` | Lens shift and rise: the picture moved across the lens, in normalised device units (the picture is 2 wide and 2 high), the camera standing still |
+| `ObliqueAngle`, `ObliqueScale` | `pjOblique`'s direction (degrees, 0 right, 90 up) and length for depth |
+| `Focus` | The camera that gives the target plane's distance and moves for the dolly zoom; set by `TPeardoxOrbitalCamera.Projection` |
+| `Distance` | The target plane's distance without a `Focus` |
+| `ManageCulling` | True (default): a `TGorillaViewport`'s `FrustumCulling` is off while the projection is changed, as Gorilla3D culls by its own camera's frustum |
+| `Active` | False: FMX's own projection |
+
+The parallel views are made from the perspective at the target plane, so switching keeps the target's size and true shape, and the depth range (and depth buffer) is kept. `TPeardoxProjectionAccess`, in the same unit, is the tool underneath: it finds the projection and camera matrices in memory and changes them, for tests and other uses.
 
 ### LeiaSR, glasses-free 3D (package PeardoxLeiaSR)
 
@@ -288,3 +309,22 @@ The target's depth stops at the viewport's far plane: further out, single
 precision moves the camera. Where LeiaSR is not
 installed the button is hidden. `SRBridge.dll` must be beside the
 executable (the Win64 build copies it from `SRDelphiFMX\dll`).
+
+## The projection test
+
+`src/ProjectionTest.dproj`, in `StereoGroup.groupproj` (it needs the **Peardox** package, as StereoModel does), asks whether the projection FireMonkey draws a 3D scene with can be reached and changed from outside FMX. FMX keeps the projection matrix private and builds it from the camera's angle of view, and Gorilla3D draws with what FMX gives it, so a camera of ours cannot supply its own. The test tries it on a lens shift and rise (the picture moved across the lens, the camera standing still), which needs an off-axis projection.
+
+Run it: it loads `models/SRDemoSceneNoWall.glb` (or `uvcube.glb`); **Run test** runs the test (it no longer runs by itself at start: `AUTO_TEST` in the form brings that back). The log is in the panel on the right and in `ProjectionTest.log` beside the executable (the last run's kept as `ProjectionTest.prev.log`).
+
+What it does:
+
+1. **Survey.** An empty 3D object, the hook (`TPeardoxRenderHook`), is put first in the viewport, so FMX calls it inside each frame once the camera and projection are set and before any model is drawn. In one frame it reads the context's public `CurrentProjectionMatrix`, `CurrentCameraMatrix` and `CurrentCameraInvMatrix`, then looks through the memory of the context, the viewport, the cameras and the objects they hold for copies of them (or anything shaped like a perspective projection). That needs no RTTI, so it finds private fields whether or not FMX and Gorilla3D were compiled with field RTTI; RTTI only names them where it can. Each find is logged with its object, offset and name.
+2. **Every way of moving the picture**, each written once, before each frame, or inside the frame by the hook: the context's public `SetRenderToMatrix` (a matrix after the projection), the public `SetCameraMatrix` with a shear in the view matrix (SRDemoFMX's way), and each projection and camera matrix found in memory.
+3. **Measured, not judged by eye.** For each, a reference frame, two frames with the change, and one after putting everything back, all read with `MakeScreenshot`. The move is measured from the pictures (`ProjectionTestMeasure`): a shift of 0.1 of the half-width should move everything 96 px right on a 1920 px picture and change nothing else. Each line says `SHIFTS AS EXPECTED`, `NO CHANGE`, `SHIFTS THE WRONG WAY`, `MOVES, BUT NOT BY THE EXPECTED AMOUNT` or `CHANGES, BUT NOT A PLAIN SHIFT`; a way that shifts is then tried for rise.
+4. **The result** at the end lists what worked.
+
+Live, the component `TPeardoxProjection` draws the view (made in code here, as a new component is first; it is the orbit camera's `Projection`). The controls are along the top. The first row has **Run test**, the **model** box (every `.glb`, `.gltf`, `.fbx` and `.obj` in the models folder; choosing one loads it), **Open...** for any other, **Fit** (frames the model for the present angles in the projection actually drawn: lens, shift and parallel views included), the **Shift** and **Rise** sliders, **Centre**, **Active** and **Free Movement** (ticked, the camera is no longer kept outside the model's box, so it can go inside a model such as the hallway). The second row chooses the **projection** (the component turns the camera to the kind's preset angles, if it has them - cavalier and cabinet level at a face, military straight above with the plan turned 45 degrees, plan oblique straight above with the plan square to the picture, true isometric, 2:1 dimetric and trimetric from their angles; orbit from there as you like), the free oblique's **Angle** and **Depth**, the **Lens**, and **Dolly (keep size)**: with it, a lens change also moves the camera so the target plane keeps its size while the perspective flattens or deepens - the dolly zoom. Left-drag orbits and the wheel zooms throughout. While something is changed, the log says every 2 s what is drawn and in how many frames.
+
+The view starts, and **Front** puts it back, level at the front: azimuth, inclination and roll 0, the target on the model's centre, framed for every angle.
+
+To see the dolly zoom, choose **DollyHallway.glb** in the model box: the UV cube on a long chequered floor between two rows of pillars, a wall at the far end and the near end open, so the camera can come in (written by `tools/gen_dolly_hallway.py`, standard library only, from `uvcube.glb`). From the front view, wheel in on the cube, then drag Lens from 45 down to 10 and up to 120 with Dolly ticked: the cube keeps its size while the pillars, the floor and the far wall come forward (narrow lens) or stretch away (wide). Untick Dolly for a plain zoom.

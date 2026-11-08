@@ -66,10 +66,71 @@ Keep this file up to date when the rules or the state of the work change.
   lib, src/common, src/ui and src/*.dpr, or every @link is reported.
 - A new unit goes in both the `.dpr` and the `.dproj` (UTF-8 with BOM).
 
-## Handover (8 November 2026, 12:22)
+## Handover (8 November 2026, 15:54)
 
 Read this section first; "Where the work is" below is the full history,
 for when a detail is needed.
+
+### This session (8 November 2026, 12:30 - 15:54): projection access SOLVED
+
+The long-standing "Gorilla3D takes no projection of ours" problem is
+solved, generally, as a component: **TPeardoxProjection**
+(lib/Peardox.Projection.pas, Peardox package, palette icon a cavalier cube
+behind a camera). It finds FMX's private TContext3D.FProjectionMatrix by
+VALUE in the drawing context (never a hard-coded offset) from an empty
+3D object first in the viewport (TPeardoxRenderHook, called inside each
+frame), and writes its own projection there every frame, made from FMX's
+own (so resizes and lens changes are followed); FMX's goes back when
+nothing is changed or Active is False. What it draws:
+
+- Perspective with any lens (FieldOfView; 0 = the camera's own) and the
+  DOLLY ZOOM (Dolly: the Focus camera moves so the target plane keeps
+  its size).
+- Lens SHIFT and RISE (ShiftX / ShiftY, NDC) - the pan / rise asked for
+  since StereoCam10.
+- Parallel views at the target plane: pjOrthographic; obliques
+  pjCavalier, pjCabinet, pjMilitary, pjPlanOblique, pjOblique (free angle
+  / scale); and orthographic camera presets pjTrueIsometric (45 /
+  35.264), pjDimetric (2:1, 45 / 30), pjTrimetric (35 / 45).
+  CameraPreset (default on) turns the Focus camera to a kind's angles
+  (PresetAngles, through IPeardoxProjectionFocus.ProjectionViewAngles).
+- ManageCulling: Gorilla3D's FrustumCulling off while changed (it culls
+  by its own camera).
+- TPeardoxOrbitalCamera.Projection links the two: the camera is the
+  projection's Focus (target distance, dolly, presets), and its fits
+  (FitToBounds / FitToBoundsMax / ProjectToView) follow the projection
+  actually drawn (shift, lens and parallel views; checked in Python).
+- RULE (owner, 15:10): no game or trademark names in identifiers, UI or
+  README.
+- Facts learned (ProjTest1-5 logs): the projection is cached in the
+  context and a written one stays until FMX remakes it; SetCameraMatrix
+  with a shear also works but only inside the frame; SetRenderToMatrix
+  does nothing; NDC y is up; FMX's perspective is D3D-style, depth 0..1;
+  MAKESCREENSHOT IS ONE FRAME LATE (it shows the RenderManual before the
+  last) - probably the cause of StereoCam58a's sign puzzle in
+  StereoModelEyes' screenshot fallback.
+- ProjectionTest (src/ProjectionTest.dpr) is now the component's test
+  bed: model box (incl. models/DollyHallway.glb, tools/
+  gen_dolly_hallway.py, near end open), Fit / Front, Shift / Rise /
+  Centre / Active / Free Movement (camera may enter the model), Kind /
+  Angle / Depth / Lens / Dolly; the measuring test only on Run test
+  (AUTO_TEST = False). Owner (15:34-15:54): all working.
+
+Zips of this session, in order (each follows the one before): ProjTest1,
+2, 3, 4, 5, ProjComp1, 2, 3, 3b, 4, 5, 6, ProjHandover1 (this file). The
+owner deletes src/common/ProjectionTestAccess.pas (moved into lib in
+ProjComp1). PACKAGE REBUILD for ProjComp1 and ProjComp2 (Peardox, all
+platforms; reinstall dclPeardox) - done by the owner.
+
+Open: (1) a Windows chime on ProjectionTest's exit, no dialog, cause
+unknown (asked for the IDE Event Log / Windows Event Viewer); an AV on
+exit with TPopupBox (ProjComp3) went with TComboBox + explicit teardown
+in FormClose. (2) "Depth 0" in the Front view taken as the target on the
+model's centre - not confirmed. (3) SetTargetDepth changes a parallel
+view's size (its size is the target plane's) - by design, not yet
+discussed. (4) The wheel scales Distance, so it never passes the target
+(Free Movement only lifts the keep-out); a fly / move-forward control
+would need asking for.
 
 ### State
 
@@ -166,8 +227,19 @@ RenderManual, zero copy, row flip) and the old shift method.
    requiring Peardox; StereoModelGLInterop goes with it (Windows-only
    parts already under {$IFDEF MSWINDOWS}). Design package and palette
    icon as the others; first made in code, then on the form.
-2. **Pan / rise** - the owner wants to explore it; read the next section
-   before starting.
+2. **TPeardoxProjection into use** (the component works - see "This
+   session" above): first on ProjectionTest's form in the .fmx (it is
+   still made in code, as the rule asks for a new component); then in
+   StereoModel - shift / rise in the 2D view (control: ask - Shift+drag,
+   middle drag or keys); then the PER-EYE VIEW'S OFF-AXIS CUT IN THE
+   PROJECTION: each eye drawn with its own asymmetric frustum (shift +
+   lens per eye, as SRDemoFMX's zoom and shear), so render scale 1, no
+   overscan and no cut in the copy - sharper and ~2x faster than the 2x
+   render. TPeardoxGorillaEyes must then use ProjectToView / ViewShape
+   (which already follow) and write the projection per eye inside each
+   eye's RenderManual. Settle the screenshot fallback's one-frame lag
+   there too. "Pan / rise: where it stands" below is now history: route
+   5 (writing FMX's private projection) is what worked.
 3. Later: LensMode (lens off over the controls); two SR displays (ask
    which); the old screenshot-route sign puzzle (StereoCam58a) only if it
    shows again.
@@ -261,6 +333,338 @@ depth, the wheel zooms - ask: Shift+drag, middle drag, or keys).
 **First question for the owner** at the start of that session: shift /
 rise in the 2D window, in SR, or both - it decides between route 2
 (an hour) and route 1 (an experiment first).
+
+### ProjectionTest (ProjTest1, 8 November 2026)
+
+**Why.** Gorilla3D's author (owner, 8 November): the projection problem is
+FMX's - TViewport3D does not expose the matrix; Gorilla3D draws with what
+FMX gives it. The owner: the FMX source is in Delphi's source, so the
+matrix can be reached, and a general solution has many uses (pan / rise,
+the per-eye off-axis view without overscan, dolly zoom, ...). Asked for a
+new test project in the main group to see if and how.
+
+**Files** (zip ProjTest1, follows StereoCam63; program only, NO PACKAGE
+REBUILD - it uses the installed Peardox package for the orbit camera):
+src/ProjectionTest.dpr / .dproj / .res (the .res a copy of StereoModel's;
+the .dproj made from StereoModel's without the SRBridge post-build and the
+Deployment block, which the IDE makes again), src/ui/ProjectionTestMain
+(.pas / .fmx, TPeardoxProjectionTestForm), src/common/ProjectionTestAccess,
+ProjectionTestMeasure, ProjectionTestRunner; StereoGroup.groupproj lists
+it (depends on Peardox) and builds it last. Its log is ProjectionTest.log
+(own writer in the form; StereoModelLog's name is fixed).
+
+**Method.** Nothing is assumed about FMX's or Gorilla3D's private fields
+(StereoCam47's probe found no field RTTI in TGorillaViewport, so RTTI may
+be off there):
+- TPeardoxRenderHook: an empty TControl3D, inserted at index 0 of the
+  viewport, overrides Render -> OnRenderBegin(Self, Context): inside the
+  frame, after the viewport has set camera and projection, before the
+  models. Gorilla3D culls by bounds, so the form gives it the model's box
+  and the test turns FrustumCulling off. UNKNOWN until the first log:
+  whether Gorilla3D calls Render on a plain TControl3D at all (the log
+  says how many times the hook was drawn per RenderManual and per
+  MakeScreenshot).
+- TPeardoxProjectionAccess.Survey: one RenderManual; in the hook it reads
+  CurrentProjectionMatrix / CurrentCameraMatrix / CurrentCameraInvMatrix
+  and scans the raw memory (InstanceSize, 4-byte steps) of the render
+  context, the viewport's context if different, the viewport, the cameras
+  and, one level down, the non-FMX objects the contexts and viewport hold
+  (where RTTI lists them) for 16 Singles equal to one of them, or shaped
+  like a perspective (either layout). RTTI only names a find
+  (Class.Field, +n inside a record). Each find is a TPeardoxMatrixSlot
+  (holder, offset, kind) that can Apply a value and Restore FMX's
+  (TPeardoxCleanTracker notices FMX making it again).
+- Ways tried, each written once / before each frame / inside the frame:
+  the PUBLIC TContext3D.SetRenderToMatrix (found in the docwiki: "the
+  matrix used for the rendering of the objects"; if FMX applies it after
+  the projection it is a public post-projection matrix: shift = identity
+  with m41 = sx, m42 = sy; the transpose is tried too), the PUBLIC
+  SetCameraMatrix with SRDemoFMX's shear (View * S, S.m31 = sx m34 / m11,
+  S.m32 = sy m34 / m22), each projection slot (ShiftProjection: x column
+  += sx * w column), each camera slot (sheared; its inverse slot too).
+- Measured (ProjectionTestMeasure): MakeScreenshot -> greys; edge-strength
+  profiles down the columns and along the rows; the best 1-D move of each
+  (cost over both whole lengths, nought beyond the ends, so empty
+  background cannot win; parabola for the fraction); then the picture
+  moved back must match (residual <= 40% of the change) or it is "not a
+  plain shift". Expected: 0.1 NDC = 0.05 of the width (96 px of 1920)
+  right; rise 0.1 up = - 0.05 of the height in pixels. Checked in Python
+  on synthetic pictures: shift 24 px -> 24.0, rise -13.5 -> -13.6, a 15%
+  zoom -> residual 125%. Shift is tried first; rise only if it moved.
+- The log ends "=== RESULT ===" with every WORKS line and "So:" lines.
+- Live: MethodBox + Shift / Rise sliders (-0.5..0.5 NDC) apply one way
+  continuously (in the frame, or between frames by a 5 ms timer for the
+  projection slot); FrustumCulling off while a way in the frame is on.
+
+**What the first log should settle:** (1) is the hook drawn; (2) does the
+context's CurrentProjectionMatrix live in a field (an exact find) - a
+cache - or is it made on every call (no exact find); (3) does a written
+projection survive to the next frame (once) or is it made again each frame
+(only in the frame works); (4) does SetRenderToMatrix work - then no
+private access is needed at all; (5) does the shear work (and the
+lighting); (6) the Y sign (rise WRONG WAY = FMX's NDC y is down there).
+Known weak points (review, ProjTest1): SetRenderToMatrix is set from the
+identity and put back to the identity, as its value cannot be read - if
+FMX keeps its own there (a Y flip for render to texture) the test drops
+it, the picture flips and is logged as "not a plain shift", and RestoreAll
+would leave it so; the Survey reads the matrices at the hook's FIRST call
+of the frame, and logs the projection at every later call (a shadow pass
+would show as DIFFERENT). After a resize the live ways drop the slots
+(Forget) rather than write into objects that may have been made again.
+Then the general part (TPeardoxProjectionAccess) goes to lib with the way
+that works, and StereoModel's per-eye view can put its cut in the
+projection (render scale 1, no overscan).
+
+**Owner's first log (ProjTest1, 13:44, 760 x 568 view, 1140 x 852
+picture): IT WORKS.**
+- The hook IS drawn: once per RenderManual, never by MakeScreenshot.
+  Context TContextOpenGLWindows (Gorilla3D's TGorillaContext under it);
+  the same context draws the frame; projection the same inside and after.
+- The projection is CACHED in a field: TContext3D.FProjectionMatrix at
+  +$60 of the context (FOV 45: m22 2.41421; near 0.1), RTTI there. Written
+  ONCE it stays (the slot was still ours after the frames) and the
+  public CurrentProjectionMatrix returns it; shift 57.0 px and rise
+  -42.6 px exactly as expected, residual 0-4%. Also works before each
+  frame and in the frame.
+- Also works: SetCameraMatrix with the shear, in the frame only (the
+  viewport sets the camera at the start of each frame), and
+  FCurrentCameraMatrix (+$194, with FCurrentCameraInvMatrix +$1D4) in
+  the frame only. The shear's residual equals the projection's, so the
+  lighting did not visibly change in this test scene.
+- Does NOT work: SetRenderToMatrix (any timing, either layout - no
+  change at all), TGorillaContext.FOriginalCameraMatrix (+$3A0).
+- Y: + rise moved the picture up: NDC y is up, as expected.
+- MAKESCREENSHOT IS ONE FRAME LATE: in every working case the first
+  look showed no change, the second the shift, and "put back" looked
+  like the shift again - each screenshot showed the RenderManual before
+  the last. ProjTest2 takes each look after two renders and checks the
+  lag on its own (CheckScreenshotLag). THIS PROBABLY EXPLAINS
+  StereoCam58a's puzzle: the screenshot route renders an eye then
+  screenshots it, so each eye got the OTHER eye's picture (left / right
+  swapped), hence the opposite shift sign to zero copy, which blits the
+  framebuffer right after RenderManual. Check the screenshot fallback in
+  StereoModelEyes before trusting it.
+- False finds in ProjTest1, both harmless (put back, no effect):
+  TGorillaViewport.FShadowStrength (+$880, settings that looked like a
+  projection) and a window context's FCurrentCameraInvMatrix+20 (straddling
+  two matrices). ProjTest2: a row-layout projection must also have m13 =
+  m23 = 0 (column: m31 = m32 = 0), and a find that starts inside a
+  TMatrix3D field (RTTI) is skipped.
+- So the way: find FProjectionMatrix by value (Survey; never hard-code
+  +$60, it moves with FMX's version), write a shifted / off-axis
+  projection into it, and write it again whenever FMX makes it anew (a
+  resize, a field-of-view change: TPeardoxCleanTracker sees that).
+  ProjTest2 (follows ProjTest1): runner and access only, as above.
+- ProjTest2's log (owner, 13:50): screenshot lag CONFIRMED by its own
+  check ("after 1 render: NO CHANGE, after 2: SHIFTS"); every case now
+  "put back"; the false finds gone; results as ProjTest1. Owner: "The
+  Shift and Rise sliders have no effect". The log shows why for the ways
+  tried: a resize made a new Survey, which frees the slots, and the live
+  camera way then took the tester's BestCamera - a dangling pointer whose
+  address a new slot (FOriginalCameraMatrix, which does nothing) had
+  taken; the other two tried were "between frames" (unknown whether FMX
+  remakes the projection in a normal paint) and SetRenderToMatrix (no
+  effect in the test). Projection or shear IN THE FRAME were not tried.
+  ProjTest3: the live ways take FirstSlot (never the tester's pointers),
+  the box names the field, SetRenderToMatrix is marked "no effect in the
+  test", and every 2 s while live the log says how often the hook was
+  drawn and whether the slot holds ours or FMX's; the memo is 640 wide
+  and goes back to the start of the last line after each add.
+- Owner (14:00): "Bear in mind that this is a general solution we're
+  looking for" - and oblique projections: cavalier, cabinet, military
+  ("only orthographic and perspective are offered by the standard
+  methods"). ProjTest4 (follows ProjTest3): TPeardoxProjectionAccess
+  gains AdjustProjection (the general entry: any function from FMX's
+  projection to the one drawn, written into the projection slot in the
+  frame or by ApplyNow), DepthRange (FMX's perspective is D3D-style,
+  right-handed, depth 0..1: m33 = f / (n - f), m43 = n f / (n - f); the
+  log's -1.00001 / -0.1 give near 0.1, far ~10000), Orthographic (the
+  perspective's view at a distance: m11 / D, m22 / D, linear depth
+  1 / (n - f), n / (n - f), w = 1) and Oblique (a view-space shear about
+  the target plane, d = -(z + D): x + k cos(a) d, y + k sin(a) d, then
+  Orthographic; checked in Python - the target plane is unchanged and a
+  point 10 deeper moves exactly k * 10 at angle a). RowLayout now tells
+  an orthographic (w = 1) projection's layout right (it used m43, which
+  an orthographic projection has as a depth term). Form: KindBox
+  (perspective, orthographic, cavalier 1 / 45, cabinet 0.5 / 63.43,
+  military 1 / 270 with the camera at azimuth 45, inclination 90, custom
+  oblique), Angle (0..360) and Depth (0..1) sliders; cavalier / cabinet
+  put the camera level (azimuth 0, inclination 0); a kind turns on
+  "projection in the frame" if the live way cannot draw it; the shift and
+  rise apply on top; distance = the orbit camera's Distance each frame, so
+  the wheel zooms the parallel views too. Culling off while live.
+  UNKNOWN: whether Gorilla3D's lighting or anything else in it assumes a
+  perspective (e.g. rebuilds positions from depth) - watch the shading in
+  the parallel views.
+- Owner (14:15, ProjTest4): "Everything appears to be working well" -
+  orthographic, cavalier, cabinet, military, free oblique, shift and rise
+  all live at 60 fps, the projection holding ours throughout. "Another
+  issue this probably solves is Dolly Zoom" - yes. One fault in that log:
+  a resize while military was on made a new Survey whose frame did not
+  draw the hook (read outside), and Forget had dropped the slots WITHOUT
+  putting FMX's projection back, so the Survey took our oblique matrix for
+  FMX's ("projection inside the frame [0.02309 ... | -0.5 2.58614 ...]");
+  the oblique was then made from that and the shift added twice. ProjTest5
+  (follows ProjTest4): Forget still restores the slots that lie in the
+  viewport's present context (alive; Restore writes only where ours is
+  still there, so a projection FMX remade for the new size is left).
+  Dolly zoom: TPeardoxProjectionAccess.WithFieldOfView(P, Fov) (m11, m22
+  scaled by (1 / tan(Fov / 2)) / m22: aspect, depth and shift kept) and
+  FieldOfView(P); form Lens slider (5..120 deg, starts at the camera's
+  FOV) applied before the kind (the parallel views take their size from
+  it), and "Dolly (keep size)" (on): a lens change sets the orbit
+  camera's Distance * tan(Fov / 2) unchanged, logged if the Subject stops
+  the camera. Gorilla3D's camera keeps its own FOV, so the orbit camera's
+  fits / ProjectToView do not know the lens yet - for the lib version.
+- Owner (14:22): "yes create new components. Possibly place an oblique
+  cube behind the camera in the icon to differentiate them. and yes the
+  fit should follow." Gorilla3D's author "will likely want to add this to
+  his own library anyway once he's seen what it does". Owner (14:27-14:29):
+  how to test the dolly zoom (answered: cavalier for the level view, then
+  perspective, Lens 45 -> 10 / 120 with Dolly; the wall scene shows it
+  best) and "add model selection".
+  ProjComp1 (follows ProjTest5): lib/Peardox.Projection.pas (NEW, in the
+  Peardox runtime package): everything of ProjectionTestAccess
+  (TPeardoxProjectionAccess, slots, hook, helpers; src/common/
+  ProjectionTestAccess.pas DELETED, out of the .dpr / .dproj) plus the
+  component TPeardoxProjection (Viewport: TControl that is an IViewport3D;
+  Active; Kind pjPerspective / pjOrthographic / pjCavalier / pjCabinet /
+  pjMilitary / pjOblique; FieldOfView (0 = own); Dolly; ShiftX / ShiftY;
+  ObliqueAngle / ObliqueScale; Focus: TComponent with
+  IPeardoxProjectionFocus (target distance, ProjectionLensChanged for the
+  dolly); Distance without a Focus; ManageCulling (TGorillaViewport's
+  FrustumCulling off while changing); OnLog). Its own TPeardoxRenderHook,
+  first in the viewport (run time only); inside each frame: finds the
+  projection in the drawing context by value (FindSlot: the context's
+  instance memory, exact match to CurrentProjectionMatrix), then writes
+  MakeMatrix(FMX's own) - lens, then orthographic / oblique at
+  FocusDistance, then shift - or puts FMX's back when not Changing or not
+  Active (also at once in Changed). ViewShape(SX, SY) describes it for
+  fits (TPeardoxViewShape: Parallel, SX, SY, ShiftX/Y, ShearX/Y).
+  Peardox.OrbitalCamera: TPeardoxOrbitalCamera implements
+  IPeardoxProjectionFocus (focus = Distance; lens change moves Distance by
+  tan(old / 2) / tan(new / 2)) and has published Projection (sets the
+  projection's Focus, and the inner camera's Projection); the inner
+  camera's FitCorners and ProjectToView use ShapeFor: perspective with
+  shift (each axis' bounds AX..BX = (-Half - shift) / S ..(Half - shift)
+  / S, eye = the tightest, centred in the slack; reduces to the old
+  formula without a shift), parallel (corners sheared about the box's
+  middle depth, Distance = picture size * S / 2 * margin, centre moved by
+  shift * Distance / S, kept clear of the nearest corner), every-angle
+  fits likewise (the narrowest side's room). Checked in Python: fitted
+  corners land exactly at the margin, centred, with and without shift and
+  shear. Gorilla3D's own orthographic mode keeps the old code.
+  Peardox.Reg registers TPeardoxProjection; icon (tools/gen_icons.py
+  projection(): a cavalier cube behind a white camera) and the .dcr
+  (tools/gen_icon_res.py COMPONENTS); tools/gen_packages.py lists
+  Peardox.Projection in Peardox (Peardox.dpk / .dproj). ProjectionTest's
+  form rewritten on the component (made in code, the orbit camera's
+  Projection): model box (models folder: glb, gltf, fbx, obj) + Open +
+  Fit (FitToBounds in the projection drawn), Shift / Rise / Centre /
+  Active, Kind / Angle / Depth / Lens / Dolly; the test turns the
+  component off while it runs. PACKAGE REBUILD: Peardox (all platforms),
+  dclPeardox (reinstall).
+  Owner (14:41): "When trying DollyZoom in a previous session we had
+  uvcube with a floor and a load of pillars - can you re-create that"
+  (StereoCam15-17's test hallway, removed in StereoCam18) and "a button
+  that resets the Inclination, Azimuth and Depth to 0 and additionally use
+  those as the starting settings". tools/gen_dolly_hallway.py (stdlib,
+  imports gen_srdemo_scene's Builder) writes models/DollyHallway.glb:
+  uvcube.glb's mesh and texture copied in (2 units) on a 16 x 64 floor of
+  2-unit squares (two greys), pillars 0.8 x 6 x 0.8 every 4 units at x =
+  +-5 (every other pair red), end walls 16 x 8 (blue far, red near); FMX
+  coordinates written as glTF (x, -y, -z) like the SRDemo scene. Form:
+  Front button = FrontView: azimuth 0, inclination 0, roll 0,
+  FitToBoundsMax (the target on the model's centre: "Depth" taken as the
+  model centre's depth against the target / glass = 0); LoadModel uses it,
+  so it is the start view (StereoModel's 52 / 75 test view no longer
+  used here). CHECK with the owner that "Depth 0" meant that.
+  Owner (14:54, an Ultima VII map): "a hand-drawn Military/Cavalier
+  projection?" - answered: a planometric oblique, the plan true shape and
+  square to the screen (not military's 45-degree turn), height drawn
+  up-left at 45 degrees (Exult shifts each lift equally left and up;
+  scale not checked). Owner (14:56): "Add a camera called Ultima-Style
+  that sets this automatically": TPeardoxProjectionKind pjUltima (angle
+  PEARDOX_PROJECTION_ULTIMA_ANGLE 315 = depth down-right, so height
+  up-left; scale 1); the form's box puts the camera at azimuth 0,
+  inclination 90 for it.
+  Owner (15:02, a Baldur's Gate 1 screenshot; "I have the others but
+  they're the same I think"): not oblique - an orthographic camera
+  (towers parallel across the picture) tilted about 45 degrees down,
+  measured from the square fountain pools' foreshortening (rough, +-5),
+  the scene turned ~30-40 degrees, each building its own way. pjInfinity:
+  the same projection as pjOrthographic, a name for the look; the form
+  puts the camera at azimuth 35, inclination 45. (Owner's "No, not BG1"
+  at 15:03 was about which game, not a refusal - CHECK if unsure.)
+  Owner (15:10): "What about Diablo 2's projection?" - answered: 2:1
+  dimetric (pixel-art "isometric"; tile edges 2 across for 1 up), an
+  orthographic camera at azimuth 45, inclination 30 (ArcSin 1/2); true
+  isometric is 35.264. Owner: "Add it as TrueIsometric - Blizzard may get
+  upset over trademarks (I guess EA may also over Ultima)". RULE: NO GAME
+  OR TRADEMARK NAMES in identifiers, UI or README (the history here may
+  name the games). ProjComp2 (follows ProjComp1): pjUltima -> pjPlanOblique
+  (PEARDOX_PROJECTION_PLAN_OBLIQUE_ANGLE 315), pjInfinity -> pjTrimetric
+  (azimuth 35, inclination 45 - trimetric, as the azimuth is not 45), new
+  pjTrueIsometric (45 / 35.264, PEARDOX_PROJECTION_ISOMETRIC_INCLINATION)
+  and pjDimetric (45 / 30, the Diablo II look); the three are orthographic.
+  The camera presets moved from the form into the component:
+  TPeardoxProjection.PresetAngles (class), ApplyCameraPreset, published
+  CameraPreset (default True; SetKind turns the Focus, not while loading);
+  IPeardoxProjectionFocus gains ProjectionViewAngles(Azimuth,
+  Inclination) (new GUID), TPeardoxOrbitalCamera sets Azimuth, PolarAngle
+  and Roll 0. The form's KindChange only sets Kind. PACKAGE REBUILD.
+  Owner (15:16, a ProjComp1 screenshot, maximised): "FullScreen the
+  projection dropdown opens in middle of scene" - FMX's TComboBox put its
+  list far above the box, at the window's bottom edge. ProjComp3 (follows
+  ProjComp2, program only): KindBox and ModelBox are TPopupBox (FMX.ExtCtrls; Items,
+  ItemIndex, OnChange as before; the list is a popup menu placed at the
+  box); FMX.ListBox out of the uses. CHECK it opens beside the box.
+  3b: FMX.ExtCtrls added (E2003 TPopupBox). Owner (15:26): "First chance
+  exception at $0000000000000000 ... ACCESS_VIOLATION" with the log of
+  that run (Release, no FastMM5): it ends "Log closed normally", so the AV
+  came during the form's destruction, after FormClose; a call through a
+  nil pointer, cause not seen. ProjComp4 (follows ProjComp3b): TPopupBox
+  dropped again (new since the last clean exit, a native popup menu) -
+  KindBox / ModelBox are TComboBox, and ControlLayout is Align Top so the
+  lists open downwards; FormClose now frees FProjection (camera's
+  Projection nil first) and FAccess itself, logged, while everything is
+  whole. If the AV stays, ask for the call stack (Debug build, the IDE's
+  Call Stack window when it stops). Also (owner, 15:26): the hallway's
+  near wall stopped the camera ("We can't get past it"):
+  gen_dolly_hallway.py writes no near wall now, DollyHallway.glb made
+  again.
+  Owner (15:34, ProjComp4 log): no AV; the log ends "Projection component
+  freed / Projection access freed / Log closed normally"; presets work
+  (2:1 dimetric turned the camera to 45 / 30, plan oblique to 0 / 90);
+  dolly 5..118.6 deg fine. But a Windows chime on exit, no dialog seen -
+  cause unknown (asked: Debug build under the IDE, its Event Log for a
+  first-chance exception at exit, or Windows' Event Viewer, Application).
+  Owner (15:42): "remove the start-up tests ... pointless now ... leave
+  the code just skip it". ProjComp5 (follows ProjComp4, program only):
+  constant AUTO_TEST = False in ProjectionTestMain - the test no longer
+  runs after the first load; the Run test button still runs it.
+  Owner (15:48): a "Free Movement" checkbox - the camera kept out of the
+  model "is causing issues with DollyHallway" (its box is the whole
+  hallway). ProjComp6 (follows ProjComp5, program only): FreeCheck (row
+  1, after Active): ticked, PeardoxOrbitalCamera1.Subject := nil
+  (SubjectWanted; LoadModel too), unticked the model again; logged. The
+  wheel still scales Distance, so it closes on the target but never
+  passes it.
+  Review of ProjComp1 (before delivery), fixed: (1) TPeardoxOrbitalCamera's
+  destructor no longer calls FProjection.RemoveFreeNotification - it is
+  two-way and would leave the projection's Focus pointing at the freed
+  camera; it clears the projection's Focus instead; (2) likewise
+  TPeardoxProjection.SetFocus keeps the old focus's notice; (3) FitOnAxis
+  (FitToBounds' target slide) is skipped in a parallel view of ours, whose
+  size follows Distance - SetTargetDepth still changes a parallel view's
+  size (its size IS the target plane's); (4) the slot is only written in
+  the viewport's present context (SlotAlive), never after the context
+  was made again; (5) a projection not found is looked for (and logged)
+  once per context until a property changes (FFailedContext), not every
+  frame; (6) the camera's own field of view is read every frame, so the
+  first dolly step starts from the real lens.
+  DELIVERED as ProjComp1 (follows ProjTest5; src/common/
+  ProjectionTestAccess.pas to be DELETED by the owner).
 
 ## Where the work is
 
@@ -1001,9 +1405,9 @@ rise in the 2D window, in SR, or both - it decides between route 2
 
 Not to start unless the owner asks for one.
 
-- **Dolly zoom**: tried in StereoCam15 to 17 and removed - Gorilla3D did
-  not draw a field-of-view change made while running (see Where the work
-  is). Needs Gorilla3D's author first.
+- **Dolly zoom**: DONE (8 November 2026) in TPeardoxProjection
+  (FieldOfView with Dolly); the StereoCam15-17 attempt through the
+  camera's FOV is history.
 - **Convergence pull**, once the stereo pair exists: convergence (the
   depth that sits on the screen surface) and eye separation will be rig
   properties anyway; a pull is changing convergence smoothly during a

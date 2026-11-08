@@ -12,6 +12,7 @@ requires
   Gorilla3D_Delphi_13_2_0_Florence;
 
 contains
+  Peardox.Projection in '..\lib\Peardox.Projection.pas',
   Peardox.OrbitalCamera in '..\lib\Peardox.OrbitalCamera.pas';
 
 end.

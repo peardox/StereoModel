@@ -6,6 +6,9 @@
         <Projects Include="src\StereoModel.dproj">
             <Dependencies>packages\Peardox.dproj;packages\PeardoxLeiaSR.dproj</Dependencies>
         </Projects>
+        <Projects Include="src\ProjectionTest.dproj">
+            <Dependencies>packages\Peardox.dproj</Dependencies>
+        </Projects>
         <Projects Include="packages\Peardox.dproj">
             <Dependencies/>
         </Projects>
@@ -31,6 +34,15 @@
     </Target>
     <Target Name="StereoModel:Make">
         <MSBuild Projects="src\StereoModel.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="ProjectionTest">
+        <MSBuild Projects="src\ProjectionTest.dproj"/>
+    </Target>
+    <Target Name="ProjectionTest:Clean">
+        <MSBuild Projects="src\ProjectionTest.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="ProjectionTest:Make">
+        <MSBuild Projects="src\ProjectionTest.dproj" Targets="Make"/>
     </Target>
     <Target Name="Peardox">
         <MSBuild Projects="packages\Peardox.dproj"/>
@@ -60,13 +72,13 @@
         <MSBuild Projects="packages\dclPeardox.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">
-        <CallTarget Targets="Peardox;PeardoxLeiaSR;dclPeardox;StereoModel"/>
+        <CallTarget Targets="Peardox;PeardoxLeiaSR;dclPeardox;StereoModel;ProjectionTest"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="Peardox:Clean;PeardoxLeiaSR:Clean;dclPeardox:Clean;StereoModel:Clean"/>
+        <CallTarget Targets="Peardox:Clean;PeardoxLeiaSR:Clean;dclPeardox:Clean;StereoModel:Clean;ProjectionTest:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="Peardox:Make;PeardoxLeiaSR:Make;dclPeardox:Make;StereoModel:Make"/>
+        <CallTarget Targets="Peardox:Make;PeardoxLeiaSR:Make;dclPeardox:Make;StereoModel:Make;ProjectionTest:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>

@@ -32,7 +32,7 @@ implementation
 
 uses
   System.Classes, FMX.Types,
-  Peardox.OrbitalCamera;
+  Peardox.OrbitalCamera, Peardox.Projection;
 
 const
   //** @abstract(The palette page, the component group, the components appear on.)
@@ -42,7 +42,8 @@ procedure Register;
 begin
   // FMX-only: hidden from the palette while a VCL form is designed
   GroupDescendentsWith(TPeardoxOrbitalCamera, TFmxObject);
-  RegisterComponents(PEARDOX_PALETTE_PAGE, [TPeardoxOrbitalCamera]);
+  GroupDescendentsWith(TPeardoxProjection, TFmxObject);
+  RegisterComponents(PEARDOX_PALETTE_PAGE, [TPeardoxOrbitalCamera, TPeardoxProjection]);
 end;
 
 end.

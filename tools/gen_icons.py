@@ -90,9 +90,36 @@ def orbital_camera():
     return orbit + centre + body
 
 
+def projection():
+    """An oblique (cavalier) cube behind a camera: the camera draws the cube
+    with a projection of its own. The cube's front square, its back square
+    up and to the right at 45 degrees, and the edges joining them, in white;
+    the camera in front of it, lower left, lens to the left, solid white on
+    a tile-coloured halo so the cube's lines stop at its outline."""
+    fx, fy, side = 8.6, 5.6, 9.0       # the front square's top-left and side
+    dx, dy = 4.2, -3.2                 # the receding depth, up and right
+    bx, by = fx + dx, fy + dy
+    line = f'fill="none" stroke="{W}" stroke-width="1.4" stroke-linejoin="round"'
+    back = f'<rect x="{bx}" y="{by}" width="{side}" height="{side}" {line} opacity="0.75"/>'
+    edges = "".join(
+        f'<line x1="{fx + ox}" y1="{fy + oy}" x2="{bx + ox}" y2="{by + oy}" '
+        f'stroke="{W}" stroke-width="1.4" stroke-linecap="round"/>'
+        for ox, oy in ((0, 0), (side, 0), (side, side), (0, side)))
+    front = f'<rect x="{fx}" y="{fy}" width="{side}" height="{side}" {line}/>'
+    shape = ('<path d="M0.2 -1.4 L-2.4 -2.5 L-2.4 2.5 L0.2 1.4 Z"/>'
+             '<rect x="0" y="-2.4" width="5.6" height="4.8" rx="1.0"/>')
+    place = 'translate(6.6 16.4) scale(1.45)'
+    body = (f'<g transform="{place}" fill="{{T}}" stroke="{{T}}" stroke-width="1.6" '
+            f'stroke-linejoin="round">{shape}</g>'
+            f'<g transform="{place}" fill="{W}">{shape}'
+            f'<circle cx="2.8" cy="0" r="1.15" fill="{{T}}"/></g>')
+    return back + edges + front + body
+
+
 # Class name -> (tile colour, symbol). Symbols may use {T} for the tile colour.
 ICONS = {
     "TPeardoxOrbitalCamera": (PEARDOX, orbital_camera()),
+    "TPeardoxProjection": (PEARDOX, projection()),
 }
 
 

@@ -30,7 +30,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ICON_DIR = "lib/icons"
 DCR = "lib/Peardox.Reg.dcr"
 # Every class lib/Peardox.Reg.pas registers
-COMPONENTS = ["TPeardoxOrbitalCamera"]
+COMPONENTS = ["TPeardoxOrbitalCamera", "TPeardoxProjection"]
 DELPHI_SIZES = ((24, ""), (16, "16"), (32, "32"))           # size, name suffix
 RT_BITMAP = 2
 MEM_FLAGS = 0x1010            # MOVEABLE | DISCARDABLE

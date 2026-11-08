@@ -196,6 +196,7 @@
         <DCCReference Include="rtl.dcp"/>
         <DCCReference Include="fmx.dcp"/>
         <DCCReference Include="Gorilla3D_Delphi_13_2_0_Florence.dcp"/>
+        <DCCReference Include="..\lib\Peardox.Projection.pas"/>
         <DCCReference Include="..\lib\Peardox.OrbitalCamera.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>

@@ -310,7 +310,7 @@ interface
 uses
   System.Classes, System.Math, System.Math.Vectors,
   FMX.Types, FMX.Types3D, FMX.Controls3D, FMX.Objects3D, FMX.Viewport3D,
-  Gorilla.Camera, Gorilla.Viewport, Gorilla.Model, Gorilla.Light;
+  Gorilla.Camera, Gorilla.Viewport, Gorilla.Model, Gorilla.Light, Peardox.Projection;
 
 const
   //** @abstract(The platforms the Peardox components are offered for in the IDE's palette, as
@@ -493,6 +493,17 @@ type
     FDistance: Single;
     //** @abstract(While True nothing done through this class moves or turns the camera.)
     FLocked: Boolean;
+    //** @abstract(The projection drawn with, if a TPeardoxProjection draws this camera's view;
+    //** not owned.)
+    FProjection: TPeardoxProjection;
+    //** @abstract(The shape of the view drawn: the projection's, or the camera's own.)
+    //**
+    //** @param(ASX The camera's own 1 / tan(half the field of view) across, or 1 / half the
+    //** visible width in Gorilla3D's orthographic mode.)
+    //** @param(ASY The same up and down.)
+    //** @returns(Projection's ViewShape when there is one and it is Active, else the camera's
+    //** own perspective, centred.)
+    function ShapeFor(ASX, ASY: Single): TPeardoxViewShape;
     //** @abstract(Makes one pivot of the chain.)
     //**
     //** The pivot has no owner, so its lifetime is the chain's and this camera's destructor's;
@@ -1175,6 +1186,12 @@ type
     //** properties, such as ProjectionMode and OrthoHeight, or to OrbitCenter's position;
     //** callers that honour the lock must check it before they do. False by default.
     property Locked: Boolean read FLocked write FLocked;
+    //** @abstract(The TPeardoxProjection that draws this camera's view, or nil; the fits and
+    //** ProjectToView follow its lens, shift and rise and its parallel views.)
+    //**
+    //** Set by TPeardoxOrbitalCamera.Projection. Not owned. In Gorilla3D's own orthographic
+    //** mode (ProjectionMode) it is not used.
+    property Projection: TPeardoxProjection read FProjection write FProjection;
   end;
 
   //** @abstract(The orbit camera as a component: a TPeardoxOrbitalGorillaCamera, and optionally a
@@ -1201,7 +1218,7 @@ type
   //**
   //** @seealso(TPeardoxOrbitalGorillaCamera)
   [ComponentPlatformsAttribute(PEARDOX_COMPONENT_PLATFORMS)]
-  TPeardoxOrbitalCamera = class(TComponent)
+  TPeardoxOrbitalCamera = class(TComponent, IPeardoxProjectionFocus)
   private
     //** @abstract(The viewport the camera is put in, or nil.)
     FViewport: TGorillaViewport;
@@ -1232,6 +1249,27 @@ type
     FWasUsingDesignCamera: Boolean;
     //** @abstract(The model the camera is kept outside of, or nil.)
     FSubject: TGorillaModel;
+    //** @abstract(The projection that draws the camera's view, or nil.)
+    FProjection: TPeardoxProjection;
+    //** @abstract(Setter for Projection: links both ways, so the projection takes its target
+    //** distance and dolly zoom from this camera and the fits follow the projection.)
+    procedure SetProjection(const Value: TPeardoxProjection);
+    //** @abstract(IPeardoxProjectionFocus: the target plane's distance, Distance.)
+    //**
+    //** @returns(Distance.)
+    function ProjectionFocusDistance: Single;
+    //** @abstract(IPeardoxProjectionFocus: the lens changed with Dolly on; Distance moves so
+    //** Distance * tan(half the angle) stays the same, and the target plane keeps its size.)
+    //**
+    //** @param(AOldFieldOfView The vertical field of view before, degrees.)
+    //** @param(ANewFieldOfView The vertical field of view now, degrees.)
+    procedure ProjectionLensChanged(AOldFieldOfView, ANewFieldOfView: Single);
+    //** @abstract(IPeardoxProjectionFocus: a projection with a camera preset was chosen; sets
+    //** Azimuth and PolarAngle, and Roll to 0.)
+    //**
+    //** @param(AAzimuth Azimuth, degrees.)
+    //** @param(AInclination PolarAngle, degrees, 90 looking straight down.)
+    procedure ProjectionViewAngles(AAzimuth, AInclination: Single);
     //** @abstract(Whether the camera may be made now: not at design time, not while the form is
     //** loading, and only with a viewport.)
     function CanAttach: Boolean;
@@ -1678,6 +1716,13 @@ type
     //** @abstract(The width of the view in scene units in orthographic and isometric mode; 0,
     //** the default, follows OrthoHeight and the viewport's shape.)
     property OrthoWidth: Single read GetOrthoWidth write SetOrthoWidth;
+    //** @abstract(The TPeardoxProjection that draws this camera's view, or nil.)
+    //**
+    //** Setting it makes this camera the projection's Focus: the projection's parallel views
+    //** and oblique shear take Distance as the target plane, a new lens with Dolly moves the
+    //** camera (the dolly zoom), and the fits and ProjectToView follow the lens, shift, rise
+    //** and parallel views actually drawn. ProjectionMode must stay perspective for it.
+    property Projection: TPeardoxProjection read FProjection write SetProjection;
   end;
 
 const
@@ -2224,6 +2269,22 @@ begin
     Pivot, UsePivot);
 end;
 
+function TPeardoxOrbitalGorillaCamera.ShapeFor(ASX, ASY: Single): TPeardoxViewShape;
+begin
+  if (FProjection <> nil) and FProjection.Active and not IsOrthographic then
+    Result := FProjection.ViewShape(ASX, ASY)
+  else
+  begin
+    Result.Parallel := False;
+    Result.SX := ASX;
+    Result.SY := ASY;
+    Result.ShiftX := 0;
+    Result.ShiftY := 0;
+    Result.ShearX := 0;
+    Result.ShearY := 0;
+  end;
+end;
+
 function TPeardoxOrbitalGorillaCamera.FitCorners(const ACorners: array of TPoint3D;
   const AViewWidth, AViewHeight, AMargin: Single;
   const AAnyAngle: Boolean; const APivot: TPoint3D;
@@ -2231,10 +2292,12 @@ function TPeardoxOrbitalGorillaCamera.FitCorners(const ACorners: array of TPoint
 var
   Q: TPeardoxQuat;
   M: TMatrix3D;
+  Shape: TPeardoxViewShape;
   AxR, AxU, AxF, Center: TPoint3D;
-  SX, SY, Scale, TX, TY, Rad, K, Dist: Single;
+  SX, SY, Scale, Half, Rad, K, Dist, RoomX, RoomY, T: Single;
   X, Y, Z, XMin, XMax, YMin, YMax, ZMin, ZMax: Single;
   LoX, HiX, LoY, HiY, EyeX, EyeY, EyeZ: Single;
+  AX, BX, AY, BY, ZT, PX, PY, PMinX, PMaxX, PMinY, PMaxY: Single;
   I: Integer;
 begin
   Result := (Length(ACorners) > 0) and (AViewWidth > 0) and (AViewHeight > 0);
@@ -2252,9 +2315,17 @@ begin
   if not Result then
     Exit;
   Scale := 1 + Max(AMargin, 0);
+  // What is drawn: a TPeardoxProjection's lens, shift and rise, and its
+  // parallel views, or the camera's own perspective. In normalised device
+  // units the picture is -1..1 each way; the margin leaves -Half..Half
+  Shape := ShapeFor(SX, SY);
+  SX := Shape.SX;
+  SY := Shape.SY;
+  Half := 1 / Scale;
 
-  // Camera axes in the rig parent's space: right, down (FMX's up is -Y;
-  // the fit is symmetric, so the sign does not matter) and view direction.
+  // Camera axes in the rig parent's space: right, down (FMX's up is -Y)
+  // and view direction. Down is the picture's down: a rise (up) is
+  // subtracted along it, and an oblique's up-going depth likewise
   Q := GetOrientation;
   AxR := Q.Rotate(Point3D(1, 0, 0));
   AxU := Q.Rotate(Point3D(0, 1, 0));
@@ -2273,6 +2344,7 @@ begin
   for I := 0 to High(ACorners) do
     Rad := Max(Rad, (ACorners[I] - Center).Length);
 
+  K := 0;
   if AAnyAngle then
   begin
     // Every Azimuth / PolarAngle / Roll together reach every orientation,
@@ -2286,12 +2358,26 @@ begin
       K := Rad * Scale * Max(SX, SY);
       Dist := Rad + Max(Rad, NEAR_CLEARANCE);
     end
+    else if Shape.Parallel then
+    begin
+      // A parallel view of ours is the perspective's size at the target
+      // plane, Distance / S each way. The ball's picture reaches
+      // Rad * Sqrt(1 + shear^2) from its centre, which the shift moves off
+      // the middle: the room on the narrower side holds it
+      RoomX := Max(Half - Abs(Shape.ShiftX), EPS);
+      RoomY := Max(Half - Abs(Shape.ShiftY), EPS);
+      Dist := Max(Rad * Sqrt(1 + Sqr(Shape.ShearX)) * SX / RoomX,
+        Rad * Sqrt(1 + Sqr(Shape.ShearY)) * SY / RoomY);
+      Dist := Max(Dist, Rad + NEAR_CLEARANCE);
+    end
     else
     begin
-      // Ball tangent to the narrower pair of frustum planes, narrowed by
-      // the margin: Distance = Rad / sin(half'), tan(half') = 1 / (S * Scale)
-      K := 0;
-      Dist := Rad * Sqrt(1 + Sqr(Max(SX, SY) * Scale));
+      // Ball tangent to the narrowest frustum plane, narrowed by the margin
+      // and moved by the shift: Distance = Rad / sin(half'), with tan(half')
+      // the smallest of the four sides' tangents
+      T := Min((Half - Abs(Shape.ShiftX)) / SX, (Half - Abs(Shape.ShiftY)) / SY);
+      T := Max(T, EPS);
+      Dist := Rad * Sqrt(1 + 1 / Sqr(T));
       Dist := Max(Dist, Rad + NEAR_CLEARANCE);
     end;
   end
@@ -2302,10 +2388,6 @@ begin
     XMin := MaxSingle;  XMax := -MaxSingle;
     YMin := MaxSingle;  YMax := -MaxSingle;
     ZMin := MaxSingle;  ZMax := -MaxSingle;
-    LoX := -MaxSingle;  HiX := MaxSingle;
-    LoY := -MaxSingle;  HiY := MaxSingle;
-    TX := 1 / (SX * Scale);   // tan of the usable half-angles
-    TY := 1 / (SY * Scale);
     for I := 0 to High(ACorners) do
     begin
       X := ACorners[I].DotProduct(AxR);
@@ -2314,13 +2396,6 @@ begin
       XMin := Min(XMin, X);  XMax := Max(XMax, X);
       YMin := Min(YMin, Y);  YMax := Max(YMax, Y);
       ZMin := Min(ZMin, Z);  ZMax := Max(ZMax, Z);
-      // Perspective: a corner is inside the frustum of an eye at
-      // (EyeX, EyeY, EyeZ) when |X - EyeX| <= TX * (Z - EyeZ), i.e.
-      // EyeX - TX * EyeZ >= X - TX * Z  and  EyeX + TX * EyeZ <= X + TX * Z.
-      LoX := Max(LoX, X - TX * Z);
-      HiX := Min(HiX, X + TX * Z);
-      LoY := Max(LoY, Y - TY * Z);
-      HiY := Min(HiY, Y + TY * Z);
     end;
 
     if IsOrthographic then
@@ -2332,17 +2407,64 @@ begin
         AxF * ((ZMin + ZMax) * 0.5);
       Dist := (ZMax - ZMin) * 0.5 + Max(Rad, NEAR_CLEARANCE);
     end
+    else if Shape.Parallel then
+    begin
+      // The target plane through the box's middle depth. A corner is drawn
+      // at (P - centre) * S / Distance (+ shift), P its place across (and
+      // down) after the oblique shear about that plane: so the picture's
+      // size is what sets Distance, and the shift moves the centre
+      ZT := (ZMin + ZMax) * 0.5;
+      PMinX := MaxSingle;  PMaxX := -MaxSingle;
+      PMinY := MaxSingle;  PMaxY := -MaxSingle;
+      for I := 0 to High(ACorners) do
+      begin
+        X := ACorners[I].DotProduct(AxR);
+        Y := ACorners[I].DotProduct(AxU);
+        Z := ACorners[I].DotProduct(AxF);
+        PX := X + Shape.ShearX * (Z - ZT);
+        PY := Y - Shape.ShearY * (Z - ZT);
+        PMinX := Min(PMinX, PX);  PMaxX := Max(PMaxX, PX);
+        PMinY := Min(PMinY, PY);  PMaxY := Max(PMaxY, PY);
+      end;
+      Dist := Max((PMaxX - PMinX) * SX, (PMaxY - PMinY) * SY) * 0.5 * Scale;
+      // The camera clear of the nearest corner
+      Dist := Max(Dist, ZT - ZMin + NEAR_CLEARANCE);
+      EyeX := (PMinX + PMaxX) * 0.5 + Shape.ShiftX * Dist / SX;
+      EyeY := (PMinY + PMaxY) * 0.5 - Shape.ShiftY * Dist / SY;
+      Center := AxR * EyeX + AxU * EyeY + AxF * ZT;
+    end
     else
     begin
+      // Perspective: a corner (X, Z) is drawn at X' / Z' * SX + shift, with
+      // X' = X - EyeX and Z' = Z - EyeZ, which must lie in -Half..Half: so
+      // X' / Z' lies in AX..BX. For an eye at (EyeX, EyeZ) that is
+      // EyeX - BX * EyeZ >= X - BX * Z and EyeX - AX * EyeZ <= X - AX * Z;
+      // LoX and HiX are the tightest of those over the corners. Down the
+      // picture the rise counts the other way (Y is down)
+      AX := (-Half - Shape.ShiftX) / SX;
+      BX := (Half - Shape.ShiftX) / SX;
+      AY := (-Half + Shape.ShiftY) / SY;
+      BY := (Half + Shape.ShiftY) / SY;
+      LoX := -MaxSingle;  HiX := MaxSingle;
+      LoY := -MaxSingle;  HiY := MaxSingle;
+      for I := 0 to High(ACorners) do
+      begin
+        X := ACorners[I].DotProduct(AxR);
+        Y := ACorners[I].DotProduct(AxU);
+        Z := ACorners[I].DotProduct(AxF);
+        LoX := Max(LoX, X - BX * Z);
+        HiX := Min(HiX, X - AX * Z);
+        LoY := Max(LoY, Y - BY * Z);
+        HiY := Min(HiY, Y - AY * Z);
+      end;
       // Farthest-forward eye that holds every corner on each axis; the
       // smaller of the two holds them on both. Halfway between the bounds
       // centres the box with equal room either side. Then keep the near
       // plane clear of the nearest corner.
-      K := 0;
-      EyeZ := Min((HiX - LoX) / (2 * TX), (HiY - LoY) / (2 * TY));
+      EyeZ := Min((HiX - LoX) / (BX - AX), (HiY - LoY) / (BY - AY));
       EyeZ := Min(EyeZ, ZMin - NEAR_CLEARANCE);
-      EyeX := (LoX + HiX) * 0.5;
-      EyeY := (LoY + HiY) * 0.5;
+      EyeX := (LoX + HiX + (AX + BX) * EyeZ) * 0.5;
+      EyeY := (LoY + HiY + (AY + BY) * EyeZ) * 0.5;
       // Orbit round the point on the view axis level with the box's middle
       Dist := (ZMin + ZMax) * 0.5 - EyeZ;
       Center := AxR * EyeX + AxU * EyeY + AxF * (EyeZ + Dist);
@@ -2421,6 +2543,12 @@ begin
   Result := FitCorners(Rig, AViewWidth, AViewHeight, AMargin, False, TPoint3D.Zero, False);
   if not Result or (LineDir.Length < EPS) then
     Exit;
+  // A parallel view of a TPeardoxProjection is sized by Distance and
+  // sheared about the target plane, so sliding the target along the line
+  // of sight would change the picture: the fit is left as it is
+  if not IsOrthographic and (FProjection <> nil) and FProjection.Active and
+    (FProjection.Kind <> pjPerspective) then
+    Exit;
   LineDir := LineDir.Normalize;
 
   // Slide the orbit centre along the view axis to the point nearest the
@@ -2447,9 +2575,10 @@ function TPeardoxOrbitalGorillaCamera.ProjectToView(const APoint: TPoint3D; cons
   const AViewWidth, AViewHeight: Single; out AX, AY: Single): Boolean;
 var
   M: TMatrix3D;
+  Shape: TPeardoxViewShape;
   Q: TPeardoxQuat;
   P, D: TPoint3D;
-  SX, SY, X, Y, Z: Single;
+  SX, SY, X, Y, Z, Depth: Single;
   RigParent: TFmxObject;
 begin
   AX := 0;
@@ -2462,6 +2591,8 @@ begin
   SY := Abs(M.m22);
   if (SX < EPS) or (SY < EPS) then
     Exit;
+  // What is drawn: a TPeardoxProjection's, or the camera's own
+  Shape := ShapeFor(SX, SY);
   // Into the rig parent's space, as FitBox carries a box's corners
   if ASpace <> nil then
     P := ASpace.LocalToAbsolute3D(APoint)
@@ -2476,17 +2607,30 @@ begin
   X := D.DotProduct(Q.Rotate(Point3D(1, 0, 0)));
   Y := D.DotProduct(Q.Rotate(Point3D(0, 1, 0)));
   Z := D.DotProduct(Q.Rotate(Point3D(0, 0, 1)));
-  // The diagonal is 1 / tan(half-angle) in perspective, and 1 / (half the
-  // visible size) in orthographic mode, per axis
-  if not IsOrthographic then
+  // Normalised device units, x right and y DOWN: the diagonal is
+  // 1 / tan(half-angle) in perspective, and 1 / (half the visible size) in
+  // Gorilla3D's orthographic mode; a parallel view of ours is the
+  // perspective's at the target plane (Distance), sheared about it
+  if IsOrthographic then
+  begin
+    X := X * SX;
+    Y := Y * SY;
+  end
+  else if Shape.Parallel then
+  begin
+    Depth := Z - FDistance;
+    X := (X + Shape.ShearX * Depth) * Shape.SX / FDistance + Shape.ShiftX;
+    Y := (Y - Shape.ShearY * Depth) * Shape.SY / FDistance - Shape.ShiftY;
+  end
+  else
   begin
     if Z < EPS then
       Exit;   // at or behind the eye
-    X := X / Z;
-    Y := Y / Z;
+    X := X / Z * Shape.SX + Shape.ShiftX;
+    Y := Y / Z * Shape.SY - Shape.ShiftY;
   end;
-  AX := (1 + X * SX) * AViewWidth / 2;
-  AY := (1 + Y * SY) * AViewHeight / 2;
+  AX := (1 + X) * AViewWidth / 2;
+  AY := (1 + Y) * AViewHeight / 2;
   Result := True;
 end;
 
@@ -2662,6 +2806,11 @@ begin
       ReleaseCamera;
   end;
   SetViewport(nil);
+  // Not RemoveFreeNotification: that would also take away the projection's
+  // notice of this camera going, leaving its Focus pointing at a freed
+  // camera (review, ProjComp1). Letting go of the focus here is enough
+  if (FProjection <> nil) and (FProjection.Focus = Self) then
+    FProjection.Focus := nil;
   inherited;
 end;
 
@@ -2720,6 +2869,7 @@ begin
       FCamera.OrthoWidth := FOrthoWidth;
     FCamera.Locked := FLocked;
   end;
+  FCamera.Projection := FProjection;
   // The whole rig goes in the viewport, never the camera itself (see
   // TPeardoxOrbitalGorillaCamera); then the camera is what the viewport shows
   FCamera.Rig.Parent := FViewport;
@@ -2802,6 +2952,12 @@ begin
     FLight := nil
   else if (FSubject <> nil) and (AComponent = FSubject) then
     FSubject := nil
+  else if (FProjection <> nil) and (AComponent = FProjection) then
+  begin
+    FProjection := nil;
+    if FCamera <> nil then
+      FCamera.Projection := nil;
+  end
   else if AComponent = FViewport then
   begin
     // The viewport tells us it is going BEFORE it frees the rig, camera
@@ -3309,6 +3465,52 @@ begin
     FCamera.MoveCenterTo(APoint);
     KeepOutsideSubject;
   end;
+end;
+
+procedure TPeardoxOrbitalCamera.SetProjection(const Value: TPeardoxProjection);
+begin
+  if Value = FProjection then
+    Exit;
+  if FProjection <> nil then
+  begin
+    FProjection.RemoveFreeNotification(Self);
+    if FProjection.Focus = Self then
+      FProjection.Focus := nil;
+  end;
+  FProjection := Value;
+  if FProjection <> nil then
+  begin
+    FProjection.FreeNotification(Self);
+    FProjection.Focus := Self;
+  end;
+  if FCamera <> nil then
+    FCamera.Projection := FProjection;
+end;
+
+function TPeardoxOrbitalCamera.ProjectionFocusDistance: Single;
+begin
+  Result := Distance;
+end;
+
+procedure TPeardoxOrbitalCamera.ProjectionLensChanged(AOldFieldOfView,
+  ANewFieldOfView: Single);
+var
+  OldTan, NewTan: Single;
+begin
+  if (AOldFieldOfView <= 0) or (AOldFieldOfView >= 180) or (ANewFieldOfView <= 0) or
+    (ANewFieldOfView >= 180) then
+    Exit;
+  OldTan := Tan(DegToRad(AOldFieldOfView) / 2);
+  NewTan := Tan(DegToRad(ANewFieldOfView) / 2);
+  if NewTan > 0 then
+    Distance := Distance * OldTan / NewTan;
+end;
+
+procedure TPeardoxOrbitalCamera.ProjectionViewAngles(AAzimuth, AInclination: Single);
+begin
+  Azimuth := AAzimuth;
+  PolarAngle := AInclination;
+  Roll := 0;
 end;
 
 procedure TPeardoxOrbitalCamera.SetSubject(const Value: TGorillaModel);

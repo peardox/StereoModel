@@ -6,7 +6,7 @@
 Standard library only. The packages, as G3DGames/TSteamAPI builds its own
 (this began as a cut-down copy of its tools/gen_projects.py):
 
-  Peardox       runtime: the camera components (Gorilla3D).
+  Peardox       runtime: the camera and projection components (Gorilla3D).
   PeardoxLeiaSR runtime: the LeiaSR (glasses-free 3D) components, their
                 settings and the Neon units those are read and written
                 with. Separate from Peardox (owner, 7 November 2026); it
@@ -49,7 +49,7 @@ RUNTIME_PLATFORMS = ["Win32", "Win64", "OSX64", "OSXARM64", "Linux64",
 DESIGN_PLATFORMS = ["Win32", "Win64"]
 ALL_PLATFORMS = RUNTIME_PLATFORMS + ["WinARM64EC"]
 
-CAMERA_UNITS = ["Peardox.OrbitalCamera"]
+CAMERA_UNITS = ["Peardox.Projection", "Peardox.OrbitalCamera"]
 LEIASR_UNITS = ["Peardox.Storage", "Peardox.LeiaSR.Settings", "Peardox.LeiaSR.Api",
                 "Peardox.LeiaSR"]
 REG_UNIT = "Peardox.Reg"
