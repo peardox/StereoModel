@@ -333,8 +333,10 @@ type
     //** @abstract(Loads a model file into the viewport in place of the one shown, stands it
     //** upright and frames it.)
     //**
-    //** Gorilla3D picks the loader by the file's extension. The new model is loaded first and
-    //** the old one freed only once it has loaded, so a file that fails leaves the view as it
+    //** Gorilla3D picks the loader by the file's extension. The new model is made and loaded
+    //** first (TGorillaModel.LoadFromFile into a model of our own, not
+    //** TGorillaModel.LoadNewModelFromFile, which leaks the FBX loader's parse tree) and the
+    //** old one freed only once it has loaded, so a file that fails leaves the view as it
     //** was. The new model becomes the camera's Subject.
     //**
     //** @param(APath The model file, with its full path.)
@@ -1479,13 +1481,21 @@ var
   NewModel: TGorillaModel;
 begin
   Result := False;
+  // Owned by the viewport as before, but made here and loaded with
+  // LoadFromFile, as Sprite3D does: TGorillaModel.LoadNewModelFromFile
+  // (Gorilla3D 1.5.3) never frees the FBX loader's parse tree, so every FBX
+  // file it loads leaks it (TFBXNode, TFBXProperty and their lists)
+  NewModel := TGorillaModel.Create(GorillaViewport1);
   try
-    // Gorilla3D chooses the loader by the extension
-    NewModel := TGorillaModel.LoadNewModelFromFile(GorillaViewport1, nil, APath, []);
     NewModel.Parent := GorillaViewport1;
+    // Gorilla3D chooses the loader by the extension
+    NewModel.LoadFromFile(nil, APath, []);
   except
     on E: Exception do
     begin
+      // Made before the load now, so it goes if the load fails
+      NewModel.Parent := nil;
+      NewModel.Free;
       ShowStatus(Format('Model load FAILED: %s: %s: %s', [APath, E.ClassName, E.Message]));
       Exit;
     end;
