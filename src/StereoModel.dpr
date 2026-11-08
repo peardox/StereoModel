@@ -1,30 +1,30 @@
 //** @abstract(StereoModel: shows a 3D model on a glasses-free stereo display.)
 //**
-//** The model is shown in a Gorilla3D viewport through TPeardoxOrbitalCamera, the Peardox
-//** orbital camera component, which comes from the Peardox runtime package's DCUs in Delphi's
-//** Dcp folder, so the program lists no lib unit and needs no path to it; TPeardoxLeiaSR
-//** (glasses-free 3D) comes the same way from PeardoxLeiaSR's. TForm2, in
-//** StereoModelMain, holds the view. Leaks still
-//** allocated at shut-down are reported, as ReportMemoryLeaksOnShutdown is set in Debug
-//** builds. On Windows FastMM5 is the memory manager and also writes them, in full, to
-//** StereoModel_MemoryManager_EventLog.txt beside the executable.
+//** The model is shown in a Gorilla3D viewport through TSpritelyOrbitalCamera, the Spritely
+//** orbital camera component, which comes from the Spritely runtime package's DCUs in Delphi's
+//** Dcp folder, so the program lists no lib unit and needs no path to it; TLenticularDisplay
+//** (glasses-free 3D) comes the same way from the Lenticular package's. TForm2, in
+//** StereoModelMain, holds the view. Leaks still allocated at shut-down are reported, as
+//** ReportMemoryLeaksOnShutdown is set in Debug builds. On Windows FastMM5 is the memory manager
+//** and also writes them, in full, to StereoModel_MemoryManager_EventLog.txt beside the executable.
 //**
 //** @preformatted(
 //** src/ui/      the forms
 //** src/common/  helpers: FmxLinuxMenu (from TSteamAPI, shared), StereoModelLog (the log file),
-//**              StereoModelEyes (first light: the two eyes drawn for LeiaSR)
-//** lib/         the Peardox components' sources, built by packages/Peardox.dpk and
-//**              packages/PeardoxLeiaSR.dpk (LeiaSR, glasses-free 3D)
+//**              StereoModelEyes (first light: the two eyes drawn for the lenticular display)
+//** lib/         the components' sources, built by packages/Spritely.dpk (camera) and
+//**              packages/Lenticular.dpk (glasses-free 3D)
 //** )
 program StereoModel;
 
 {
   StereoModel: shows a 3D model on a glasses-free stereo display.
 
-  The model is shown in a Gorilla3D viewport through TPeardoxOrbitalCamera,
-  the Peardox orbital camera component, which comes from the Peardox
+  The model is shown in a Gorilla3D viewport through TSpritelyOrbitalCamera,
+  the Spritely orbital camera component, which comes from the Spritely
   runtime package's DCUs in Delphi's Dcp folder, so the program lists no
-  lib unit and needs no path to it. TForm2, in StereoModelMain, holds the
+  lib unit and needs no path to it; TLenticularDisplay (glasses-free 3D)
+  comes the same way from the Lenticular package's. TForm2, in StereoModelMain, holds the
   view. Leaks still allocated at shut-down are reported, as
   ReportMemoryLeaksOnShutdown is set in Debug builds. On Windows FastMM5 is
   the memory manager and also writes them, in full, to
@@ -32,9 +32,9 @@ program StereoModel;
 
     src/ui/      the forms
     src/common/  helpers: FmxLinuxMenu (from TSteamAPI, shared), StereoModelLog (the log file),
-                 StereoModelEyes (first light: the two eyes drawn for LeiaSR)
-    lib/         the Peardox components' sources, built by packages/Peardox.dpk and
-                 packages/PeardoxLeiaSR.dpk (LeiaSR, glasses-free 3D)
+                 StereoModelEyes (first light: the two eyes drawn for the lenticular display)
+    lib/         the components' sources, built by packages/Spritely.dpk (camera) and
+                 packages/Lenticular.dpk (glasses-free 3D)
 }
 
 uses

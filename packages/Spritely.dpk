@@ -1,0 +1,18 @@
+package Spritely;
+
+{ Spritely components for FireMonkey and Gorilla3D - runtime. Written by tools/gen_packages.py - edit the script, not this file. }
+
+{$DESCRIPTION 'Spritely components for FireMonkey and Gorilla3D - runtime'}
+{$RUNONLY}
+{$IMPLICITBUILD ON}
+
+requires
+  rtl,
+  fmx,
+  Gorilla3D_Delphi_13_2_0_Florence;
+
+contains
+  Spritely.Projection in '..\lib\Spritely.Projection.pas',
+  Spritely.OrbitalCamera in '..\lib\Spritely.OrbitalCamera.pas';
+
+end.

@@ -1,7 +1,7 @@
-//** @abstract(Main form of StereoModel: a Gorilla3D viewport seen through the Peardox orbital
-//** camera.)
+//** @abstract(Main form of StereoModel: a Gorilla3D viewport seen through the Spritely
+//** orbital camera.)
 //**
-//** The view is a TPeardoxOrbitalCamera on the form, from the Peardox package, with its
+//** The view is a TSpritelyOrbitalCamera on the form, from the Spritely package, with its
 //** headlight on. Once the form is showing it loads the test model, uvcube.glb from the models
 //** folder, into the viewport and frames it so it stays in view at every angle.
 //**
@@ -12,18 +12,17 @@
 //** Status and problems are shown in the strip at the bottom, logged with FMX's Log.d and
 //** written to StereoModel.log (StereoModelLog), beside the executable on Windows.
 //**
-//** Glasses-free 3D (step 0): a TPeardoxLeiaSR, from the PeardoxLeiaSR package, made in code
-//** for now. Where LeiaSR is installed the Stereo button turns it on and off, and the choice
-//** is saved in the shared LeiaSR settings; it starts by itself when the settings say so.
-//** Nothing is woven yet: it only starts SR and logs the display and the eyes. Where LeiaSR
-//** is not installed the button is hidden.
+//** Glasses-free 3D: a TLenticularDisplay, from the Lenticular package, made in code for now.
+//** Where the display runtime is installed the Stereo button shows the view woven full screen
+//** on the 3D display (TPeardoxGorillaEyes draws the two eyes); where it is not, the button is
+//** hidden.
 unit StereoModelMain;
 
 {
-  Main form of StereoModel: a Gorilla3D viewport seen through the Peardox
+  Main form of StereoModel: a Gorilla3D viewport seen through the Spritely
   orbital camera.
 
-  The view is a TPeardoxOrbitalCamera on the form, from the Peardox
+  The view is a TSpritelyOrbitalCamera on the form, from the Spritely
   package, with its headlight on. Once the form is showing it loads the
   test model, uvcube.glb from the models folder, into the viewport and
   frames it so it stays in view at every angle.
@@ -37,11 +36,10 @@ unit StereoModelMain;
   FMX's Log.d and written to StereoModel.log (StereoModelLog), beside the
   executable on Windows.
 
-  Glasses-free 3D (step 0): a TPeardoxLeiaSR, made in code for now. Where
-  LeiaSR is installed the Stereo button turns it on and off, and the
-  choice is saved in the shared LeiaSR settings; it starts by itself when
-  the settings say so. Nothing is woven yet: it only starts SR and logs
-  the display and the eyes. Where LeiaSR is not installed the button is
+  Glasses-free 3D: a TLenticularDisplay, from the Lenticular package, made
+  in code for now. Where the display runtime is installed the Stereo
+  button shows the view woven full screen on the 3D display
+  (TPeardoxGorillaEyes draws the two eyes); where it is not, the button is
   hidden.
 }
 
@@ -63,13 +61,13 @@ uses
   // FMX.Objects (TRectangle) has a TPath of its own, the shape: the file
   // paths below are System.IOUtils.TPath in full
   FMX.Controls.Presentation, FMX.StdCtrls, FMX.Menus, FMX.Layouts, FMX.Objects, FMX.ListBox,
-  Peardox.OrbitalCamera, Peardox.LeiaSR, Peardox.LeiaSR.Settings, FmxLinuxMenu, StereoModelLog,
-  StereoModelEyes, Peardox.LeiaSR.Api;
+  Spritely.OrbitalCamera, Lenticular.Display, Lenticular.Display.Settings, FmxLinuxMenu,
+  StereoModelLog, StereoModelEyes, Lenticular.Display.Api;
 
 type
   //** @abstract(The main form: the 3D view and the control strip below it.)
   //**
-  //** @seealso(TPeardoxOrbitalCamera)
+  //** @seealso(TSpritelyOrbitalCamera)
   TForm2 = class(TForm)
     //** @abstract(Holds the view; fills the form above ControlLayout.)
     MainViewLayout: TLayout;
@@ -82,16 +80,16 @@ type
     //** @abstract(File, Open: picks a model file and loads it in place of the one shown;
     //** desktop only.)
     OpenMenuItem: TMenuItem;
-    //** @abstract(Turns glasses-free 3D on (pressed) and off; hidden where LeiaSR is not
-    //** installed.)
+    //** @abstract(Turns glasses-free 3D on (pressed) and off; hidden where the display runtime is
+    //** not installed.)
     btnStereo: TButton;
     //** @abstract(Holds the viewport inside MainViewLayout.)
     ViewLayout: TLayout;
-    //** @abstract(The Gorilla3D viewport, seen through PeardoxOrbitalCamera1's camera.)
+    //** @abstract(The Gorilla3D viewport, seen through SpritelyOrbitalCamera1's camera.)
     GorillaViewport1: TGorillaViewport;
     //** @abstract(The orbital camera, on the form: it makes its camera and headlight in
     //** GorillaViewport1 as the form loads.)
-    PeardoxOrbitalCamera1: TPeardoxOrbitalCamera;
+    SpritelyOrbitalCamera1: TSpritelyOrbitalCamera;
     //** @abstract(Makes the status line, reports the orbital camera and hooks up the
     //** viewport's events.)
     //**
@@ -131,26 +129,26 @@ type
     FAnimationBox: TComboBox;
     //** @abstract(True while FAnimationBox is being filled, so its OnChange does nothing.)
     FFillingAnimations: Boolean;
-    //** @abstract(The 3D window: borderless, full screen on the SR display while Stereo is
-    //** on, hidden otherwise. The bridge's window is a child of it, made when SR starts (with
-    //** this form hidden), so turning Stereo on is quick.)
+    //** @abstract(The 3D window: borderless, full screen on the 3D display while Stereo is
+    //** on, hidden otherwise. The bridge's window is a child of it, made when the display starts
+    //** (with this form hidden), so turning Stereo on is quick.)
     FOutput: TForm;
-    //** @abstract(Fills FOutput: FLeiaSR's Control, so the bridge's window covers it; it takes
+    //** @abstract(Fills FOutput: FDisplay's Control, so the bridge's window covers it; it takes
     //** the mouse (the bridge's window lets it through) for the same drags and wheel as the
     //** viewport.)
     FOutputHost: TLayout;
     //** @abstract(True while Stereo is on: FOutput shows the woven view.)
     FStereoOn: Boolean;
-    //** @abstract(True while this form is hidden for Stereo, as it was on the SR display.)
+    //** @abstract(True while this form is hidden for Stereo, as it was on the 3D display.)
     FMainHidden: Boolean;
     //** @abstract(True while the viewport is being resized for Stereo or back: ViewResize then
     //** leaves the view as it is.)
     FResizing: Boolean;
-    //** @abstract(FOutput's window when SR last started on it: the bridge's window is its
-    //** child. 0 until SR has started.)
-    FSRParent: NativeUInt;
-    //** @abstract(True while SR is being restarted on a new FOutput window: its OnStopped then
-    //** leaves Stereo on.)
+    //** @abstract(FOutput's window when the display last started on it: the bridge's window is its
+    //** child. 0 until the display has started.)
+    FDisplayParent: NativeUInt;
+    //** @abstract(True while the display is being restarted on a new FOutput window: its OnStopped
+    //** then leaves Stereo on.)
     FRestarting: Boolean;
     //** @abstract(An opaque cover over the viewport while Stereo is on, with FStereoNote on
     //** it: FMX still draws the viewport (Gorilla3D renders nothing for a hidden one), but
@@ -165,7 +163,7 @@ type
     //** then, Stereo is turned off, so a black full-screen window on top cannot trap the user.)
     FStereoWatch: TTimer;
     //** @abstract(Checks every CURSOR_CHECK_MS while Stereo is on whether the mouse pointer is
-    //** over the SR display, and hides it there if the LeiaSR setting HideCursor says so.)
+    //** over the 3D display, and hides it there if the display setting HideCursor says so.)
     FCursorTimer: TTimer;
     //** @abstract(True while this program has the pointer hidden (one ShowCursor(False) to
     //** undo).)
@@ -184,11 +182,11 @@ type
     //** @abstract(How far the wheel has zoomed from the fitted view: 1 is the fit, below 1
     //** nearer; kept between ZOOM_MIN and ZOOM_MAX.)
     FZoom: Single;
-    //** @abstract(Glasses-free 3D: LeiaSR for GorillaViewport1, made in code for now; owned by
-    //** the form.)
-    FLeiaSR: TPeardoxLeiaSR;
+    //** @abstract(Glasses-free 3D: the TLenticularDisplay for GorillaViewport1, made in code for
+    //** now; owned by the form.)
+    FDisplay: TLenticularDisplay;
     //** @abstract(First light: draws GorillaViewport1 once per eye through
-    //** PeardoxOrbitalCamera1 and hands the pair to FLeiaSR, while it runs.)
+    //** SpritelyOrbitalCamera1 and hands the pair to FDisplay, while it runs.)
     FEyes: TPeardoxGorillaEyes;
     //** @abstract(Shows a line in the status strip, and logs it with Log.d and in
     //** StereoModel.log.)
@@ -212,34 +210,34 @@ type
     //** TEST_VIEW_INCLINATION and TEST_VIEW_ROLL, framed, then TEST_VIEW_DEPTH from the
     //** target.)
     procedure TestView;
-    //** @abstract(Runs once the form is first showing: loads the test model, then starts SR
-    //** (not Stereo) if LeiaSR is installed, so btnStereo is ready.)
+    //** @abstract(Runs once the form is first showing: loads the test model, then starts the
+    //** display (not Stereo) if the display runtime is installed, so btnStereo is ready.)
     procedure FirstShown;
-    //** @abstract(Makes FLeiaSR, hooks up its events and shows or hides btnStereo.)
-    procedure CreateLeiaSR;
-    //** @abstract(FLeiaSR's log: every line to the status strip and Log.d.)
+    //** @abstract(Makes FDisplay, hooks up its events and shows or hides btnStereo.)
+    procedure CreateDisplay;
+    //** @abstract(FDisplay's log: every line to the status strip and Log.d.)
     //**
-    //** @param(Sender FLeiaSR.)
+    //** @param(Sender FDisplay.)
     //**
     //** @param(AText The line.)
-    procedure LeiaSRLog(Sender: TObject; const AText: string);
-    //** @abstract(FLeiaSR has started (on the hidden FOutput): btnStereo is enabled.)
+    procedure DisplayLog(Sender: TObject; const AText: string);
+    //** @abstract(FDisplay has started (on the hidden FOutput): btnStereo is enabled.)
     //**
-    //** @param(Sender FLeiaSR.)
-    procedure LeiaSRStarted(Sender: TObject);
-    //** @abstract(FLeiaSR has stopped: Stereo off, btnStereo disabled.)
+    //** @param(Sender FDisplay.)
+    procedure DisplayStarted(Sender: TObject);
+    //** @abstract(FDisplay has stopped: Stereo off, btnStereo disabled.)
     //**
-    //** @param(Sender FLeiaSR.)
-    procedure LeiaSRStopped(Sender: TObject);
+    //** @param(Sender FDisplay.)
+    procedure DisplayStopped(Sender: TObject);
     //** @abstract(Glasses-free 3D could not start: btnStereo stays disabled and the reason
     //** goes to the status strip.)
     //**
-    //** @param(Sender FLeiaSR.)
+    //** @param(Sender FDisplay.)
     //**
     //** @param(AProblem What went wrong.)
     //**
     //** @param(AMessage The details.)
-    procedure LeiaSRProblem(Sender: TObject; AProblem: TPeardoxLeiaSRProblem;
+    procedure DisplayProblem(Sender: TObject; AProblem: TLenticularDisplayProblem;
       const AMessage: string);
     //** @abstract(Makes FOutput and FOutputHost, hidden.)
     procedure CreateOutput;
@@ -250,19 +248,19 @@ type
     //**
     //** @param(Sender FAnimationBox.)
     procedure AnimationBoxChange(Sender: TObject);
-    //** @abstract(Turns Stereo on: FOutput full screen on the SR display, the viewport at the
-    //** display's recommended view size, this form hidden if it is on the SR display, and the
+    //** @abstract(Turns Stereo on: FOutput full screen on the 3D display, the viewport at the
+    //** display's recommended view size, this form hidden if it is on the 3D display, and the
     //** two eyes woven (the lens comes on).)
     //**
     //** @returns(True if Stereo is on.)
     function EnterStereo: Boolean;
     //** @abstract(Turns Stereo off: weaving stops (the lens goes off), FOutput is hidden, the
-    //** viewport fills its layout again and this form shows again if it was hidden. SR keeps
-    //** running, for the next time.)
+    //** viewport fills its layout again and this form shows again if it was hidden. The display
+    //** keeps running, for the next time.)
     procedure LeaveStereo;
-    //** @abstract(Puts FOutput over the whole SR display, on top, and logs where it went.)
+    //** @abstract(Puts FOutput over the whole 3D display, on top, and logs where it went.)
     //**
-    //** @param(ARect The SR display, in desktop pixels.)
+    //** @param(ARect The 3D display, in desktop pixels.)
     procedure PlaceOutput(const ARect: TRect);
     //** @abstract(Sizes the viewport for Stereo (the display's recommended view, in physical
     //** pixels, centred in ViewLayout and clipped) or back to filling ViewLayout.)
@@ -281,7 +279,7 @@ type
     procedure StereoWatchTimer(Sender: TObject);
     //** @abstract(Starts the eyes and FStereoWatch.)
     procedure StartWeaving;
-    //** @abstract(FCursorTimer OnTimer: the pointer hidden while it is over the SR display in
+    //** @abstract(FCursorTimer OnTimer: the pointer hidden while it is over the 3D display in
     //** Stereo and HideCursor is set, shown otherwise.)
     //**
     //** @param(Sender FCursorTimer.)
@@ -300,9 +298,9 @@ type
     //** @abstract(The keys for glasses-free 3D, acted on once a press however long it is
     //** held: L steps the weaver's latency (0 to LATENCY_MAX_FRAMES), [ and ] the eye
     //** separation by EYE_SEPARATION_STEP_MM, C turns the bridge's frame cap off and on (the
-    //** wait for the SR display's vertical blank after each frame; off by default), V the
+    //** wait for the 3D display's vertical blank after each frame; off by default), V the
     //** per-eye view (off: full speed), comma and full stop the render scale down and up by
-    //** RENDER_SCALE_STEP, M hiding the mouse pointer over the SR display, W weaving (off: one
+    //** RENDER_SCALE_STEP, M hiding the mouse pointer over the 3D display, W weaving (off: one
     //** flat view, lens off, for screen recordings) - all saved -, Home puts the view back
     //** (the test view for the test scene), P logs a snapshot
     //** of everything that sets the view (as SRDemoFMX's P does), Esc turns Stereo off (while
@@ -368,7 +366,7 @@ type
     //** The target's depth is the plane that will lie on the display's glass. The model's
     //** centre, measured along the line of sight, is then that much in front of the glass
     //** (out of the screen, Z below 0) or behind it (Z above 0): Z = model depth - target
-    //** depth. While LeiaSR runs it is also given in millimetres, at the scale that puts the
+    //** depth. While the display runs it is also given in millimetres, at the scale that puts the
     //** view's height in the camera's field of view at the target's depth onto the view's height
     //** on the display.
     //**
@@ -608,9 +606,9 @@ const
   //** @abstract(The model loaded at start: SRDelphiFMX's demo scene without its back wall
   //** (owner, 7 November 2026: the definitive test scene), seen from TEST_VIEW_AZIMUTH and
   //** the rest.)
-  TEST_MODEL = 'SRDemoSceneNoWall.glb';
+  TEST_MODEL = 'DemoSceneNoWall.glb';
   //** @abstract(The test scene's view: the camera's azimuth, degrees (owner, 7 November 2026,
-  //** found by eye on the SR display: "the 3D really pops out").)
+  //** found by eye on the 3D display: "the 3D really pops out").)
   TEST_VIEW_AZIMUTH = 52;
   //** @abstract(The test scene's view: the inclination (PolarAngle), degrees.)
   TEST_VIEW_INCLINATION = 75;
@@ -707,36 +705,36 @@ begin
   // nothing: the lens is on exactly while Stereo is
   // The component is on the form: by now it has made its camera, and its
   // headlight, in the viewport, as the form loaded
-  if PeardoxOrbitalCamera1.Camera = nil then
+  if SpritelyOrbitalCamera1.Camera = nil then
     ShowStatus('Orbital camera NOT made: no camera in the viewport')
   else
     ShowStatus(Format('Orbital camera made: FOV %.0f, distance %.2f, headlight %s',
-      [PeardoxOrbitalCamera1.FOV, PeardoxOrbitalCamera1.Distance,
-       BoolToStr(PeardoxOrbitalCamera1.Light <> nil, True)]));
+      [SpritelyOrbitalCamera1.FOV, SpritelyOrbitalCamera1.Distance,
+       BoolToStr(SpritelyOrbitalCamera1.Light <> nil, True)]));
   GorillaViewport1.OnResize := ViewResize;
   GorillaViewport1.OnMouseDown := ViewMouseDown;
   GorillaViewport1.OnMouseMove := ViewMouseMove;
   GorillaViewport1.OnMouseUp := ViewMouseUp;
   GorillaViewport1.OnMouseWheel := ViewMouseWheel;
   CreateOutput;
-  CreateLeiaSR;
+  CreateDisplay;
 end;
 
-procedure TForm2.CreateLeiaSR;
+procedure TForm2.CreateDisplay;
 begin
   // Made in code for now (owner, 7 November 2026); a component on the form
   // later
-  FLeiaSR := TPeardoxLeiaSR.Create(Self);
+  FDisplay := TLenticularDisplay.Create(Self);
   // The bridge's window goes on the full-screen form (owner, 19:43)
-  FLeiaSR.Control := FOutputHost;
-  FLeiaSR.OnLog := LeiaSRLog;
-  FLeiaSR.OnStarted := LeiaSRStarted;
-  FLeiaSR.OnStopped := LeiaSRStopped;
-  FLeiaSR.OnProblem := LeiaSRProblem;
-  // First light: the two eyes drawn while LeiaSR runs
+  FDisplay.Control := FOutputHost;
+  FDisplay.OnLog := DisplayLog;
+  FDisplay.OnStarted := DisplayStarted;
+  FDisplay.OnStopped := DisplayStopped;
+  FDisplay.OnProblem := DisplayProblem;
+  // First light: the two eyes drawn while the display runs
   FEyes := TPeardoxGorillaEyes.Create(Self);
-  FEyes.LeiaSR := FLeiaSR;
-  FEyes.Camera := PeardoxOrbitalCamera1;
+  FEyes.Display := FDisplay;
+  FEyes.Camera := SpritelyOrbitalCamera1;
   FEyes.Viewport := GorillaViewport1;
   FEyes.OnLog := EyesLog;
   // Windows: a thread keyboard hook, as SRDemoFMX's. FMX never passed the
@@ -749,17 +747,17 @@ begin
   {$ELSE}
   OnKeyUp := FormKeyUp;
   {$ENDIF}
-  ShowStatus(FLeiaSR.SettingsStatus);
-  // No LeiaSR here: nothing about glasses-free 3D is shown
-  btnStereo.Visible := TPeardoxLeiaSR.Installed;
+  ShowStatus(FDisplay.SettingsStatus);
+  // No display runtime here: nothing about glasses-free 3D is shown
+  btnStereo.Visible := TLenticularDisplay.Installed;
   btnStereo.IsPressed := False;
-  // Until SR has started (owner, 19:43: disabled until SR is available, so
+  // Until the display has started (owner, 19:43: disabled until the display is available, so
   // that switching is quick)
   btnStereo.Enabled := False;
   if not btnStereo.Visible then
-    ShowStatus('LeiaSR not installed (or not a Windows 64-bit build): Stereo hidden')
+    ShowStatus('Glasses-free 3D not installed (or not a Windows 64-bit build): Stereo hidden')
   else
-    ShowStatus('LeiaSR installed; Stereo is enabled once SR has started');
+    ShowStatus('Glasses-free 3D installed; Stereo is enabled once the display has started');
 end;
 
 procedure TForm2.CreateOutput;
@@ -788,7 +786,7 @@ begin
   FStereoCover.Fill.Color := $FF202428;
   FStereoCover.Stroke.Kind := TBrushKind.None;
   // Drags and the wheel on the cover work on the view too, so the launcher
-  // can move the view while Stereo shows it on the SR display
+  // can move the view while Stereo shows it on the 3D display
   FStereoCover.HitTest := True;
   FStereoCover.OnMouseDown := ViewMouseDown;
   FStereoCover.OnMouseMove := ViewMouseMove;
@@ -800,7 +798,7 @@ begin
   FStereoNote.Align := TAlignLayout.Client;
   FStereoNote.TextSettings.HorzAlign := TTextAlign.Center;
   FStereoNote.TextSettings.VertAlign := TTextAlign.Center;
-  FStereoNote.Text := 'Showing in glasses-free 3D on the SR display' + sLineBreak +
+  FStereoNote.Text := 'Showing in glasses-free 3D on the 3D display' + sLineBreak +
     'Esc or Stereo turns it off';
   FStereoNote.StyledSettings := FStereoNote.StyledSettings - [TStyledSetting.FontColor];
   FStereoNote.TextSettings.FontColor := TAlphaColors.White;
@@ -900,15 +898,15 @@ end;
 procedure TForm2.FirstShown;
 begin
   LoadTestModel;
-  // SR starts now, on the hidden 3D window, with the lens off: Stereo then
+  // The display starts now, on the hidden 3D window, with the lens off: Stereo then
   // only shows it (owner, 19:43: "The window should start Lens Off").
   // Settings.UseGlassesFree3D is not used here
-  if TPeardoxLeiaSR.Installed then
+  if TLenticularDisplay.Installed then
   begin
     // FMX makes the 3D window's window again the first time it is shown
     // (owner, 19:58 and 19:59: $551040 then $561040, $CF1004 then $D01004),
     // which took the bridge's window with it: show it once now, out of
-    // sight, so SR starts on the window it will keep
+    // sight, so the display starts on the window it will keep
     FOutput.SetBounds(-32000, -32000, 64, 64);
     FOutput.Show;
     FOutput.Hide;
@@ -917,7 +915,7 @@ begin
     FRenderForm.Show;
     FRenderForm.Hide;
     Activate;
-    FLeiaSR.Start;
+    FDisplay.Start;
   end;
 end;
 
@@ -928,7 +926,7 @@ begin
   FEyes.Stop;
   // While the viewport's OpenGL context still exists
   FEyes.ReleaseZeroCopy;
-  FLeiaSR.Stop;
+  FDisplay.Stop;
   {$IFDEF MSWINDOWS}
   RemoveKeyHook;
   {$ENDIF}
@@ -957,17 +955,17 @@ begin
   Result := FStereoOn;
   if FStereoOn then
     Exit;
-  if not FLeiaSR.Running then
+  if not FDisplay.Running then
   begin
-    ShowStatus('Stereo: LeiaSR is not running');
+    ShowStatus('Stereo: the display is not running');
     Exit;
   end;
-  if not FLeiaSR.DisplayRect(R) or R.IsEmpty then
+  if not FDisplay.DisplayRect(R) or R.IsEmpty then
   begin
-    ShowStatus('Stereo: where the SR display is on the desktop is not known');
+    ShowStatus('Stereo: where the 3D display is on the desktop is not known');
     Exit;
   end;
-  // On the SR display this form would be under the 3D window, blurred by
+  // On the 3D display this form would be under the 3D window, blurred by
   // the lens: hidden until Stereo is off. Elsewhere it stays (owner, 19:43)
   FMainHidden := False;
   {$IFDEF MSWINDOWS}
@@ -986,32 +984,32 @@ begin
   // Owner (19:53): black, and the bridge's window measured 0 x 0 mm at the
   // panel's corner, as a window that no longer exists would: FMX had made
   // the 3D window's window again when it was first shown, taking the
-  // bridge's (its child) with it. SR is then started again on the new one
+  // bridge's (its child) with it. The display is then started again on the new one
   // (about a third of a second in Release); the Eyes start once it has
-  ShowStatus(Format('3D window: window $%x now, SR started on $%x',
-    [FormToHWND(FOutput), FSRParent]));
-  if FormToHWND(FOutput) <> FSRParent then
+  ShowStatus(Format('3D window: window $%x now, the display started on $%x',
+    [FormToHWND(FOutput), FDisplayParent]));
+  if FormToHWND(FOutput) <> FDisplayParent then
   begin
-    ShowStatus('The 3D window''s window was made again since SR started on it: starting SR ' +
-      'again on the new one');
+    ShowStatus('The 3D window''s window was made again since the display started on it: ' +
+      'starting the display again on the new one');
     FRestarting := True;
     try
-      FLeiaSR.Stop;
+      FDisplay.Stop;
     finally
       FRestarting := False;
     end;
     btnStereo.Enabled := False;
-    if not FLeiaSR.Start then
+    if not FDisplay.Start then
       LeaveStereo;
     Exit(FStereoOn);
   end;
   {$ENDIF}
   if FMainHidden then
-    Where := 'hidden (it was on the SR display)'
+    Where := 'hidden (it was on the 3D display)'
   else
     Where := 'stays where it is';
   ShowStatus(Format('Stereo on: full screen on %s at (%d, %d) %d x %d; this window %s; ' +
-    'Esc or Stereo turns it off', [FLeiaSR.DisplayName, R.Left, R.Top, R.Width, R.Height,
+    'Esc or Stereo turns it off', [FDisplay.DisplayName, R.Left, R.Top, R.Width, R.Height,
     Where]));
   StartWeaving;
   Result := True;
@@ -1036,8 +1034,8 @@ var
 {$ENDIF}
 begin
   {$IFDEF MSWINDOWS}
-  SetCursorHidden(FStereoOn and FLeiaSR.Settings.HideCursor and GetCursorPos(P) and
-    FLeiaSR.DisplayRect(R) and R.Contains(P));
+  SetCursorHidden(FStereoOn and FDisplay.Settings.HideCursor and GetCursorPos(P) and
+    FDisplay.DisplayRect(R) and R.Contains(P));
   {$ENDIF}
 end;
 
@@ -1058,7 +1056,7 @@ begin
     Show;
   end;
   btnStereo.IsPressed := False;
-  ShowStatus('Stereo off: the 3D window is hidden and the lens off; SR stays running');
+  ShowStatus('Stereo off: the 3D window is hidden and the lens off; the display stays running');
 end;
 
 procedure TForm2.PlaceOutput(const ARect: TRect);
@@ -1111,7 +1109,7 @@ end;
 
 procedure TForm2.SizeViewForStereo(AOn: Boolean);
 var
-  Info: TSRBDisplayInfo;
+  Info: TLNBDisplayInfo;
   Scale, W, H: Single;
 begin
   FResizing := True;
@@ -1123,7 +1121,7 @@ begin
       // part of each eye's picture, which is cut out and scaled to the view
       W := PEARDOX_EYES_DEFAULT_VIEW_WIDTH;
       H := PEARDOX_EYES_DEFAULT_VIEW_HEIGHT;
-      if FLeiaSR.DisplayInfo(Info) and (Info.recommendedViewWidth > 0) and
+      if FDisplay.DisplayInfo(Info) and (Info.recommendedViewWidth > 0) and
         (Info.recommendedViewHeight > 0) then
       begin
         W := Info.recommendedViewWidth;
@@ -1137,12 +1135,12 @@ begin
       // Gorilla3D's render shows in the window it is on, and an opaque
       // cover over it did not help (and cost 14 ms a frame); an invisible
       // viewport is not rendered at all (20:10: black). With this window
-      // hidden (it was on the SR display) the viewport stays here: 70 fps,
+      // hidden (it was on the 3D display) the viewport stays here: 70 fps,
       // render 5.7 ms (19:58)
       if not FMainHidden then
       begin
         // The display by name (owner, 20:29)
-        FStereoNote.Text := 'Showing in glasses-free 3D on ' + FLeiaSR.DisplayName +
+        FStereoNote.Text := 'Showing in glasses-free 3D on ' + FDisplay.DisplayName +
           sLineBreak + 'Esc or Stereo turns it off';
         GorillaViewport1.Parent := FRenderForm;
         FStereoCover.Visible := True;
@@ -1190,12 +1188,12 @@ begin
   TThread.ForceQueue(nil, LeaveStereo);
 end;
 
-procedure TForm2.LeiaSRLog(Sender: TObject; const AText: string);
+procedure TForm2.DisplayLog(Sender: TObject; const AText: string);
 begin
   ShowStatus(AText);
 end;
 
-procedure TForm2.LeiaSRStarted(Sender: TObject);
+procedure TForm2.DisplayStarted(Sender: TObject);
 {$IFDEF MSWINDOWS}
 var
   Child: NativeUInt;
@@ -1203,11 +1201,11 @@ var
 {$ENDIF}
 begin
   {$IFDEF MSWINDOWS}
-  FSRParent := FormToHWND(FOutput);
+  FDisplayParent := FormToHWND(FOutput);
   // The bridge's window is the 3D window's only native child: the mouse is
   // passed through it to the 3D window (FOutputHost's handlers)
   N := 0;
-  Child := GetWindow(FSRParent, GW_CHILD);
+  Child := GetWindow(FDisplayParent, GW_CHILD);
   while Child <> 0 do
   begin
     if SetWindowSubclass(Child, @PassMouseThrough, PASS_MOUSE_SUBCLASS_ID, 0) then
@@ -1220,14 +1218,14 @@ begin
   // Started again on a new 3D window (see EnterStereo): weave now
   if FStereoOn then
   begin
-    ShowStatus('SR started again on the 3D window: weaving');
+    ShowStatus('The display started again on the 3D window: weaving');
     StartWeaving;
   end
   else
-    ShowStatus('SR ready: Stereo turns glasses-free 3D on, full screen on the SR display');
+    ShowStatus('Display ready: Stereo turns glasses-free 3D on, full screen on the 3D display');
 end;
 
-procedure TForm2.LeiaSRStopped(Sender: TObject);
+procedure TForm2.DisplayStopped(Sender: TObject);
 begin
   if FRestarting then
     Exit;
@@ -1289,7 +1287,7 @@ begin
   Result := True;
   if AIsRepeat then
     Exit;
-  // Outside the hook: the key's action may log, resize, restart SR
+  // Outside the hook: the key's action may log, resize, restart the display
   TThread.ForceQueue(nil,
     procedure
     begin
@@ -1305,24 +1303,24 @@ begin
   case AKey of
     vkL:
       begin
-        // 0 (SR's own) .. LATENCY_MAX_FRAMES, round and round
-        FLeiaSR.SetLatencyFrames((FLeiaSR.Settings.LatencyFrames + 1) mod (LATENCY_MAX_FRAMES + 1));
-        FLeiaSR.SaveSettings;
+        // 0 (the runtime's own) .. LATENCY_MAX_FRAMES, round and round
+        FDisplay.SetLatencyFrames((FDisplay.Settings.LatencyFrames + 1) mod (LATENCY_MAX_FRAMES + 1));
+        FDisplay.SaveSettings;
       end;
     vkLeftBracket, vkRightBracket:
       begin
-        Sep := FLeiaSR.Settings.EyeSeparationMM;
+        Sep := FDisplay.Settings.EyeSeparationMM;
         // 0 means "as tracked": the keys start from the usual 63 mm
         if Sep <= 0 then
-          Sep := PEARDOX_DEFAULT_EYE_SEPARATION_MM;
+          Sep := LENTICULAR_DEFAULT_EYE_SEPARATION_MM;
         if AKey = vkLeftBracket then
           Sep := Sep - EYE_SEPARATION_STEP_MM
         else
           Sep := Sep + EYE_SEPARATION_STEP_MM;
-        FLeiaSR.Settings.EyeSeparationMM := EnsureRange(Sep, EYE_SEPARATION_MIN_MM,
+        FDisplay.Settings.EyeSeparationMM := EnsureRange(Sep, EYE_SEPARATION_MIN_MM,
           EYE_SEPARATION_MAX_MM);
-        ShowStatus(Format('Eye separation %.0f mm', [FLeiaSR.Settings.EyeSeparationMM]));
-        FLeiaSR.SaveSettings;
+        ShowStatus(Format('Eye separation %.0f mm', [FDisplay.Settings.EyeSeparationMM]));
+        FDisplay.SaveSettings;
       end;
     vkP:
       FEyes.LogSnapshot('StereoModel view: ' + ViewText + ' | model ' +
@@ -1336,53 +1334,53 @@ begin
       begin
         // Owner's Release log (19:27): off, submit 8 -> 0.9 ms and 24 -> 32
         // fps; "No difference visually" (19:30), so off is the default
-        FLeiaSR.SetFrameCap(not FLeiaSR.Settings.FrameCap);
-        FLeiaSR.SaveSettings;
+        FDisplay.SetFrameCap(not FDisplay.Settings.FrameCap);
+        FDisplay.SaveSettings;
       end;
     vkV, vkComma, vkPeriod:
       begin
         // The per-eye view on and off (off: full speed), and its render
         // scale (owner, 22:37); the viewport is made the new size at once
         if AKey = vkV then
-          FLeiaSR.Settings.PerEyeView := not FLeiaSR.Settings.PerEyeView
+          FDisplay.Settings.PerEyeView := not FDisplay.Settings.PerEyeView
         else
         begin
-          Scale := EnsureRange(FLeiaSR.Settings.RenderScale, PEARDOX_MIN_RENDER_SCALE,
-            PEARDOX_MAX_RENDER_SCALE);
+          Scale := EnsureRange(FDisplay.Settings.RenderScale, LENTICULAR_MIN_RENDER_SCALE,
+            LENTICULAR_MAX_RENDER_SCALE);
           if AKey = vkComma then
             Scale := Scale - RENDER_SCALE_STEP
           else
             Scale := Scale + RENDER_SCALE_STEP;
-          FLeiaSR.Settings.RenderScale := EnsureRange(Scale, PEARDOX_MIN_RENDER_SCALE,
-            PEARDOX_MAX_RENDER_SCALE);
+          FDisplay.Settings.RenderScale := EnsureRange(Scale, LENTICULAR_MIN_RENDER_SCALE,
+            LENTICULAR_MAX_RENDER_SCALE);
         end;
-        FLeiaSR.SaveSettings;
+        FDisplay.SaveSettings;
         if FStereoOn then
           SizeViewForStereo(True);
         ShowStatus(Format('Per-eye view %s, render scale %.2f (used: %.2f)',
-          [IfThenStr(FLeiaSR.Settings.PerEyeView, 'on', 'off (full speed)'),
-          FLeiaSR.Settings.RenderScale, FEyes.RenderScale]));
+          [IfThenStr(FDisplay.Settings.PerEyeView, 'on', 'off (full speed)'),
+          FDisplay.Settings.RenderScale, FEyes.RenderScale]));
       end;
     vkM:
       begin
-        FLeiaSR.Settings.HideCursor := not FLeiaSR.Settings.HideCursor;
-        FLeiaSR.SaveSettings;
+        FDisplay.Settings.HideCursor := not FDisplay.Settings.HideCursor;
+        FDisplay.SaveSettings;
         CursorTimer(nil);
-        ShowStatus('Mouse pointer hidden over the SR display: ' +
-          BoolToStr(FLeiaSR.Settings.HideCursor, True));
+        ShowStatus('Mouse pointer hidden over the 3D display: ' +
+          BoolToStr(FDisplay.Settings.HideCursor, True));
       end;
     vkW:
       begin
         // Off: one flat view, lens off, for screen recordings (owner, 22:37)
-        FLeiaSR.Settings.Weave := not FLeiaSR.Settings.Weave;
-        FLeiaSR.SaveSettings;
-        ShowStatus(IfThenStr(FLeiaSR.Settings.Weave, 'Weave on: glasses-free 3D',
+        FDisplay.Settings.Weave := not FDisplay.Settings.Weave;
+        FDisplay.SaveSettings;
+        ShowStatus(IfThenStr(FDisplay.Settings.Weave, 'Weave on: glasses-free 3D',
           'Weave off: one flat view from between the eyes, the lens off (for recording)'));
       end;
   end;
 end;
 
-procedure TForm2.LeiaSRProblem(Sender: TObject; AProblem: TPeardoxLeiaSRProblem;
+procedure TForm2.DisplayProblem(Sender: TObject; AProblem: TLenticularDisplayProblem;
   const AMessage: string);
 begin
   // Also when a restart on a new 3D window fails
@@ -1446,10 +1444,10 @@ end;
 
 procedure TForm2.TestView;
 var
-  Cam: TPeardoxOrbitalCamera;
+  Cam: TSpritelyOrbitalCamera;
   Fitted: Single;
 begin
-  Cam := PeardoxOrbitalCamera1;
+  Cam := SpritelyOrbitalCamera1;
   FZoom := 1;
   Cam.Azimuth := TEST_VIEW_AZIMUTH;
   Cam.PolarAngle := TEST_VIEW_INCLINATION;
@@ -1506,16 +1504,16 @@ begin
   FModel := NewModel;
   FModelPath := APath;
   PlaceModel;
-  // A model with animations plays its first (SRDemoScene's spinning
+  // A model with animations plays its first (DemoScene's spinning
   // cubes); FAnimationBox chooses another
   FillAnimations;
   // The camera may not go inside the model: the wheel and orbits stop at
   // the face nearest the camera
-  PeardoxOrbitalCamera1.Subject := FModel;
+  SpritelyOrbitalCamera1.Subject := FModel;
   ResetView;
   ShowStatus(Format('Loaded %s; azimuth %.1f, polar %.1f, distance %.2f, headlight %s',
-    [APath, PeardoxOrbitalCamera1.Azimuth, PeardoxOrbitalCamera1.PolarAngle,
-     PeardoxOrbitalCamera1.Distance, BoolToStr(PeardoxOrbitalCamera1.Light <> nil, True)]));
+    [APath, SpritelyOrbitalCamera1.Azimuth, SpritelyOrbitalCamera1.PolarAngle,
+     SpritelyOrbitalCamera1.Distance, BoolToStr(SpritelyOrbitalCamera1.Light <> nil, True)]));
   Result := True;
 end;
 
@@ -1596,30 +1594,30 @@ begin
     Exit;
   // For every angle, so orbiting never needs a refit; only the view's
   // shape does. The wheel's zoom is then put back on top of the fit
-  if not PeardoxOrbitalCamera1.FitToBoundsMax(FModel, VIEW_MARGIN) then
+  if not SpritelyOrbitalCamera1.FitToBoundsMax(FModel, VIEW_MARGIN) then
     ShowStatus('Framing FAILED: no camera, an empty model or a viewport with no size')
   else if not SameValue(FZoom, 1) then
-    PeardoxOrbitalCamera1.Zoom(FZoom);
+    SpritelyOrbitalCamera1.Zoom(FZoom);
   ShowView;
 end;
 
 procedure TForm2.ResetView;
 begin
   FZoom := 1;
-  PeardoxOrbitalCamera1.Azimuth := 0;
-  PeardoxOrbitalCamera1.PolarAngle := 0;
-  PeardoxOrbitalCamera1.Roll := 0;
+  SpritelyOrbitalCamera1.Azimuth := 0;
+  SpritelyOrbitalCamera1.PolarAngle := 0;
+  SpritelyOrbitalCamera1.Roll := 0;
   FitView;
 end;
 
 function TForm2.ModelDepth(out ADepth: Single): Boolean;
 var
-  Cam: TPeardoxOrbitalCamera;
+  Cam: TSpritelyOrbitalCamera;
   Eye, Forward, Centre: TPoint3D;
   Box: TBoundingBox;
 begin
   ADepth := 0;
-  Cam := PeardoxOrbitalCamera1;
+  Cam := SpritelyOrbitalCamera1;
   Result := (FModel <> nil) and (Cam.Camera <> nil) and (Cam.Distance > 0);
   if not Result then
     Exit;
@@ -1634,10 +1632,10 @@ end;
 
 function TForm2.ViewText: string;
 var
-  Cam: TPeardoxOrbitalCamera;
+  Cam: TSpritelyOrbitalCamera;
   Depth: Single;
 begin
-  Cam := PeardoxOrbitalCamera1;
+  Cam := SpritelyOrbitalCamera1;
   Result := Format('azimuth %.1f, inclination %.1f, roll %.1f | target depth %.3f',
     [Cam.Azimuth, Cam.PolarAngle, Cam.Roll, Cam.Distance]);
   if ModelDepth(Depth) then
@@ -1651,11 +1649,11 @@ end;
 
 function TForm2.DepthStatus: string;
 var
-  Cam: TPeardoxOrbitalCamera;
+  Cam: TSpritelyOrbitalCamera;
   Depth, Z, MMPerUnit: Single;
   Where: string;
 begin
-  Cam := PeardoxOrbitalCamera1;
+  Cam := SpritelyOrbitalCamera1;
   Result := Format('Target depth %.3f', [Cam.Distance]);
   if not ModelDepth(Depth) then
     Exit;
@@ -1668,9 +1666,9 @@ begin
     [Result, Depth, Z, Where]);
   // The view's height at the target's depth is the view's height on the
   // display; FOV is the vertical field of view
-  if FLeiaSR.Running and (FLeiaSR.WindowSizeMM.Height > 0) then
+  if FDisplay.Running and (FDisplay.WindowSizeMM.Height > 0) then
   begin
-    MMPerUnit := FLeiaSR.WindowSizeMM.Height /
+    MMPerUnit := FDisplay.WindowSizeMM.Height /
       (2 * Cam.Distance * Tan(DegToRad(Cam.FOV) / 2));
     Result := Result + Format(', %.0f mm', [Z * MMPerUnit]);
   end;
@@ -1715,8 +1713,8 @@ begin
   begin
     // Up (Y falling) pushes the target deeper, down pulls it nearer; the
     // camera and the picture stay as they are (owner, 7 November 2026: the
-    // depth will matter for the SR display). Across is not used
-    PeardoxOrbitalCamera1.SetTargetDepth(PeardoxOrbitalCamera1.Distance
+    // depth will matter for the 3D display). Across is not used
+    SpritelyOrbitalCamera1.SetTargetDepth(SpritelyOrbitalCamera1.Distance
       * Power(DEPTH_STEP_PER_PIXEL, FDragLast.Y - Y));
     ShowStatus(DepthStatus);
   end
@@ -1724,7 +1722,7 @@ begin
     // Dragging right turns the camera right round the centre (owner, 7
     // November 2026: the other way round felt reversed); dragging down
     // raises the camera
-    PeardoxOrbitalCamera1.Orbit((X - FDragLast.X) * ORBIT_DEGREES_PER_PIXEL,
+    SpritelyOrbitalCamera1.Orbit((X - FDragLast.X) * ORBIT_DEGREES_PER_PIXEL,
       (Y - FDragLast.Y) * ORBIT_DEGREES_PER_PIXEL);
   FDragLast := PointF(X, Y);
   ShowView;
@@ -1745,13 +1743,13 @@ end;
 procedure TForm2.ViewMouseWheel(Sender: TObject; Shift: TShiftState; WheelDelta: Integer;
   var Handled: Boolean);
 var
-  Cam: TPeardoxOrbitalCamera;
+  Cam: TSpritelyOrbitalCamera;
   NewZoom, Before, ToModel, NewToModel, NewDistance: Single;
   Box: TBoundingBox;
   Centre: TPoint3D;
 begin
   Handled := True;
-  Cam := PeardoxOrbitalCamera1;
+  Cam := SpritelyOrbitalCamera1;
   // Rolling the wheel away (positive) brings the view nearer
   NewZoom := EnsureRange(FZoom * Power(ZOOM_STEP, -WheelDelta / WHEEL_NOTCH), ZOOM_MIN, ZOOM_MAX);
   if (FModel = nil) or (Cam.Camera = nil) or

@@ -1,9 +1,13 @@
 @echo off
 rem PasDoc reference of StereoModel (a 3D model on a glasses-free display,
 rem Delphi FMX and Gorilla3D), as HTML and as HTML Help (.chm), one set for
-rem the Peardox components and one per program:
-rem   docs\html\api            HTML: the Peardox components in lib (the API)
-rem   docs\chm\api             HTML Help as docs\html\api, compiled to a .chm
+rem each set of components and one per program:
+rem   docs\html\Spritely       HTML: the Spritely components in lib (camera,
+rem                            projection)
+rem   docs\html\Lenticular     HTML: the Lenticular components in lib
+rem                            (glasses-free 3D)
+rem   docs\chm\Spritely, docs\chm\Lenticular
+rem                            HTML Help as the HTML ones, compiled to a .chm
 rem   docs\html\<program>      HTML: one program (StereoModel): its .dpr, its
 rem                            forms and the lib units it uses
 rem   docs\chm\<program>       HTML Help as docs\html\<program>, as a .chm
@@ -13,9 +17,10 @@ rem found, not listed: every src\<program>.dpr is one. What each program's
 rem reference holds is read from its .dpr's uses clause (the units named
 rem "in '...'"): its forms (ui\...), and the units from ..\lib, so a new
 rem program, form or lib unit is picked up without changing this script.
-rem Units from elsewhere (the FastMM5 and delphi-neon submodules) are left
-rem out. The api run takes every unit in lib except the design-time
-rem registration units (*.Reg.pas, Peardox.Reg), which are not API.
+rem Units from elsewhere (the FastMM5 submodule) are left out. Each
+rem component set's run takes every unit in lib named after it except its
+rem design-time registration unit (*.Reg.pas, such as Spritely.Reg), which
+rem is not API.
 rem
 rem Needs pasdoc on the PATH (or set PASDOC=full path). The .chm files need
 rem Microsoft HTML Help Workshop's hhc.exe (set HHC=full path if it is not
@@ -61,9 +66,12 @@ set SUBTITLE=a 3D model on a glasses-free display
 set FAILED=0
 set RUNS=0
 
-rem The API: every unit in lib except the design-time registration
-set APISRC=
-for %%F in (lib\*.pas) do call :addapi "%%F"
+rem The API of each set: every unit in lib named after it, except the
+rem design-time registration
+set APISPRITELY=
+for %%F in (lib\Spritely.*.pas) do call :addapi APISPRITELY "%%F"
+set APILENTICULAR=
+for %%F in (lib\Lenticular.*.pas) do call :addapi APILENTICULAR "%%F"
 
 rem The programs: every src\<program>.dpr
 set APPS=
@@ -74,23 +82,27 @@ echo ==== Cleaning the output folders
 call :clean docs\html
 call :clean docs\chm
 
-call :run html api docs\html\api --name Peardox --title "Peardox components - %SUBTITLE%" %APISRC%
-call :run htmlhelp api docs\chm\api --name Peardox --title "Peardox components - %SUBTITLE%" %APISRC%
+call :run html Spritely docs\html\Spritely --name Spritely --title "Spritely components - %SUBTITLE%" %APISPRITELY%
+call :run htmlhelp Spritely docs\chm\Spritely --name Spritely --title "Spritely components - %SUBTITLE%" %APISPRITELY%
+call :run html Lenticular docs\html\Lenticular --name Lenticular --title "Lenticular components - %SUBTITLE%" %APILENTICULAR%
+call :run htmlhelp Lenticular docs\chm\Lenticular --name Lenticular --title "Lenticular components - %SUBTITLE%" %APILENTICULAR%
 for %%A in (%APPS%) do call :program %%A
 
-call :chm docs\chm\api
+call :chm docs\chm\Spritely
+call :chm docs\chm\Lenticular
 for %%A in (%APPS%) do call :chm docs\chm\%%A
 
 echo.
-if %FAILED%==0 (echo PasDoc: all %RUNS% runs finished; start at docs\html\api\index.html) else (echo PasDoc: %FAILED% step^(s^) FAILED - see above)
+if %FAILED%==0 (echo PasDoc: all %RUNS% runs finished; start at docs\html\Spritely\index.html or docs\html\Lenticular\index.html) else (echo PasDoc: %FAILED% step^(s^) FAILED - see above)
 endlocal & exit /b %FAILED%
 
-rem ---- :addapi <lib\unit.pas> - adds one lib unit to the api run, unless it
-rem      is a design-time registration unit (*.Reg.pas, such as Peardox.Reg)
+rem ---- :addapi <variable> <lib\unit.pas> - adds one lib unit to a set's
+rem      run (the variable holding its sources), unless it is a design-time
+rem      registration unit (*.Reg.pas, such as Spritely.Reg)
 :addapi
-set "UNITNAME=%~n1"
+set "UNITNAME=%~n2"
 if /i "%UNITNAME:~-4%"==".Reg" exit /b 0
-set APISRC=%APISRC% "%~1"
+call set "%~1=%%%~1%% "%~2""
 exit /b 0
 
 rem ---- :addapp <folder> - adds one program folder to the list

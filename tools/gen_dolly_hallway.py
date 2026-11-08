@@ -3,18 +3,18 @@
 
     python3 tools/gen_dolly_hallway.py
 
-Standard library only; uses gen_srdemo_scene.py's builder and models/uvcube.glb.
+Standard library only; uses gen_demo_scene.py's builder and models/uvcube.glb.
 Writes models/DollyHallway.glb: the UV cube standing on a long chequered
 floor, between two rows of pillars, with a wall at the far end of the hallway.
 
-It is made for the dolly zoom (TPeardoxProjection's FieldOfView with
+It is made for the dolly zoom (TSpritelyProjection's FieldOfView with
 Dolly): look along the hallway, level, with the cube as the subject. As
 the lens narrows and the camera backs away the cube keeps its size while
 the pillars and the far wall come forward and the floor's squares stop
 shrinking with distance; as it widens the hallway stretches away.
 
 The scene, in FMX's units (Y down, Z along the hallway), written as glTF
-(x, -y, -z) as gen_srdemo_scene.py does, since StereoModel and
+(x, -y, -z) as gen_demo_scene.py does, since StereoModel and
 ProjectionTest turn every model 180 degrees about X:
 
   - the UV cube (uvcube.glb's mesh and texture, 2 units) on the floor at
@@ -33,7 +33,7 @@ import struct
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import gen_srdemo_scene as base  # noqa: E402
+import gen_demo_scene as base  # noqa: E402
 
 ROOT = base.ROOT
 OUT = os.path.join(ROOT, "models", "DollyHallway.glb")

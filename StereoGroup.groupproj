@@ -4,19 +4,22 @@
     </PropertyGroup>
     <ItemGroup>
         <Projects Include="src\StereoModel.dproj">
-            <Dependencies>packages\Peardox.dproj;packages\PeardoxLeiaSR.dproj</Dependencies>
+            <Dependencies>packages\Spritely.dproj;packages\Lenticular.dproj</Dependencies>
         </Projects>
         <Projects Include="src\ProjectionTest.dproj">
-            <Dependencies>packages\Peardox.dproj</Dependencies>
+            <Dependencies>packages\Spritely.dproj</Dependencies>
         </Projects>
-        <Projects Include="packages\Peardox.dproj">
+        <Projects Include="packages\Spritely.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="packages\PeardoxLeiaSR.dproj">
+        <Projects Include="packages\dclSpritely.dproj">
+            <Dependencies>packages\Spritely.dproj</Dependencies>
+        </Projects>
+        <Projects Include="packages\Lenticular.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="packages\dclPeardox.dproj">
-            <Dependencies>packages\Peardox.dproj</Dependencies>
+        <Projects Include="packages\dclLenticular.dproj">
+            <Dependencies>packages\Lenticular.dproj</Dependencies>
         </Projects>
     </ItemGroup>
     <ProjectExtensions>
@@ -44,41 +47,50 @@
     <Target Name="ProjectionTest:Make">
         <MSBuild Projects="src\ProjectionTest.dproj" Targets="Make"/>
     </Target>
-    <Target Name="Peardox">
-        <MSBuild Projects="packages\Peardox.dproj"/>
+    <Target Name="Spritely">
+        <MSBuild Projects="packages\Spritely.dproj"/>
     </Target>
-    <Target Name="Peardox:Clean">
-        <MSBuild Projects="packages\Peardox.dproj" Targets="Clean"/>
+    <Target Name="Spritely:Clean">
+        <MSBuild Projects="packages\Spritely.dproj" Targets="Clean"/>
     </Target>
-    <Target Name="Peardox:Make">
-        <MSBuild Projects="packages\Peardox.dproj" Targets="Make"/>
+    <Target Name="Spritely:Make">
+        <MSBuild Projects="packages\Spritely.dproj" Targets="Make"/>
     </Target>
-    <Target Name="PeardoxLeiaSR">
-        <MSBuild Projects="packages\PeardoxLeiaSR.dproj"/>
+    <Target Name="dclSpritely">
+        <MSBuild Projects="packages\dclSpritely.dproj"/>
     </Target>
-    <Target Name="PeardoxLeiaSR:Clean">
-        <MSBuild Projects="packages\PeardoxLeiaSR.dproj" Targets="Clean"/>
+    <Target Name="dclSpritely:Clean">
+        <MSBuild Projects="packages\dclSpritely.dproj" Targets="Clean"/>
     </Target>
-    <Target Name="PeardoxLeiaSR:Make">
-        <MSBuild Projects="packages\PeardoxLeiaSR.dproj" Targets="Make"/>
+    <Target Name="dclSpritely:Make">
+        <MSBuild Projects="packages\dclSpritely.dproj" Targets="Make"/>
     </Target>
-    <Target Name="dclPeardox">
-        <MSBuild Projects="packages\dclPeardox.dproj"/>
+    <Target Name="Lenticular">
+        <MSBuild Projects="packages\Lenticular.dproj"/>
     </Target>
-    <Target Name="dclPeardox:Clean">
-        <MSBuild Projects="packages\dclPeardox.dproj" Targets="Clean"/>
+    <Target Name="Lenticular:Clean">
+        <MSBuild Projects="packages\Lenticular.dproj" Targets="Clean"/>
     </Target>
-    <Target Name="dclPeardox:Make">
-        <MSBuild Projects="packages\dclPeardox.dproj" Targets="Make"/>
+    <Target Name="Lenticular:Make">
+        <MSBuild Projects="packages\Lenticular.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="dclLenticular">
+        <MSBuild Projects="packages\dclLenticular.dproj"/>
+    </Target>
+    <Target Name="dclLenticular:Clean">
+        <MSBuild Projects="packages\dclLenticular.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="dclLenticular:Make">
+        <MSBuild Projects="packages\dclLenticular.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">
-        <CallTarget Targets="Peardox;PeardoxLeiaSR;dclPeardox;StereoModel;ProjectionTest"/>
+        <CallTarget Targets="Spritely;dclSpritely;Lenticular;dclLenticular;StereoModel;ProjectionTest"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="Peardox:Clean;PeardoxLeiaSR:Clean;dclPeardox:Clean;StereoModel:Clean;ProjectionTest:Clean"/>
+        <CallTarget Targets="Spritely:Clean;dclSpritely:Clean;Lenticular:Clean;dclLenticular:Clean;StereoModel:Clean;ProjectionTest:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="Peardox:Make;PeardoxLeiaSR:Make;dclPeardox:Make;StereoModel:Make;ProjectionTest:Make"/>
+        <CallTarget Targets="Spritely:Make;dclSpritely:Make;Lenticular:Make;dclLenticular:Make;StereoModel:Make;ProjectionTest:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>

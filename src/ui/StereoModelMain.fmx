@@ -96,7 +96,7 @@ object Form2: TForm2
       end
     end
   end
-  object PeardoxOrbitalCamera1: TPeardoxOrbitalCamera
+  object SpritelyOrbitalCamera1: TSpritelyOrbitalCamera
     Viewport = GorillaViewport1
     Left = 80
     Top = 16

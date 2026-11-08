@@ -1,24 +1,27 @@
 #!/usr/bin/env python3
-"""Packages the Peardox palette icons (lib/icons/<Class>.ico) for Delphi.
+"""Packages the palette icons (lib/icons/<Class>.ico) for Delphi.
 
     python3 tools/gen_icon_res.py
 
-Standard library only. Writes lib/Peardox.Reg.dcr, linked with {$R ...} by
-lib/Peardox.Reg.pas, the unit that registers the components on the Peardox
-page of the palette.
+Standard library only. Writes one .dcr per set of components, linked with
+{$R ...} by the unit that registers that set on its page of the palette:
+
+  lib/Spritely.Reg.dcr     lib/Spritely.Reg.pas, the Spritely page
+  lib/Lenticular.Reg.dcr   lib/Lenticular.Reg.pas, the Lenticular page
 
 A .dcr is a .res file: one BITMAP per size, named after the class in
-capitals - TPEARDOXORBITALCAMERA (24 px), TPEARDOXORBITALCAMERA16 and
-TPEARDOXORBITALCAMERA32. The bitmaps are 32-bit with alpha; transparent
+capitals - TSPRITELYORBITALCAMERA (24 px), TSPRITELYORBITALCAMERA16 and
+TSPRITELYORBITALCAMERA32. The bitmaps are 32-bit with alpha; transparent
 pixels (and the faint anti-aliased fringe of the rounded corners) are
 magenta with alpha 0, and the bottom-left pixel is always one of them, so
 an IDE that ignores alpha still finds the transparent colour where Delphi
 looks for it. Taken from G3DGames/TSteamAPI's tools/gen_icon_res.py, whose
 32-bit alpha bitmaps are confirmed to show in the Delphi 13 IDE.
 
-A new component needs its class in COMPONENTS and its icon drawn by
-tools/gen_icons.py; a missing icon or size stops the script with a message.
-Output is deterministic: the file is rewritten only when its bytes change.
+A new component needs its class in its set's list in SETS and its icon
+drawn by tools/gen_icons.py; a missing icon or size stops the script with
+a message. Output is deterministic: a file is rewritten only when its bytes
+change.
 """
 import os
 import struct
@@ -28,9 +31,11 @@ import zlib
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 ICON_DIR = "lib/icons"
-DCR = "lib/Peardox.Reg.dcr"
-# Every class lib/Peardox.Reg.pas registers
-COMPONENTS = ["TPeardoxOrbitalCamera", "TPeardoxProjection"]
+# Each .dcr and every class its registration unit registers
+SETS = {
+    "lib/Spritely.Reg.dcr": ["TSpritelyOrbitalCamera", "TSpritelyProjection"],
+    "lib/Lenticular.Reg.dcr": ["TLenticularDisplay"],
+}
 DELPHI_SIZES = ((24, ""), (16, "16"), (32, "32"))           # size, name suffix
 RT_BITMAP = 2
 MEM_FLAGS = 0x1010            # MOVEABLE | DISCARDABLE
@@ -187,12 +192,13 @@ def load(classes, sizes):
 
 def main():
     try:
-        icons = load(COMPONENTS, [s for s, _ in DELPHI_SIZES])
-        write(DCR, res_file([res_entry(RT_BITMAP, cls + suffix, bitmap_resource(icons[cls][size]))
-                             for cls in COMPONENTS for size, suffix in DELPHI_SIZES]))
+        for dcr, classes in SETS.items():
+            icons = load(classes, [s for s, _ in DELPHI_SIZES])
+            write(dcr, res_file([res_entry(RT_BITMAP, cls + suffix, bitmap_resource(icons[cls][size]))
+                                 for cls in classes for size, suffix in DELPHI_SIZES]))
+            print(f"{dcr}: {len(classes)} components packaged")
     except IconError as e:
         sys.exit(str(e))
-    print(f"{len(COMPONENTS)} components packaged")
 
 
 if __name__ == "__main__":

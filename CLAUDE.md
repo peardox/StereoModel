@@ -8,15 +8,15 @@ Keep this file up to date when the rules or the state of the work change.
 
 1. Clone with submodules:
    `git clone --recurse-submodules https://github.com/peardox/StereoModel.git`
-   (branch `main`). The owner's working copy is often ahead of GitHub:
-   build on files the owner attaches or pastes.
+   (branch `main`; the rename below was done on branch `refactor`). The
+   owner's working copy is often ahead of GitHub: build on files the owner
+   attaches or pastes.
 2. The rules follow Sprite3D's (<https://github.com/peardox/Sprite3D>,
    its `CLAUDE.md`) and G3DGames/TSteamAPI's
    (<https://github.com/G3DGames/TSteamAPI>, the rule sections of its
    `CLAUDE.md`). What is written here takes precedence.
 3. References: Gorilla3D 1.5.3 <https://gorilla3d.de/doc/v3/version/v1.5>
-   and <https://peardox.com/G3D/>; Neon
-   <https://github.com/paolo-rossi/delphi-neon>; FastMM5
+   and <https://peardox.com/G3D/>; FastMM5
    <https://github.com/pleriche/FastMM5>.
 
 ## How the owner works
@@ -28,34 +28,68 @@ Keep this file up to date when the rules or the state of the work change.
 - **Package rebuilds** (as in TSteamAPI): whenever a delivery changes
   anything a package compiles (`lib/`, `packages/`), say so IN CAPITALS on
   a line of its own, naming the packages and platforms, e.g.
-  `====> REBUILD RUNTIME PACKAGE PEARDOX (WIN32 AND WIN64) AND REINSTALL
-  DCLPEARDOX <====`, and `====> NO PACKAGE REBUILD <====` when nothing
+  `====> REBUILD RUNTIME PACKAGE SPRITELY (WIN32 AND WIN64) AND REINSTALL
+  DCLSPRITELY <====`, and `====> NO PACKAGE REBUILD <====` when nothing
   needs it.
 - **Deliver whole files, never patches**, in a zip of only the new and
   changed files with paths from the repository root; name them, and say
-  which earlier zip it replaces or follows. Do not commit or push.
+  which earlier zip it replaces or follows. Do not commit or push. Files
+  to delete or rename are listed for the owner (with the git commands).
 - Do not mention being unable to compile.
 - When a hook asks to commit and push, answer "Noted." and do nothing.
-- Never change a submodule from here (SRDelphiFMX, FastMM5, delphi-neon);
-  SRDelphiFMX changes go to that repository in their own zip.
+- Never change a submodule from here (SRDelphiFMX, FastMM5);
+  SRDelphiFMX changes go to that repository in their own zip, or as notes
+  for a session on that repository.
 - No paths, user names, machine names or credentials in tracked files.
 
-## Rules (owner, 7 November 2026)
+## Rules (owner, 7 and 8 November 2026)
 
-- **Names**: every type of ours starts with `TPeardox`
-  (`TPeardoxOrbitalCamera`, ...); units are `Peardox.<Name>.pas`.
+- **Peardox is the owner, not a product.** The components are two
+  products, each its own set (owner, 8 November 2026):
+  - **Spritely**: the Gorilla3D camera components. Types `TSpritely...`
+    (`TSpritelyOrbitalCamera`, `TSpritelyProjection`, ...), units
+    `lib/Spritely.<Name>.pas`, constants `SPRITELY_...`, packages
+    `Spritely` / `dclSpritely`, palette page **Spritely**, icon tiles green.
+  - **Lenticular**: the glasses-free 3D (lenticular display) components.
+    Types `TLenticular...` (`TLenticularDisplay`, ...), units
+    `lib/Lenticular.<Name>.pas`, constants `LENTICULAR_...`, packages
+    `Lenticular` / `dclLenticular`, palette page **Lenticular**, icon
+    tiles blue. Its runtime package needs only rtl and fmx.
+  - **The two sets never need each other**: no Spritely unit uses a
+    Lenticular one or the reverse, and neither package requires the other,
+    so either may be installed alone. Something that needs both (such as
+    TPeardoxGorillaEyes, if it becomes a component) goes in the program or
+    in a third package that requires both. `tools/gen_packages.py` stops if
+    a unit is in the other set's package or a package requires the other
+    set's.
+  - The programs' own types keep the owner's prefix, `TPeardox...`
+    (`TPeardoxGorillaEyes`, `TPeardoxProjectionTestForm`, ...); the
+    settings folder is still `Peardox` in the user's application data.
+- **No trademarks in names, UI, logs, comments or README** (owner, 8
+  November 2026; extends the 15:10 rule on game names): not the display
+  maker's name, nor its runtime's product name or that name's two-letter
+  abbreviation: say "the display", "the display runtime",
+  "the 3D display", "glasses-free 3D", "lenticular"). Vendor DLL and SDK
+  names stay inside the bridge (SRDelphiFMX), never here. The only place a
+  trademark is named is the README's Trademarks notice. SRDelphiFMX and
+  its demo SRDemoFMX are referred to by those repository names until the
+  owner renames them.
 - **Reusable components go in `lib/` at the repository root**, not under
   `src/`; other projects use them. They must not know about this program.
-- **Components are registered on the `Peardox` palette page**, with a
+- **Components are registered on their set's palette page**, with a
   palette icon (`lib/icons`, packaged by `tools/gen_icon_res.py` into
-  `lib/Peardox.Reg.dcr`, linked by `lib/Peardox.Reg.pas`).
+  `lib/Spritely.Reg.dcr` or `lib/Lenticular.Reg.dcr`, linked by
+  `lib/Spritely.Reg.pas` or `lib/Lenticular.Reg.pas`).
 - **Cross-platform**: Windows, macOS, Linux 64-bit, Android and iOS. No
   platform-specific unit or call without `{$IF}` alternatives, as in
   Sprite3D.
 - **Settings are kept in the OS's per-user location** (AppData on Windows,
   Application Support on macOS, `$XDG_CONFIG_HOME` / `~/.config` on Linux,
   the documents folder on mobile), never beside the executable, read and
-  written with Neon as in Sprite3D's `TSprite3DJsonSettings`.
+  written with the RTL's `System.JSON` (no Neon, owner, 8 November 2026),
+  as `TLenticularStorage` in `lib/Lenticular.Storage.pas` does. If
+  Spritely ever needs settings it gets its own `Spritely.Storage` (the
+  sets share no unit).
 - A new component is first made in code to test it; once it works it is
   put on the form in the `.fmx`.
 - PasDoc on everything (`//**` comments, private members too), ASCII-only
@@ -66,6 +100,69 @@ Keep this file up to date when the rules or the state of the work change.
   lib, src/common, src/ui and src/*.dpr, or every @link is reported.
 - A new unit goes in both the `.dpr` and the `.dproj` (UTF-8 with BOM).
 
+## Handover (8 November 2026, Rename1)
+
+### This session: Peardox split into Spritely and Lenticular (Rename1)
+
+Asked by the owner (8 November 2026, 17:25 - 17:41): the components
+renamed into two independent products, the display maker's trademark
+removed everywhere, JSON settings without Neon. On branch `refactor`;
+zip Rename1 follows ProjHandover1 (the branch at cc39655).
+
+- Spritely: `Peardox.OrbitalCamera` -> `Spritely.OrbitalCamera`,
+  `Peardox.Projection` -> `Spritely.Projection`, `Peardox.Reg` ->
+  `Spritely.Reg` (+ `.dcr`); every `TPeardox...` there -> `TSpritely...`
+  (`TPeardoxProjection` -> `TSpritelyProjection`, not "...Camera": it
+  rewrites a camera's projection, it is not one), `IPeardoxProjectionFocus`
+  -> `ISpritelyProjectionFocus`, `PEARDOX_ORBITAL_/PROJECTION_/MATRIX_/
+  COMPONENT_PLATFORMS` -> `SPRITELY_...`. Packages `Peardox` /
+  `dclPeardox` -> `Spritely` / `dclSpritely` (the IDE's .dproj copies
+  edited, GUIDs kept).
+- Lenticular: the old glasses-free 3D units and `Peardox.Storage` -> `Lenticular.Display`,
+  `Lenticular.Display.Settings`, `Lenticular.Display.Api`,
+  `Lenticular.Storage`; the component is `TLenticularDisplay` (its enums
+  `ldp*` problems, `lds*` states, `ldl*` lens), settings
+  `TLenticularDisplaySettings`, `TLenticularStorage`, constants
+  `LENTICULAR_...`. NEW: `Lenticular.Reg` (palette page Lenticular, icon:
+  a screen under lens ridges, blue tile), package `dclLenticular`; the
+  component is safe to drop on a form (its constructor already skipped the
+  settings file, the timer and the window at design time). Package
+  the old glasses-free 3D package -> `Lenticular`, requiring rtl and fmx only (dbrtl was
+  Neon's).
+- JSON settings: `Lenticular.Storage` rewritten on System.JSON and
+  System.TypInfo (published integer, Int64, float, Boolean, enum by name,
+  string; camel-case member names as Neon wrote; read case-blind, unknown
+  or unsuitable members ignored). The settings file is now
+  `Lenticular.json` (same folder, same members): the owner renames the old
+  file by hand to keep his settings. The `delphi-neon` submodule is
+  removed (`git rm delphi-neon`).
+- The bridge (renamed in SRDelphiFMX by its own session, from the notes
+  delivered with Rename1 - assumed done): `LenticularBridge.dll`
+  (`dll\LenticularBridge.dll` in the submodule; StereoModel's post-build
+  copies it), exports `lnb_...`, records `TLNB...`, constants `LNB_...`
+  (`LNB_E_RUNTIME_MISSING` for the old "DLL missing"), Pascal helpers
+  `LenticularBridgeAvailable`, `LenticularBridgeHasExport`,
+  `LenticularBridgeLastError`, `LenticularRuntimeInstalled`,
+  `LenticularEventTypeName`. NEW export `lnb_RuntimeInstalled` (the bridge
+  looks for the runtime's DLLs as data): their names no longer appear
+  here. So `Installed` now also needs the bridge beside the executable,
+  and `Start` reports a missing bridge before a missing runtime.
+- Demos: `PeardoxOrbitalCamera1` -> `SpritelyOrbitalCamera1` in both
+  forms; the form's display field is `FDisplay`, its handlers `Display...`,
+  and `TPeardoxGorillaEyes.Display`; the demo scene models are
+  `DemoScene*.glb` and `tools/gen_srdemo_scene.py` ->
+  `gen_demo_scene.py` (made again). The orphan
+  `src/common/ProjectionTestAccess.pas` deleted.
+- Tools: `gen_packages.py` (four packages, the two sets checked apart),
+  `gen_icons.py` / `gen_icon_res.py` (two .dcr), `pasdoc.bat` (a reference
+  per set), `StereoGroup.groupproj`.
+- PACKAGE REBUILD: all four, all platforms used; uninstall dclPeardox and
+  install dclSpritely and dclLenticular; delete the old Peardox,
+  glasses-free 3D and dclPeardox .bpl and .dcp (and their DCUs in the Dcp
+  folders) so no program picks up the old units.
+- Names in the history below are the present ones (rewritten in Rename1);
+  zip names are as they were.
+
 ## Handover (8 November 2026, 15:54)
 
 Read this section first; "Where the work is" below is the full history,
@@ -74,11 +171,11 @@ for when a detail is needed.
 ### This session (8 November 2026, 12:30 - 15:54): projection access SOLVED
 
 The long-standing "Gorilla3D takes no projection of ours" problem is
-solved, generally, as a component: **TPeardoxProjection**
-(lib/Peardox.Projection.pas, Peardox package, palette icon a cavalier cube
+solved, generally, as a component: **TSpritelyProjection**
+(lib/Spritely.Projection.pas, Spritely package, palette icon a cavalier cube
 behind a camera). It finds FMX's private TContext3D.FProjectionMatrix by
 VALUE in the drawing context (never a hard-coded offset) from an empty
-3D object first in the viewport (TPeardoxRenderHook, called inside each
+3D object first in the viewport (TSpritelyRenderHook, called inside each
 frame), and writes its own projection there every frame, made from FMX's
 own (so resizes and lens changes are followed); FMX's goes back when
 nothing is changed or Active is False. What it draws:
@@ -93,10 +190,10 @@ nothing is changed or Active is False. What it draws:
   / scale); and orthographic camera presets pjTrueIsometric (45 /
   35.264), pjDimetric (2:1, 45 / 30), pjTrimetric (35 / 45).
   CameraPreset (default on) turns the Focus camera to a kind's angles
-  (PresetAngles, through IPeardoxProjectionFocus.ProjectionViewAngles).
+  (PresetAngles, through ISpritelyProjectionFocus.ProjectionViewAngles).
 - ManageCulling: Gorilla3D's FrustumCulling off while changed (it culls
   by its own camera).
-- TPeardoxOrbitalCamera.Projection links the two: the camera is the
+- TSpritelyOrbitalCamera.Projection links the two: the camera is the
   projection's Focus (target distance, dolly, presets), and its fits
   (FitToBounds / FitToBoundsMax / ProjectToView) follow the projection
   actually drawn (shift, lens and parallel views; checked in Python).
@@ -119,8 +216,8 @@ nothing is changed or Active is False. What it draws:
 Zips of this session, in order (each follows the one before): ProjTest1,
 2, 3, 4, 5, ProjComp1, 2, 3, 3b, 4, 5, 6, ProjHandover1 (this file). The
 owner deletes src/common/ProjectionTestAccess.pas (moved into lib in
-ProjComp1). PACKAGE REBUILD for ProjComp1 and ProjComp2 (Peardox, all
-platforms; reinstall dclPeardox) - done by the owner.
+ProjComp1). PACKAGE REBUILD for ProjComp1 and ProjComp2 (Spritely, all
+platforms; reinstall dclSpritely) - done by the owner.
 
 Open: (1) a Windows chime on ProjectionTest's exit, no dialog, cause
 unknown (asked for the IDE Event Log / Windows Event Viewer); an AV on
@@ -146,25 +243,25 @@ would need asking for.
   method `LoadFromFile`, as Sprite3D does; never go back to the class
   function `TGorillaModel.LoadNewModelFromFile`, which leaks the FBX
   loader's parse tree (Gorilla3D 1.5.3). See Lessons learned.
-- Submodule SRDelphiFMX at 2c4a2f1 (`srb_GetDevice`, `srb_SetFrameCap`,
-  `srb_CopyEyeTexture` / `srb_PresentViews`). Never change it from here.
-- StereoCam60 changed the PeardoxLeiaSR package (settings + `Flat`); the
+- Submodule SRDelphiFMX at 2c4a2f1 (`lnb_GetDevice`, `lnb_SetFrameCap`,
+  `lnb_CopyEyeTexture` / `lnb_PresentViews`). Never change it from here.
+- StereoCam60 changed the Lenticular package (settings + `Flat`); the
   owner must have rebuilt it.
 
 ### How glasses-free 3D works now
 
 - **Two windows.** The launcher (main form, lens off) and the 3D window
-  (`FOutput`, borderless, full screen on the SR display, named from its
-  EDID). Stereo button / Esc. On the SR display the launcher hides; on
+  (`FOutput`, borderless, full screen on the 3D display, named from its
+  EDID). Stereo button / Esc. On the 3D display the launcher hides; on
   another monitor it stays, with a cover (`FStereoCover`) over the view
   that takes drags and the wheel. The viewport moves to the hidden
   `FRenderForm` while the launcher is in sight (Gorilla3D otherwise
-  flashes in the launcher). SR starts on the hidden 3D window at program
+  flashes in the launcher). The display starts on the hidden 3D window at program
   start; Stereo is enabled once it has.
 - **Mouse.** The bridge's child window covers the 3D window;
-  `LeiaSRStarted` subclasses it (`PassMouseThrough`, WM_NCHITTEST ->
+  `DisplayStarted` subclasses it (`PassMouseThrough`, WM_NCHITTEST ->
   HTTRANSPARENT) so drags reach `FOutputHost`. The pointer is hidden over
-  the SR display while Stereo is on (`HideCursor`, `FCursorTimer`,
+  the 3D display while Stereo is on (`HideCursor`, `FCursorTimer`,
   `ShowCursor`).
 - **Per-eye off-axis view** (`TPeardoxGorillaEyes`,
   src/common/StereoModelEyes.pas), SRDemoFMX's geometry done Gorilla3D's
@@ -188,32 +285,32 @@ would need asking for.
   RenderManual, `CopyEye` binds FMX's multisampled RGBA8 framebuffer
   (`FindPicture`, by name), resolves it, and blits the part (GL_LINEAR,
   rows turned over, black outside) into the eye texture;
-  `TPeardoxLeiaSR.SubmitEyeTextures` weaves them. Every GL error is taken
+  `TLenticularDisplay.SubmitEyeTextures` weaves them. Every GL error is taken
   (`TakeErrors`) - FMX's next BeginScene fails on any pending one.
   Screenshots + a CPU copy (`CopyPart`) are the automatic fallback.
-- **Speed** (owner's RTX 5090 laptop, SRDemo scene): per-eye view at
+- **Speed** (owner's RTX 5090 laptop, demo scene): per-eye view at
   render scale 2: 46-48 fps (render 16 ms for both eyes, copy 0.5, submit
   0.2); per-eye view off or render scale 1: about 100 fps.
 - **Right drag** = `SetTargetDepth`: the camera stays, the target (the
   glass) slides along the line of sight. The scale stays (it is set at
-  the model's depth), so in SR the glass and the viewer move together and
+  the model's depth), so in the display the glass and the viewer move together and
   the model comes out of the screen or goes in without sliding. The 2D
   picture does not change. The wheel moves the camera (and so the scale).
 
 ### Settings and keys
 
-All in LeiaSR.json (`TPeardoxLeiaSRSettings`, lib, shared by Peardox
+All in Lenticular.json (`TLenticularDisplaySettings`, lib, shared by Spritely
 programs), all saved when changed by key:
 
 | Key | Setting | Meaning |
 |---|---|---|
-| L | LatencyFrames | weaver's eye prediction, 0 (SR's) .. 4 |
+| L | LatencyFrames | weaver's eye prediction, 0 (the runtime's) .. 4 |
 | [ ] | EyeSeparationMM | -/+ 5 mm (0 = as tracked) |
 | C | FrameCap | bridge waits for vblank after each frame (off) |
 | V | PerEyeView | off = full speed: eyes at the model's distance in the real eyes' directions, the whole picture woven, render scale 1 |
 | , . | RenderScale | -/+ 0.25, 1 .. 2 (2) |
-| M | HideCursor | pointer hidden over the SR display (on) |
-| W | Weave | off = flat: one view from the eyes' midpoint for both, lens off (`TPeardoxLeiaSR.Flat`), for screen recordings |
+| M | HideCursor | pointer hidden over the 3D display (on) |
+| W | Weave | off = flat: one view from the eyes' midpoint for both, lens off (`TLenticularDisplay.Flat`), for screen recordings |
 
 Also P (snapshot block to the log), Home (view back), Esc (Stereo off).
 Removed in StereoCam59: S T X R Z F (swap, toe-in, shift sign,
@@ -222,12 +319,13 @@ RenderManual, zero copy, row flip) and the old shift method.
 ### Next, in order
 
 1. **TPeardoxGorillaEyes as a component** in lib (the owner will do this
-   in its own session). It uses Peardox (orbit camera), PeardoxLeiaSR and
-   Gorilla3D, so it needs a package that requires both, or PeardoxLeiaSR
-   requiring Peardox; StereoModelGLInterop goes with it (Windows-only
+   in its own session). It uses Spritely (orbit camera), Lenticular and
+   Gorilla3D, so it needs a third package that requires both (never
+   Lenticular requiring Spritely or the reverse: the sets stay apart, owner,
+   8 November 2026); its name and prefix to ask; StereoModelGLInterop goes with it (Windows-only
    parts already under {$IFDEF MSWINDOWS}). Design package and palette
    icon as the others; first made in code, then on the form.
-2. **TPeardoxProjection into use** (the component works - see "This
+2. **TSpritelyProjection into use** (the component works - see "This
    session" above): first on ProjectionTest's form in the .fmx (it is
    still made in code, as the rule asks for a new component); then in
    StereoModel - shift / rise in the 2D view (control: ask - Shift+drag,
@@ -240,7 +338,7 @@ RenderManual, zero copy, row flip) and the old shift method.
    eye's RenderManual. Settle the screenshot fallback's one-frame lag
    there too. "Pan / rise: where it stands" below is now history: route
    5 (writing FMX's private projection) is what worked.
-3. Later: LensMode (lens off over the controls); two SR displays (ask
+3. Later: LensMode (lens off over the controls); two 3D displays (ask
    which); the old screenshot-route sign puzzle (StereoCam58a) only if it
    shows again.
 
@@ -260,7 +358,7 @@ which is what `x_ndc += sx * w` does after the projection, or a shear
 
 **What has been tried (StereoCam10-17), and why it failed:**
 - Truck / pedestal (StereoCam10): moves the camera, so the view changes;
-  not a shift. `TPeardoxOrbitalGorillaCamera.ShiftView` (lib) still does
+  not a shift. `TSpritelyOrbitalGorillaCamera.ShiftView` (lib) still does
   this, for sub-pixel nudges only.
 - A lens shift in the PROJECTION (StereoCam13): overriding
   GetProjectionMatrix drew nothing different - Gorilla3D 1.5.3's context
@@ -275,7 +373,7 @@ which is what `x_ndc += sx * w` does after the projection, or a shear
 
 **Not yet tried, most promising first:**
 1. **Shear in the VIEW matrix, as SRDemoFMX does.** SRDemoFMX
-   (SRDelphiFMX lib/FMX.SRStereoViewport.pas, `TSRStereoRenderer.RenderEye`,
+   (SRDelphiFMX lib/FMX.SRStereoViewport.pas, `the stereo renderer's RenderEye`,
    around line 2694) gets its whole off-axis projection into FMX by
    multiplying the VIEW matrix: `OffAxis.m31 := -Zoom * ShearX`,
    `m32 := -Zoom * ShearY` (and m11 = m22 = Zoom), then
@@ -293,7 +391,7 @@ which is what `x_ndc += sx * w` does after the projection, or a shear
    could put its cut and zoom in the matrix too (no 2x overscan: render
    scale 1, sharp, ~100 fps), and the dolly zoom (Maybe later) becomes
    possible.
-2. **In the SR view only: an offset on the glass, nearly free.** The
+2. **In the 3D view only: an offset on the glass, nearly free.** The
    per-eye view already renders larger and cuts the glass's part out.
    A true shift / rise is the glass's rectangle moved in its own plane
    while the eyes stay where they are: in `EyeView`, add the offset
@@ -305,7 +403,7 @@ which is what `x_ndc += sx * w` does after the projection, or a shear
    picture at 85 cm with render scale 2 (the part was ~0.48 high), none
    at all with PerEyeView off (the part is the whole picture). More
    needs a wider field of view or a bigger render. NOTE: this alone
-   gives the SR view a shift the 2D window does not show; the owner
+   gives the 3D view a shift the 2D window does not show; the owner
    should say whether that is acceptable.
 3. **The 2D window by render and copy**: draw the 2D view off screen
    (as the eyes are) and blit the shifted part to the window - costs a
@@ -324,14 +422,14 @@ which is what `x_ndc += sx * w` does after the projection, or a shear
    Gorilla3D draws with is not known. Last resort.
 
 **Whatever route is taken, these must follow the offset:**
-`TPeardoxOrbitalGorillaCamera.ProjectToView` and the fits
+`TSpritelyOrbitalGorillaCamera.ProjectToView` and the fits
 (FitToBounds / FitCorners / FitOnAxis, which assume a centred frustum),
-`TPeardoxGorillaEyes.EyeView` (so SR and 2D agree), and the owner's
+`TPeardoxGorillaEyes.EyeView` (so the display and 2D agree), and the owner's
 choice of control (no mouse button is free: left orbits, right moves the
 depth, the wheel zooms - ask: Shift+drag, middle drag, or keys).
 
 **First question for the owner** at the start of that session: shift /
-rise in the 2D window, in SR, or both - it decides between route 2
+rise in the 2D window, in the display, or both - it decides between route 2
 (an hour) and route 1 (an experiment first).
 
 ### ProjectionTest (ProjTest1, 8 November 2026)
@@ -344,19 +442,19 @@ the per-eye off-axis view without overscan, dolly zoom, ...). Asked for a
 new test project in the main group to see if and how.
 
 **Files** (zip ProjTest1, follows StereoCam63; program only, NO PACKAGE
-REBUILD - it uses the installed Peardox package for the orbit camera):
+REBUILD - it uses the installed Spritely package for the orbit camera):
 src/ProjectionTest.dpr / .dproj / .res (the .res a copy of StereoModel's;
-the .dproj made from StereoModel's without the SRBridge post-build and the
+the .dproj made from StereoModel's without the LenticularBridge post-build and the
 Deployment block, which the IDE makes again), src/ui/ProjectionTestMain
 (.pas / .fmx, TPeardoxProjectionTestForm), src/common/ProjectionTestAccess,
 ProjectionTestMeasure, ProjectionTestRunner; StereoGroup.groupproj lists
-it (depends on Peardox) and builds it last. Its log is ProjectionTest.log
+it (depends on Spritely) and builds it last. Its log is ProjectionTest.log
 (own writer in the form; StereoModelLog's name is fixed).
 
 **Method.** Nothing is assumed about FMX's or Gorilla3D's private fields
 (StereoCam47's probe found no field RTTI in TGorillaViewport, so RTTI may
 be off there):
-- TPeardoxRenderHook: an empty TControl3D, inserted at index 0 of the
+- TSpritelyRenderHook: an empty TControl3D, inserted at index 0 of the
   viewport, overrides Render -> OnRenderBegin(Self, Context): inside the
   frame, after the viewport has set camera and projection, before the
   models. Gorilla3D culls by bounds, so the form gives it the model's box
@@ -364,16 +462,16 @@ be off there):
   whether Gorilla3D calls Render on a plain TControl3D at all (the log
   says how many times the hook was drawn per RenderManual and per
   MakeScreenshot).
-- TPeardoxProjectionAccess.Survey: one RenderManual; in the hook it reads
+- TSpritelyProjectionAccess.Survey: one RenderManual; in the hook it reads
   CurrentProjectionMatrix / CurrentCameraMatrix / CurrentCameraInvMatrix
   and scans the raw memory (InstanceSize, 4-byte steps) of the render
   context, the viewport's context if different, the viewport, the cameras
   and, one level down, the non-FMX objects the contexts and viewport hold
   (where RTTI lists them) for 16 Singles equal to one of them, or shaped
   like a perspective (either layout). RTTI only names a find
-  (Class.Field, +n inside a record). Each find is a TPeardoxMatrixSlot
+  (Class.Field, +n inside a record). Each find is a TSpritelyMatrixSlot
   (holder, offset, kind) that can Apply a value and Restore FMX's
-  (TPeardoxCleanTracker notices FMX making it again).
+  (TSpritelyCleanTracker notices FMX making it again).
 - Ways tried, each written once / before each frame / inside the frame:
   the PUBLIC TContext3D.SetRenderToMatrix (found in the docwiki: "the
   matrix used for the rendering of the objects"; if FMX applies it after
@@ -411,7 +509,7 @@ would leave it so; the Survey reads the matrices at the hook's FIRST call
 of the frame, and logs the projection at every later call (a shadow pass
 would show as DIFFERENT). After a resize the live ways drop the slots
 (Forget) rather than write into objects that may have been made again.
-Then the general part (TPeardoxProjectionAccess) goes to lib with the way
+Then the general part (TSpritelyProjectionAccess) goes to lib with the way
 that works, and StereoModel's per-eye view can put its cut in the
 projection (render scale 1, no overscan).
 
@@ -453,7 +551,7 @@ picture): IT WORKS.**
 - So the way: find FProjectionMatrix by value (Survey; never hard-code
   +$60, it moves with FMX's version), write a shifted / off-axis
   projection into it, and write it again whenever FMX makes it anew (a
-  resize, a field-of-view change: TPeardoxCleanTracker sees that).
+  resize, a field-of-view change: TSpritelyCleanTracker sees that).
   ProjTest2 (follows ProjTest1): runner and access only, as above.
 - ProjTest2's log (owner, 13:50): screenshot lag CONFIRMED by its own
   check ("after 1 render: NO CHANGE, after 2: SHIFTS"); every case now
@@ -473,7 +571,7 @@ picture): IT WORKS.**
 - Owner (14:00): "Bear in mind that this is a general solution we're
   looking for" - and oblique projections: cavalier, cabinet, military
   ("only orthographic and perspective are offered by the standard
-  methods"). ProjTest4 (follows ProjTest3): TPeardoxProjectionAccess
+  methods"). ProjTest4 (follows ProjTest3): TSpritelyProjectionAccess
   gains AdjustProjection (the general entry: any function from FMX's
   projection to the one drawn, written into the projection slot in the
   frame or by ApplyNow), DepthRange (FMX's perspective is D3D-style,
@@ -508,7 +606,7 @@ picture): IT WORKS.**
   (follows ProjTest4): Forget still restores the slots that lie in the
   viewport's present context (alive; Restore writes only where ours is
   still there, so a projection FMX remade for the new size is left).
-  Dolly zoom: TPeardoxProjectionAccess.WithFieldOfView(P, Fov) (m11, m22
+  Dolly zoom: TSpritelyProjectionAccess.WithFieldOfView(P, Fov) (m11, m22
   scaled by (1 / tan(Fov / 2)) / m22: aspect, depth and shift kept) and
   FieldOfView(P); form Lens slider (5..120 deg, starts at the camera's
   FOV) applied before the kind (the parallel views take their size from
@@ -523,26 +621,26 @@ picture): IT WORKS.**
   how to test the dolly zoom (answered: cavalier for the level view, then
   perspective, Lens 45 -> 10 / 120 with Dolly; the wall scene shows it
   best) and "add model selection".
-  ProjComp1 (follows ProjTest5): lib/Peardox.Projection.pas (NEW, in the
-  Peardox runtime package): everything of ProjectionTestAccess
-  (TPeardoxProjectionAccess, slots, hook, helpers; src/common/
+  ProjComp1 (follows ProjTest5): lib/Spritely.Projection.pas (NEW, in the
+  Spritely runtime package): everything of ProjectionTestAccess
+  (TSpritelyProjectionAccess, slots, hook, helpers; src/common/
   ProjectionTestAccess.pas DELETED, out of the .dpr / .dproj) plus the
-  component TPeardoxProjection (Viewport: TControl that is an IViewport3D;
+  component TSpritelyProjection (Viewport: TControl that is an IViewport3D;
   Active; Kind pjPerspective / pjOrthographic / pjCavalier / pjCabinet /
   pjMilitary / pjOblique; FieldOfView (0 = own); Dolly; ShiftX / ShiftY;
   ObliqueAngle / ObliqueScale; Focus: TComponent with
-  IPeardoxProjectionFocus (target distance, ProjectionLensChanged for the
+  ISpritelyProjectionFocus (target distance, ProjectionLensChanged for the
   dolly); Distance without a Focus; ManageCulling (TGorillaViewport's
-  FrustumCulling off while changing); OnLog). Its own TPeardoxRenderHook,
+  FrustumCulling off while changing); OnLog). Its own TSpritelyRenderHook,
   first in the viewport (run time only); inside each frame: finds the
   projection in the drawing context by value (FindSlot: the context's
   instance memory, exact match to CurrentProjectionMatrix), then writes
   MakeMatrix(FMX's own) - lens, then orthographic / oblique at
   FocusDistance, then shift - or puts FMX's back when not Changing or not
   Active (also at once in Changed). ViewShape(SX, SY) describes it for
-  fits (TPeardoxViewShape: Parallel, SX, SY, ShiftX/Y, ShearX/Y).
-  Peardox.OrbitalCamera: TPeardoxOrbitalCamera implements
-  IPeardoxProjectionFocus (focus = Distance; lens change moves Distance by
+  fits (TSpritelyViewShape: Parallel, SX, SY, ShiftX/Y, ShearX/Y).
+  Spritely.OrbitalCamera: TSpritelyOrbitalCamera implements
+  ISpritelyProjectionFocus (focus = Distance; lens change moves Distance by
   tan(old / 2) / tan(new / 2)) and has published Projection (sets the
   projection's Focus, and the inner camera's Projection); the inner
   camera's FitCorners and ProjectToView use ShapeFor: perspective with
@@ -554,26 +652,26 @@ picture): IT WORKS.**
   fits likewise (the narrowest side's room). Checked in Python: fitted
   corners land exactly at the margin, centred, with and without shift and
   shear. Gorilla3D's own orthographic mode keeps the old code.
-  Peardox.Reg registers TPeardoxProjection; icon (tools/gen_icons.py
+  Spritely.Reg registers TSpritelyProjection; icon (tools/gen_icons.py
   projection(): a cavalier cube behind a white camera) and the .dcr
   (tools/gen_icon_res.py COMPONENTS); tools/gen_packages.py lists
-  Peardox.Projection in Peardox (Peardox.dpk / .dproj). ProjectionTest's
+  Spritely.Projection in Spritely (Spritely.dpk / .dproj). ProjectionTest's
   form rewritten on the component (made in code, the orbit camera's
   Projection): model box (models folder: glb, gltf, fbx, obj) + Open +
   Fit (FitToBounds in the projection drawn), Shift / Rise / Centre /
   Active, Kind / Angle / Depth / Lens / Dolly; the test turns the
-  component off while it runs. PACKAGE REBUILD: Peardox (all platforms),
-  dclPeardox (reinstall).
+  component off while it runs. PACKAGE REBUILD: Spritely (all platforms),
+  dclSpritely (reinstall).
   Owner (14:41): "When trying DollyZoom in a previous session we had
   uvcube with a floor and a load of pillars - can you re-create that"
   (StereoCam15-17's test hallway, removed in StereoCam18) and "a button
   that resets the Inclination, Azimuth and Depth to 0 and additionally use
   those as the starting settings". tools/gen_dolly_hallway.py (stdlib,
-  imports gen_srdemo_scene's Builder) writes models/DollyHallway.glb:
+  imports gen_demo_scene's Builder) writes models/DollyHallway.glb:
   uvcube.glb's mesh and texture copied in (2 units) on a 16 x 64 floor of
   2-unit squares (two greys), pillars 0.8 x 6 x 0.8 every 4 units at x =
   +-5 (every other pair red), end walls 16 x 8 (blue far, red near); FMX
-  coordinates written as glTF (x, -y, -z) like the SRDemo scene. Form:
+  coordinates written as glTF (x, -y, -z) like the demo scene. Form:
   Front button = FrontView: azimuth 0, inclination 0, roll 0,
   FitToBoundsMax (the target on the model's centre: "Depth" taken as the
   model centre's depth against the target / glass = 0); LoadModel uses it,
@@ -584,8 +682,8 @@ picture): IT WORKS.**
   square to the screen (not military's 45-degree turn), height drawn
   up-left at 45 degrees (Exult shifts each lift equally left and up;
   scale not checked). Owner (14:56): "Add a camera called Ultima-Style
-  that sets this automatically": TPeardoxProjectionKind pjUltima (angle
-  PEARDOX_PROJECTION_ULTIMA_ANGLE 315 = depth down-right, so height
+  that sets this automatically": TSpritelyProjectionKind pjUltima (angle
+  SPRITELY_PROJECTION_ULTIMA_ANGLE 315 = depth down-right, so height
   up-left; scale 1); the form's box puts the camera at azimuth 0,
   inclination 90 for it.
   Owner (15:02, a Baldur's Gate 1 screenshot; "I have the others but
@@ -603,15 +701,15 @@ picture): IT WORKS.**
   upset over trademarks (I guess EA may also over Ultima)". RULE: NO GAME
   OR TRADEMARK NAMES in identifiers, UI or README (the history here may
   name the games). ProjComp2 (follows ProjComp1): pjUltima -> pjPlanOblique
-  (PEARDOX_PROJECTION_PLAN_OBLIQUE_ANGLE 315), pjInfinity -> pjTrimetric
+  (SPRITELY_PROJECTION_PLAN_OBLIQUE_ANGLE 315), pjInfinity -> pjTrimetric
   (azimuth 35, inclination 45 - trimetric, as the azimuth is not 45), new
-  pjTrueIsometric (45 / 35.264, PEARDOX_PROJECTION_ISOMETRIC_INCLINATION)
+  pjTrueIsometric (45 / 35.264, SPRITELY_PROJECTION_ISOMETRIC_INCLINATION)
   and pjDimetric (45 / 30, the Diablo II look); the three are orthographic.
   The camera presets moved from the form into the component:
-  TPeardoxProjection.PresetAngles (class), ApplyCameraPreset, published
+  TSpritelyProjection.PresetAngles (class), ApplyCameraPreset, published
   CameraPreset (default True; SetKind turns the Focus, not while loading);
-  IPeardoxProjectionFocus gains ProjectionViewAngles(Azimuth,
-  Inclination) (new GUID), TPeardoxOrbitalCamera sets Azimuth, PolarAngle
+  ISpritelyProjectionFocus gains ProjectionViewAngles(Azimuth,
+  Inclination) (new GUID), TSpritelyOrbitalCamera sets Azimuth, PolarAngle
   and Roll 0. The form's KindChange only sets Kind. PACKAGE REBUILD.
   Owner (15:16, a ProjComp1 screenshot, maximised): "FullScreen the
   projection dropdown opens in middle of scene" - FMX's TComboBox put its
@@ -646,15 +744,15 @@ picture): IT WORKS.**
   Owner (15:48): a "Free Movement" checkbox - the camera kept out of the
   model "is causing issues with DollyHallway" (its box is the whole
   hallway). ProjComp6 (follows ProjComp5, program only): FreeCheck (row
-  1, after Active): ticked, PeardoxOrbitalCamera1.Subject := nil
+  1, after Active): ticked, SpritelyOrbitalCamera1.Subject := nil
   (SubjectWanted; LoadModel too), unticked the model again; logged. The
   wheel still scales Distance, so it closes on the target but never
   passes it.
-  Review of ProjComp1 (before delivery), fixed: (1) TPeardoxOrbitalCamera's
+  Review of ProjComp1 (before delivery), fixed: (1) TSpritelyOrbitalCamera's
   destructor no longer calls FProjection.RemoveFreeNotification - it is
   two-way and would leave the projection's Focus pointing at the freed
   camera; it clears the projection's Focus instead; (2) likewise
-  TPeardoxProjection.SetFocus keeps the old focus's notice; (3) FitOnAxis
+  TSpritelyProjection.SetFocus keeps the old focus's notice; (3) FitOnAxis
   (FitToBounds' target slide) is skipped in a parallel view of ours, whose
   size follows Distance - SetTargetDepth still changes a parallel view's
   size (its size IS the target plane's); (4) the slot is only written in
@@ -668,26 +766,26 @@ picture): IT WORKS.**
 
 ## Where the work is
 
-- `TPeardoxOrbitalCamera` (`lib/Peardox.OrbitalCamera.pas`): a non-visual
+- `TSpritelyOrbitalCamera` (`lib/Spritely.OrbitalCamera.pas`): a non-visual
   component wrapping Sprite3D's orbit camera (renamed
-  `TPeardoxOrbitalGorillaCamera`), with `Headlight`, the projection
+  `TSpritelyOrbitalGorillaCamera`), with `Headlight`, the projection
   properties, fits and `Subject`. Registration unit and icon done.
 - Packages (StereoCam8, owner 7 November 2026, as TSteamAPI does them):
-  `packages/Peardox` (runtime; DCUs to `$(BDSCOMMONDIR)\Dcp\$(Platform)`,
-  `\Dcp` for Win32, so programs need no paths) and `packages/dclPeardox`
-  (design; Win32 + Win64), written by `tools/gen_packages.py`. Peardox
+  `packages/Spritely` (runtime; DCUs to `$(BDSCOMMONDIR)\Dcp\$(Platform)`,
+  `\Dcp` for Win32, so programs need no paths) and `packages/dclSpritely`
+  (design; Win32 + Win64), written by `tools/gen_packages.py`. Spritely
   requires Gorilla3D's runtime package `Gorilla3D_Delphi_13_2_0_Florence`
   (the name from StereoModel's DCC_UsePackage; it has no WinARM64EC entry,
-  so neither has Peardox). StereoGroup.groupproj shows StereoModel,
-  Peardox, dclPeardox and builds Peardox, dclPeardox, StereoModel, with
+  so neither has Spritely). StereoGroup.groupproj shows StereoModel,
+  Spritely, dclSpritely and builds Spritely, dclSpritely, StereoModel, with
   Dependencies; check they survive the IDE's re-saves (TSteamAPI's group
   lost its Dependencies three times). NOT YET BUILT.
 - `src/ui/StereoModelMain` (StereoCam8): the component is on the form,
-  `PeardoxOrbitalCamera1` in the `.fmx` with `Viewport = GorillaViewport1`
+  `SpritelyOrbitalCamera1` in the `.fmx` with `Viewport = GorillaViewport1`
   (last in the file, so the viewport has loaded first); the `.dpr` /
   `.dproj` no longer list `lib` or search it. The program's WinARM64EC
-  target cannot link Gorilla3D or Peardox (no packages there).
-- StereoCam8 first install (owner): TPeardoxOrbitalCamera greyed out on
+  target cannot link Gorilla3D or Spritely (no packages there).
+- StereoCam8 first install (owner): TSpritelyOrbitalCamera greyed out on
   the palette - no ComponentPlatformsAttribute; StereoCam9 adds it.
 - Picture placement (owner, 7 November 2026): tried and REMOVED. Truck /
   pedestal (StereoCam10) moved the camera, so the view changed; a lens
@@ -716,7 +814,7 @@ picture): IT WORKS.**
   it.
 - StereoCam19 (owner, 15:03): `SetTargetDepth` moves the orbit centre
   along the line of sight with the camera fixed (Distance becomes the
-  depth; for the SR display's convergence plane later); test form:
+  depth; for the 3D display's convergence plane later); test form:
   right-drag vertical, 1.01 per pixel, up deeper. Fit overloads on the
   component for the target space: `FitToBounds` / `FitToBoundsMax` with a
   model, an array of models (union of GetAbsoluteBoundingBox), a box in
@@ -760,44 +858,45 @@ picture): IT WORKS.**
   works". Not reported separately: whether the TGA and shader TStringList
   leaks went too; if a later dump shows them, they are a separate
   Gorilla3D bug.
-- Glasses-free 3D (owner, 7 November 2026, 15:53): the target is LeiaSR,
+- Glasses-free 3D (owner, 7 November 2026, 15:53): the target is a lenticular display,
   through peardox/SRDelphiFMX's bridge. Step 0 (StereoCam22): a NEW
-  PACKAGE, PeardoxLeiaSR, separate from the camera package (requires rtl,
-  dbrtl, fmx; not Gorilla3D, not Peardox), for "a few" LeiaSR components,
+  PACKAGE, Lenticular, separate from the camera package (requires rtl,
+  dbrtl, fmx; not Gorilla3D, not Spritely), for "a few" Lenticular components,
   made in code first and put on forms soon after (then they get a design
   package and icons). Persistent data as SRDemoFMX keeps it, with Neon.
-  Units: Peardox.Storage (Sprite3D's Sprite3DStorage, renamed:
-  AppDataFolder, TPeardoxJsonSettings), Peardox.LeiaSR.Settings
-  (TPeardoxLeiaSRSettings: UseGlassesFree3D, EyeSeparationMM, LookAround,
-  LatencyFrames, LensMode, FullScreen; %APPDATA%\Peardox\LeiaSR.json,
+  Units: Lenticular.Storage (Sprite3D's Sprite3DStorage, renamed:
+  AppDataFolder, TLenticularStorage), Lenticular.Display.Settings
+  (TLenticularDisplaySettings: UseGlassesFree3D, EyeSeparationMM, LookAround,
+  LatencyFrames, LensMode, FullScreen; %APPDATA%\Peardox\Lenticular.json,
   shared by all Peardox programs; SRDelphiFMX's own settings.json is NOT
-  shared, as saving it would drop its other members), Peardox.LeiaSR.Api
-  (SRDelphiFMX's SRBridge.Api at 9530011, comments as //**, imports under
-  {$IFDEF MSWINDOWS} so it compiles everywhere, srb_RenderScene left out;
-  keeps the bridge's C names srb_*/TSRB*, like Winapi - keep in step with
-  SRDelphiFMX), Peardox.LeiaSR (TPeardoxLeiaSR: Installed, Start with
-  srb_Probe on a thread and the answer posted to an AllocateHWnd window,
-  srb_Initialize with the bridge's own DX11 device (Gorilla3D is OpenGL,
+  shared, as saving it would drop its other members), Lenticular.Display.Api
+  (SRDelphiFMX's LenticularBridge.Api at 9530011, comments as //**, imports under
+  {$IFDEF MSWINDOWS} so it compiles everywhere, lnb_RenderScene left out;
+  keeps the bridge's C names lnb_*/TLNB*, like Winapi - keep in step with
+  SRDelphiFMX), Lenticular.Display (TLenticularDisplay: Installed, Start with
+  lnb_Probe on a thread and the answer posted to an AllocateHWnd window,
+  lnb_Initialize with the bridge's own DX11 device (Gorilla3D is OpenGL,
   so no zero copy), bridge window hidden and lens off since nothing is
   woven yet, then a TTimer polls events, bounds, window mm and eyes, logs
   once a second; Stop; OnLog/OnStarted/OnStopped/OnProblem/OnEyes).
-  Neon's 7 units the settings need are compiled into PeardoxLeiaSR (so
+  Neon's 7 units the settings need are compiled into Lenticular (so
   their DCUs are in the Dcp folders), and StereoModel's search path no
   longer has delphi-neon (two builds of one unit otherwise). ONLY ONE
   PACKAGE MAY CONTAIN NEON: if the camera package ever needs settings,
-  move Peardox.Storage and Neon into a shared base package. SRDelphiFMX is
+  move Lenticular.Storage and Neon into a shared base package. (Rename1: Neon
+  dropped for System.JSON, and the sets now share nothing.) SRDelphiFMX is
   a submodule at the root (the owner adds it:
   `git submodule add https://github.com/peardox/SRDelphiFMX SRDelphiFMX`),
-  for its dll\SRBridge.dll, copied beside StereoModel's Win64 exe by its
-  post-build step; never change it here. Test form: FLeiaSR made in
+  for its dll\LenticularBridge.dll, copied beside StereoModel's Win64 exe by its
+  post-build step; never change it here. Test form: FDisplay made in
   FormCreate (Control = GorillaViewport1), Stereo button (StaysPressed)
   hidden unless Installed, pressed = Start, released = Stop, choice saved;
   auto-start after the first model load when UseGlassesFree3D; Stop in
   FormClose. Owner's first run (branch `stereo`, push 0c89b44, 16:21,
   under the debugger): works - background check 937 ms, then
-  srb_Initialize 9.2 s on the main thread (window frozen; SRDemoFMX
+  lnb_Initialize 9.2 s on the main thread (window frozen; SRDemoFMX
   measured ~0.2 s without the debugger and ~20 s to first frame under F9,
-  so probably the debugger and NVIDIA's DLL loads: judge without it), SR
+  so probably the debugger and NVIDIA's DLL loads: judge without it), the display
   1.36.4, display 3840 x 2160, 596.7 x 335.7 mm, view mm follows the
   window (maximise / restore), UserLost / UserFound / LensOff events
   arrive and the EYES TRACK (separation 63-72 mm) with nothing presented;
@@ -807,26 +906,26 @@ picture): IT WORKS.**
   as StereoModel.prev.log, every ShowStatus line timed and flushed, ends
   "Log closed normally"; opened first in FormCreate, closed in FormClose.
   Owner's Release run (16:26, still from the IDE: its Event Log shows the
-  debugger attached): srb_Initialize again 9.2 s, and the UI was BLURRED -
-  the bridge creates its lens hint inside srb_Initialize in the state last
-  set with srb_SetLens, which starts as ON (bridge g.lensOn = true), so the
-  lens was on through the whole start until our srb_SetLens(0) after it.
-  StereoCam23 also calls srb_SetLens(0) before srb_Initialize.
+  debugger attached): lnb_Initialize again 9.2 s, and the UI was BLURRED -
+  the bridge creates its lens hint inside lnb_Initialize in the state last
+  set with lnb_SetLens, which starts as ON (bridge g.lensOn = true), so the
+  lens was on through the whole start until our lnb_SetLens(0) after it.
+  StereoCam23 also calls lnb_SetLens(0) before lnb_Initialize.
   Owner (16:29): without the debugger "much faster". StereoCam23's log
   (16:31, Debug build, debugger not known): no blur reported; start
-  8.9 s (D3D11 device 3.4 s, weaver 4.4 s), and srb_Finalize took 9.3 s
-  (7 s of it AFTER "SR context deleted": the bridge releasing its D3D
+  8.9 s (D3D11 device 3.4 s, weaver 4.4 s), and lnb_Finalize took 9.3 s
+  (7 s of it AFTER "runtime context deleted": the bridge releasing its D3D
   objects / child window) - the window freezes for both; to look at if
   it holds without the debugger. A second start was stopped at once
   (clicks queued during the freeze). StereoCam24 (owner, 16:35: "Need
-  some indicator to inform when Lens is on"): TPeardoxLeiaSR.LensState
-  (lslUnknown / lslOn / lslOff, from the SR LensOn / LensOff events,
-  SRB_EVENT_LENS_ON = 14 / _OFF = 15 in the Api unit; unknown after
+  some indicator to inform when Lens is on"): TLenticularDisplay.LensState
+  (ldlUnknown / ldlOn / ldlOff, from the display LensOn / LensOff events,
+  LNB_EVENT_LENS_ON = 14 / _OFF = 15 in the Api unit; unknown after
   Stop) and OnLensChange; the form's FLensLabel left of btnStereo: LENS
   ON red bold, Lens off grey, blank while not running. The log's first
   line now says whether a debugger is attached (IsDebuggerPresent).
-  Owner's build of 24 failed (E2003 OnLensChange, LensState, lslOn) only
-  because PeardoxLeiaSR had not been rebuilt - the program takes the
+  Owner's build of 24 failed (E2003 OnLensChange, LensState, ldlOn) only
+  because Lenticular had not been rebuilt - the program takes the
   package's DCUs from the Dcp folder. StereoCam25 (owner, 16:40: "Changing
   the depth with RightDrag made wheel zoom behave badly in big jumps"):
   Zoom scales Distance, the distance to the TARGET, so after a deep
@@ -842,49 +941,49 @@ picture): IT WORKS.**
   up), which right-drag already allows (the log went to 1186). The status
   line now says it: DepthStatus gives the model centre's Z against the
   glass, Z = depth along the line of sight - target depth (< 0 in front,
-  out of the screen), and in mm while LeiaSR runs, at mm per unit =
+  out of the screen), and in mm while the display runs, at mm per unit =
   view height mm / (2 * target depth * tan(FOV / 2)), FOV taken as
   vertical. Nothing shows on the display until step 1 weaves.
   Owner's log (16:54, debugger attached): (1) the indicator never went
-  red - only one LensOff event came (after srb_Initialize), never LensOn,
+  red - only one LensOff event came (after lnb_Initialize), never LensOn,
   yet the owner says the lens WAS on whenever it showed blank (unknown:
   during the start and after Stop). Events only tell of changes once the
   bridge's listener exists, so the start's state and the state after
-  srb_Finalize are not seen. The SDK has isLensEnabled(lensHint) and
-  newSRContextLensPreference(bool) (SRDelphiFMX's SimulatedReality.Api),
+  lnb_Finalize are not seen. The SDK has a lens query and
+  a lens preference for a new context (SRDelphiFMX's runtime imports),
   but the bridge exposes neither: OFFERED, NOT DONE - a bridge export
-  srb_GetLensState and creating the context with the lens preference
+  lnb_GetLensState and creating the context with the lens preference
   (owner's MSVC rebuild of SRDelphiFMX). (2) "a sudden jump and the
   target appeared to move vertically": right drag took the target depth
   to 7 362 159; the camera position is the target less Distance in
   SINGLE precision, so the camera drifted (model depth 4.837 -> 13.479)
   and stayed moved. StereoCam27: SetTargetDepth clamps to the viewport's
-  FarPlane (PEARDOX_ORBITAL_MAX_TARGET_DEPTH 10000 without one; drift was
+  FarPlane (SPRITELY_ORBITAL_MAX_TARGET_DEPTH 10000 without one; drift was
   0.002 at 7000), the status line says AT THE LIMIT there; the lens
   indicator shows "Lens ?" (orange) when unknown instead of blank, and
-  is hidden with the button where LeiaSR is not installed.
+  is hidden with the button where the display runtime is not installed.
   Bridge (owner, 16:59: "give me the bridge. I'll build and push"):
-  zip SRBridgeLens1 for peardox/SRDelphiFMX - NewContext() makes the SR
-  context with newSRContextLensPreference(g.lensOn) (optional export) for
-  srb_Initialize and srb_Probe, and a new export srb_GetLensState (SR's
-  isLensEnabled; 1 / 0 / -1); SRDelphiFMX's SRBridge.Api, README and
+  zip LenticularBridgeLens1 for peardox/SRDelphiFMX - NewContext() makes the display
+  context with the runtime's lens preference (g.lensOn) (optional export) for
+  lnb_Initialize and lnb_Probe, and a new export lnb_GetLensState (the runtime's
+  own lens state; 1 / 0 / -1); SRDelphiFMX's LenticularBridge.Api, README and
   CLAUDE.md say so; its demos unchanged (they ask for the lens on).
-  StereoCam28 here: Peardox.LeiaSR.Api declares srb_GetLensState;
-  TPeardoxLeiaSR reads it right after srb_Initialize and at every poll
-  (ReadLens, when SRBridgeHasExport says the bridge has it), the events
+  StereoCam28 here: Lenticular.Display.Api declares lnb_GetLensState;
+  TLenticularDisplay reads it right after lnb_Initialize and at every poll
+  (ReadLens, when LenticularBridgeHasExport says the bridge has it), the events
   still followed too. The submodule SRDelphiFMX must be updated to the
-  owner's push for the new dll\SRBridge.dll.
-  Owner (17:11) saw "Lens ? in red": that run never started SR (the
+  owner's push for the new dll\LenticularBridge.dll.
+  Owner (17:11) saw "Lens ? in red": that run never started the display (the
   saved choice was off, Stereo not pressed), so unknown was right, but
   dark orange read as red. StereoCam29: LENS ON red bold, Lens off
   green, Lens ? grey. The bridge lens reading is still to be seen.
   Owner's log 17:17: bridge lens reading WORKS ("Lens off (read from
-  SR)", context made lens off), tracking with nothing presented.
+  the display)", context made lens off), tracking with nothing presented.
   Owner (17:20): "Lets move on to doing some drawing" (start timings left
   for a Release run without the debugger).
-- STEP 1, first light (StereoCam30): TPeardoxLeiaSR gains Weaving (shows
-  the bridge's window, srb_SetVisible, and asks the lens on; cleared by
-  Stop), SubmitViews (srb_SubmitViews, BGRA or RGBA, results counted and
+- STEP 1, first light (StereoCam30): TLenticularDisplay gains Weaving (shows
+  the bridge's window, lnb_SetVisible, and asks the lens on; cleared by
+  Stop), SubmitViews (lnb_SubmitViews, BGRA or RGBA, results counted and
   logged once a second) and UpdateEyes. src/common/StereoModelEyes.pas
   (program unit until it works, then lib): TPeardoxGorillaEyes - timer
   16 ms; per eye moves the orbital camera's inner Gorilla camera (child of
@@ -898,7 +997,7 @@ picture): IT WORKS.**
   rows copied side by side into FBuffer, SubmitViews. Eyes: tracked with
   LookAround, the saved EyeSeparationMM rebuilt about the midpoint;
   else a fixed viewer 650 mm in front of the view centre. Form: started
-  in LeiaSRStarted, stopped in LeiaSRStopped / FormClose; keys S (swap
+  in DisplayStarted, stopped in DisplayStopped / FormClose; keys S (swap
   eyes) and R (RenderManual before the screenshot or not). UNKNOWNS to
   read from the first log: whether RenderManual / MakeScreenshot work as
   hoped with Gorilla3D's ManualRendering, whether RotationAngle on the
@@ -927,7 +1026,7 @@ picture): IT WORKS.**
   "not bad either", still leaning to X; keys reacted too quickly (a held
   key's repeated key-down toggled again). StereoCam32: ShiftSign default
   -1; keys on OnKeyUp by virtual key code (vkS, vkT, vkX, vkR), once a
-  press. Eye separation explained: 63 mm (LeiaSR.json default), rebuilt
+  press. Eye separation explained: 63 mm (Lenticular.json default), rebuilt
   about the tracked midpoint; near the glass the on-screen disparity
   matches real 63 mm eyes whatever the window size.
   Log 17:50 (debug + debugger): idle loop 44 fps windowed, 22 fps full
@@ -942,8 +1041,8 @@ picture): IT WORKS.**
   and uploads a quarter.
   StereoCam33 (owner, 18:03: "construct a model Gorilla3D can load from
   the scene in SRDemoFMX ... The cubes are the real show-off"):
-  tools/gen_srdemo_scene.py (stdlib) writes models/SRDemoScene.glb and
-  SRDemoSceneNoWall.glb from SRDemoFMX/ui/MainForm.pas's numbers: 121
+  tools/gen_demo_scene.py (stdlib) writes models/DemoScene.glb and
+  DemoSceneNoWall.glb from SRDemoFMX/ui/MainForm.pas's numbers: 121
   spheres (d 1.4, step 3, colours per depth row, centre lime green), 6
   cubes (3 units, Y +-4.5/9/13.5, #E8A33D), wall 60 x 40 at Z 18
   (#35507A, two-sided); FMX (x, y, z) written as glTF (x, -y, -z), as the
@@ -963,11 +1062,11 @@ picture): IT WORKS.**
   roll 0, NoWall - "the 3D really pops out", make it the default; "a LOT
   of ghosting on the balls"; the owner has a cataract in the right eye
   (glasses for this screen), so judging is harder. StereoCam35: TEST_MODEL
-  = SRDemoSceneNoWall.glb, TestView after it loads (angles, FitView, then
+  = DemoSceneNoWall.glb, TestView after it loads (angles, FitView, then
   Distance := 42, FZoom kept; "depth 42" taken as the camera 42 from the
   target on the scene's axis - CHECK with the owner if it was a moved
   target); Home = TestView for it, ResetView otherwise. For the
-  ghosting: TPeardoxLeiaSR.SetLatencyFrames (live srb_SetLatencyInFrames,
+  ghosting: TLenticularDisplay.SetLatencyFrames (live lnb_SetLatencyInFrames,
   not 0) and keys L (latency 0..4, saved) and [ / ] (eye separation +-5 mm,
   20..90, saved). Ghosting suspects: latency (our frames read back through
   the CPU, 20-40 fps in Debug), big disparities (lenticular crosstalk
@@ -976,7 +1075,7 @@ picture): IT WORKS.**
   Owner (18:30): "The settings from SRDemoFMX were excellent ... log what
   the settings were ... we may be able to improve this version". Zip
   SRDemoSnap1 for SRDelphiFMX (synced to its push db0a459 first):
-  TSRStereoRenderer.LogSnapshot(Note) + SRDemoFMX key P. StereoCam36
+  the stereo renderer's LogSnapshot(Note) + SRDemoFMX key P. StereoCam36
   here: TPeardoxGorillaEyes.LogSnapshot(Note) + key P, the same
   quantities: display, view mm / px, eyes tracked and drawn from,
   settings, FOV, target depth, convergence, shifts, the IMPLIED scale
@@ -1005,24 +1104,24 @@ picture): IT WORKS.**
   (~10 ms for two eyes, Gorilla's per-object cost?) and submit (~8 ms:
   the bridge's frame cap, WaitForVBlank after Present) do not; 8 ms wait +
   25 ms work misses the next blank, so <= 30 fps. StereoCam37: key C
-  toggles srb_SetFrameCap (form field FFrameCapOff, re-applied in
-  LeiaSRStarted, not saved). Also from the owner: StereoModel is not
-  display aware (SRDemoFMX moves its window onto the SR display); this
-  run's log did say "The form is on the SR display". The lens state is
-  the SR display's own, so LENS ON was true even with our window
+  toggles lnb_SetFrameCap (form field FFrameCapOff, re-applied in
+  DisplayStarted, not saved). Also from the owner: StereoModel is not
+  display aware (SRDemoFMX moves its window onto the 3D display); this
+  run's log did say "The form is on the 3D display". The lens state is
+  the 3D display's own, so LENS ON was true even with our window
   elsewhere - we just never check where the view is before weaving.
   PLAN (owner, 18:52 + 19:04), StereoCam38+: a 2D "launcher" form with
-  the controls, and a borderless full-screen output form on the SR
+  the controls, and a borderless full-screen output form on the display
   display hosting the bridge's window, with the Gorilla viewport hidden
   under it at the recommended view (1920 x 1080 = option 2). Two
   monitors: both shown, wherever the user puts the launcher. One
   monitor (or by choice): the launcher hides while the output shows full
   screen, and Esc closes the output and restores the launcher - works
   whatever monitors there are; the user may want either. Weave only while
-  the output is on the SR display, else flat with the lens off. Two SR
+  the output is on the 3D display, else flat with the lens off. Two the display
   displays: ask which (not yet). Owner (19:04): "The purpose of the Stereo
-  button has, since the start, to switch into full screen on SR" - so
-  btnStereo opens the output form full screen on the SR display (and
+  button has, since the start, to switch into full screen on the display" - so
+  btnStereo opens the output form full screen on the 3D display (and
   starts weaving); Esc / btnStereo again closes it.
   Owner (19:21): "The cubes don't spin in StereoModel" (so Gorilla3D does
   not drive the glTF node animation, or not visibly); C pressed twice,
@@ -1044,71 +1143,71 @@ picture): IT WORKS.**
   27-30 ms; repeatable both ways. Off: render 9.2 + shot 8.4 + copy 6.7 +
   submit 0.9 = ~25 ms of a ~31 ms frame (~6 ms outside the four: poses,
   FMX's idle loop). Owner (19:30): "No difference visually". StereoCam39:
-  TPeardoxLeiaSRSettings.FrameCap (published, default False, so old
-  LeiaSR.json files get off), TPeardoxLeiaSR.SetFrameCap(AOn) (live, logs;
-  not saved), srb_SetFrameCap(Ord(FrameCap)) after srb_Initialize, the
+  TLenticularDisplaySettings.FrameCap (published, default False, so old
+  Lenticular.json files get off), TLenticularDisplay.SetFrameCap(AOn) (live, logs;
+  not saved), lnb_SetFrameCap(Ord(FrameCap)) after lnb_Initialize, the
   start's settings line shows it; key C = SetFrameCap(not ...) +
-  SaveSettings; the form's FFrameCapOff and its Peardox.LeiaSR.Api use
-  gone. PACKAGE REBUILD (PeardoxLeiaSR). Next: the two-window layout
-  (output form on the SR display, view hidden at the recommended view
+  SaveSettings; the form's FFrameCapOff and its Lenticular.Display.Api use
+  gone. PACKAGE REBUILD (Lenticular). Next: the two-window layout
+  (output form on the 3D display, view hidden at the recommended view
   1920 x 1080: shot + copy ~15 -> ~4 ms, so ~50 fps), and time the ~6 ms
   outside the four steps.
   Owner (19:37 log: StereoCam39 works, "frame cap off" after init).
   Owner (19:43), the two-window spec: the window starts with the lens
-  off; Stereo = full screen on the SR display, lens on, scene there; Esc
-  or the button again stops it (the button has state); started on the SR
+  off; Stereo = full screen on the 3D display, lens on, scene there; Esc
+  or the button again stops it (the button has state); started on the display
   display, the main window hides until Stereo is off; on another screen it
   stays, button pressed; the lens indicator is now useless; Stereo is
-  disabled until SR is available, so switching is quick. StereoCam40:
+  disabled until the display is available, so switching is quick. StereoCam40:
   FOutput (TForm.CreateNew, borderless, black, OnClose = caHide + Leave)
   with FOutputHost (TLayout client, HitTest, the view's mouse handlers) =
-  FLeiaSR.Control; SR starts in FirstShown on the HIDDEN FOutput (lib:
+  FDisplay.Control; the display starts in FirstShown on the HIDDEN FOutput (lib:
   FindFormWindow needs a Handle, no longer Visible; LogStartDetails says
   "hidden for now"), UseGlassesFree3D no longer used by StereoModel;
   OnStarted enables btnStereo, OnStopped / OnProblem disable it.
-  EnterStereo: DisplayRect (new lib TPeardoxLeiaSR.DisplayRect), main
-  hidden if its centre is on the SR rect, SizeViewForStereo (viewport
+  EnterStereo: DisplayRect (new lib TLenticularDisplay.DisplayRect), main
+  hidden if its centre is on the display rect, SizeViewForStereo (viewport
   Align None, recommended view in physical px / scene scale, centred,
   ViewLayout clipped; FResizing stops ViewResize's refit both ways),
-  FOutput.Show + PlaceOutput (SetWindowPos HWND_TOPMOST to the SR rect,
+  FOutput.Show + PlaceOutput (SetWindowPos HWND_TOPMOST to the display rect,
   again once queued after the DPI change, logged), FEyes.Start.
   LeaveStereo: FEyes.Stop, hide FOutput, Align Client, show main. Key hook
   takes keys while either window is active; Esc = LeaveStereo while on.
   The viewport stays on the main form (not reparented): rendered by
   RenderManual even with the main form hidden - CHECK the eyes are not
-  black then. FLensLabel and LeiaSRLensChange gone. PACKAGE REBUILD.
-  Owner (19:53): started on the SR display, Stereo -> full screen,
+  black then. FLensLabel and DisplayLensChange gone. PACKAGE REBUILD.
+  Owner (19:53): started on the 3D display, Stereo -> full screen,
   "completely black image". Log: one frame submitted, then 0 fps (EyePair
   needs WindowSizeMM > 0), and the bridge's window measured "centre
   (-298.4, 167.8) mm, 0.0 x 0.0 mm" = a zero rect at screen (0, 0), what
   GetClientRect / ClientToScreen give for a window that no longer exists:
   FMX had made FOutput's window again at its first Show, destroying the
-  bridge's child (srb_Initialize had parent $6D1042). StereoCam41: FSRParent
-  = FormToHWND(FOutput) in LeiaSRStarted; EnterStereo logs both handles and,
-  if they differ, restarts SR on the shown form (FRestarting keeps
-  OnStopped from leaving Stereo; LeiaSRStarted then FEyes.Start while
-  FStereoOn); LeiaSRProblem leaves Stereo. Program only, no rebuild. NEXT
+  bridge's child (lnb_Initialize had parent $6D1042). StereoCam41: FDisplayParent
+  = FormToHWND(FOutput) in DisplayStarted; EnterStereo logs both handles and,
+  if they differ, restarts the display on the shown form (FRestarting keeps
+  OnStopped from leaving Stereo; DisplayStarted then FEyes.Start while
+  FStereoOn); DisplayProblem leaves Stereo. Program only, no rebuild. NEXT
   LOG: does the handle change only at the first Show (then later toggles
   are quick) or every time; are the eyes still black with the main form
   hidden.
-  Owner (20:02), two logs: started on the SR display - handle changed at
-  the first Show only ($551040 -> $561040), SR restarted (0.3 s), then 65-74
+  Owner (20:02), two logs: started on the 3D display - handle changed at
+  the first Show only ($551040 -> $561040), the display restarted (0.3 s), then 65-74
   fps, render 5.7, shot 2.5, copy 2.2, submit 1.0 ms; later toggles quick,
   no restart. Started on the widescreen - same restart, 47-56 fps, render
   7.9 ms, and "screen flashes horribly in the launcher window" (FMX painting
   the visible viewport while the eyes move its camera). Also: "The stereo
   button becomes enabled extremely quickly. Is it possible to click before
-  SR is ready (first time the screen hung - had to task-manager kill)" - no
+  the display is ready (first time the screen hung - had to task-manager kill)" - no
   log of the hang. StereoCam42: viewport Visible False while Stereo (FMX
   does not draw it; the eyes' RenderManual + MakeScreenshot still do - CHECK
   not black), FStereoNote label in its place; FirstShown shows FOutput once
-  off-screen (-32000) and hides it before FLeiaSR.Start so FMX's re-make
+  off-screen (-32000) and hides it before FDisplay.Start so FMX's re-make
   happens first (restart check kept as a fallback); FStereoWatch: if
-  FEyes.WovenFrames (new, SubmitViews = SRB_OK since Start) is still 0
+  FEyes.WovenFrames (new, SubmitViews = LNB_OK since Start) is still 0
   STEREO_WATCH_MS = 3000 after weaving starts (StartWeaving), Stereo is
   turned off - a black topmost full-screen window can no longer trap the
-  user. btnStereo is enabled only from OnStarted, after srb_Initialize has
-  returned: it cannot be clicked before SR is ready. Program only.
+  user. btnStereo is enabled only from OnStarted, after lnb_Initialize has
+  returned: it cannot be clicked before the display is ready. Program only.
   Owner (20:10): "black screen... how about a 1x1 gorilla render window for
   2-screen mode?" Log: no restart ($3D0FDA both - the off-screen first
   Show worked), 104-130 fps but render 0.2-0.3 ms: Gorilla3D renders
@@ -1129,7 +1228,7 @@ picture): IT WORKS.**
   stays in sight, GorillaViewport1.Parent := FRenderForm (Align None, the
   recommended view in its physical px, the form's client sized to it), the
   cover with its note over the empty ViewLayout; back to ViewLayout on
-  leave. With the main form hidden (on the SR display) the viewport stays
+  leave. With the main form hidden (on the 3D display) the viewport stays
   put - the proven 70 fps case. CHECK: reparenting a Gorilla viewport
   between forms keeps its context; not black; render ~5.7 ms.
   Owner (20:20): "Good" - StereoCam44 works from the widescreen: SRDemo
@@ -1145,17 +1244,17 @@ picture): IT WORKS.**
   Owner (20:24): "This functionality will eventually be merged into
   Sprite3D so nothing complicated is required" - RULE: keep StereoModel's
   copies of what Sprite3D does (animation choice and the like) minimal.
-  Owner (20:29): "can we name [the SR display] when in SR mode". The bridge
+  Owner (20:29): "can we name [the 3D display] when in 3D mode". The bridge
   has no name export, but Windows has the EDID name: StereoCam46, lib
-  TPeardoxLeiaSR.DisplayName (PEARDOX_LEIASR_DISPLAY_NAME 'the SR display'
-  until known), set in LogStartDetails by MonitorNameAt(centre of the SR
+  TLenticularDisplay.DisplayName (LENTICULAR_DISPLAY_DEFAULT_NAME 'the 3D display'
+  until known), set in LogStartDetails by MonitorNameAt(centre of the display
   rect): MonitorFromPoint + GetMonitorInfoW (\\.\DISPLAYn), then
   QueryDisplayConfig's active paths, DisplayConfigGetDeviceInfo source name
   to match, target name -> monitorFriendlyDeviceName, the EDID maker code
   (SAM...) decoded and put in front if the name lacks it (MakerName, a small
   table). Own declarations (TPdxDC* records sized as in wingdi.h: path 72,
   source name 84, target name 420 bytes), user32 externals renamed Pdx*.
-  Logged "The SR display is ..."; StereoModel's note and Stereo-on status
+  Logged "The 3D display is ..."; StereoModel's note and Stereo-on status
   use it. PACKAGE REBUILD. Check whether the bridge's child window
   passes mouse messages through (drag on the output vs on the launcher).
   Owner (20:33): DisplayName undeclared + ForceQueue E2250 (knock-on) -
@@ -1165,13 +1264,13 @@ picture): IT WORKS.**
   matches.
   ZERO COPY (owner, 20:45: "SRDemoFMX already does ZeroCopy ... for people
   with worse [laptops] ... all the speed we can give them helps"). Plan, no
-  bridge change: StereoModel makes its own D3D11 device on the SR display's
-  adapter and gives it to the bridge (srb_SetExternalDevice before
-  srb_Initialize, as SRDemoFMX gives FMX's); two eye textures on it,
+  bridge change: StereoModel makes its own D3D11 device on the 3D display's
+  adapter and gives it to the bridge (lnb_SetExternalDevice before
+  lnb_Initialize, as SRDemoFMX gives FMX's); two eye textures on it,
   registered with OpenGL through WGL_NV_DX_interop2 (wglDXOpenDeviceNV,
   wglDXRegisterObjectNV, Lock / Unlock); after each eye's RenderManual,
   glBlitFramebuffer from Gorilla3D's picture into the eye texture, flipped
-  (GL is bottom-up); then srb_CopyEyeTexture(eye) and srb_PresentViews
+  (GL is bottom-up); then lnb_CopyEyeTexture(eye) and lnb_PresentViews
   (the bridge accepts any texture on its device). Screenshot route kept as
   the fallback. Saves shot + copy + upload, ~6 ms of a 12-14 ms frame.
   Step 1, StereoCam47: src/common/StereoModelGLProbe.pas (new; .dpr +
@@ -1191,12 +1290,12 @@ picture): IT WORKS.**
   1.5; MakeScreenshot gave 1920 x 1080, so it renders again or scales);
   after MakeScreenshot still framebuffer 3. glGetError $502 (ours or
   Gorilla's, harmless). RTTI found no fields in TGorillaViewport.
-  StereoCam48, zero copy: bridge export srb_GetDevice (zip SRBridgeDevice1
+  StereoCam48, zero copy: bridge export lnb_GetDevice (zip LenticularBridgeDevice1
   for SRDelphiFMX, which also carries the unpushed SRDemoSnap1 files: the
-  bridge's g.dev, not AddRef'd; README / CLAUDE / SRBridge.h / .Api.pas);
-  Peardox.LeiaSR.Api declares it; TPeardoxLeiaSR.BridgeDevice (nil without
-  the export) and SubmitEyeTextures (srb_CopyEyeTexture x2 +
-  srb_PresentViews, counted by the new CountSubmit as SubmitViews is).
+  bridge's g.dev, not AddRef'd; README / CLAUDE / LenticularBridge.h / .Api.pas);
+  Lenticular.Display.Api declares it; TLenticularDisplay.BridgeDevice (nil without
+  the export) and SubmitEyeTextures (lnb_CopyEyeTexture x2 +
+  lnb_PresentViews, counted by the new CountSubmit as SubmitViews is).
   src/common/StereoModelGLInterop.pas (new; .dpr + .dproj):
   TPeardoxGLInterop - two B8G8R8A8 textures made on the bridge's device
   (own IPdxD3D11Device declaration up to CreateTexture2D, no Delphi D3D
@@ -1226,7 +1325,7 @@ picture): IT WORKS.**
   error logged (NoteGLError), and at the end of Start / Release; Start
   keeps its HGLRC / HDC and Release makes them current (wglMakeCurrent)
   when none is, so the GL side is undone; Eyes.ReleaseZeroCopy in FormClose
-  (before SR stops, while the context exists) and in LeiaSRStopped. Program
+  (before the display stops, while the context exists) and in DisplayStopped. Program
   only.
   Owner (21:10): "Not as bad (but not great either)" - ONE 1282 dialog,
   then ZERO COPY WORKS: ~9 fps while the modal dialog was up (watchdog
@@ -1359,9 +1458,9 @@ picture): IT WORKS.**
   now picks FMX's multisampled RGBA8 framebuffer of the picture's size
   by name), keys S T X R Z F. Keys now: L [ ] C P Home Esc. Program only.
   Owner (22:31): works, "Oh yeah, that's nice"; 46-48 fps. StereoCam60:
-  LeiaSR settings PerEyeView (V), RenderScale (, .), HideCursor (M),
-  Weave (W, TPeardoxLeiaSR.Flat: lens off while weaving, one view from the
-  eyes' midpoint for both). PACKAGE REBUILD (PeardoxLeiaSR). The
+  display settings PerEyeView (V), RenderScale (, .), HideCursor (M),
+  Weave (W, TLenticularDisplay.Flat: lens off while weaving, one view from the
+  eyes' midpoint for both). PACKAGE REBUILD (Lenticular). The
   SubmitViews PasDoc block, cut off from its declaration since
   StereoCam48, put back above it.
   Owner (22:59): "right click + drag still doesn't work". No drag reached
@@ -1372,14 +1471,14 @@ picture): IT WORKS.**
   logged "Mouse passed through N window(s)"; the cover takes the view's
   mouse handlers.
   Owner (23:10): drags arrive, but "No, it still moves" - the model slid
-  across the SR view during a right drag: the scale followed the target
+  across the 3D view during a right drag: the scale followed the target
   depth, so the eyes' cameras moved sideways with it. StereoCam62: the
   scale is set at ModelDepth (the Subject's centre along the line of
   sight), full-speed mode too. Owner (23:17): "that's good now".
 - Later: TPeardoxGorillaEyes into lib as a component (with a design
   package); the true off-axis frustum (Gorilla3D's author: projection
   offset); LensMode (lens off over the controls); an OpenGL weaver path
-  in the bridge (SR::CreateGLWeaver) for zero copy.
+  in the bridge (the runtime's OpenGL weaver) for zero copy.
 - FastMM5 (submodule, owner 7 November 2026) is the memory manager on
   Windows, first in the `.dpr`; Debug builds report leaks, in full, to
   `StereoModel_MemoryManager_EventLog.txt` beside the executable.
@@ -1405,7 +1504,7 @@ picture): IT WORKS.**
 
 Not to start unless the owner asks for one.
 
-- **Dolly zoom**: DONE (8 November 2026) in TPeardoxProjection
+- **Dolly zoom**: DONE (8 November 2026) in TSpritelyProjection
   (FieldOfView with Dolly); the StereoCam15-17 attempt through the
   camera's FOV is history.
 - **Convergence pull**, once the stereo pair exists: convergence (the
@@ -1427,10 +1526,10 @@ Not to start unless the owner asks for one.
   viewport's notice the component now lets go of the camera and light at
   once and never touches them again.
 - **Palette greyed out**: a component class needs
-  `[ComponentPlatformsAttribute(...)]` (here `PEARDOX_COMPONENT_PLATFORMS`,
+  `[ComponentPlatformsAttribute(...)]` (here `SPRITELY_COMPONENT_PLATFORMS`,
   `pidAllPlatforms` as Gorilla3D's components use); without it the IDE
   takes it as Win32-only and greys it out while the project's active
-  platform is Win64 (owner, 7 November 2026). Every new Peardox component
+  platform is Win64 (owner, 7 November 2026). Every new Spritely component
   carries the attribute.
 - **Loading a model**: make the TGorillaModel (owned by the viewport,
   parented to it) and call its `LoadFromFile`; never use the class

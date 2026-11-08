@@ -276,7 +276,7 @@ object PeardoxProjectionTestForm: TPeardoxProjectionTestForm
       TabOrder = 19
     end
   end
-  object PeardoxOrbitalCamera1: TPeardoxOrbitalCamera
+  object SpritelyOrbitalCamera1: TSpritelyOrbitalCamera
     Viewport = GorillaViewport1
     Left = 80
     Top = 16

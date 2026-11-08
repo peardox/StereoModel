@@ -1,11 +1,11 @@
 //** @abstract(ProjectionTest's form: a Gorilla3D view of a test model, the projection test
-//** (Run test, also once by itself after the model loads), and TPeardoxProjection live.)
+//** (Run test, also once by itself after the model loads), and TSpritelyProjection live.)
 //**
 //** The test (TPeardoxProjectionTester) finds the matrices FMX draws with and tries every way
 //** of moving the picture across the lens, measuring each; its log is in the memo on the right
 //** and in ProjectionTest.log beside the executable.
 //**
-//** Live, the component TPeardoxProjection (made in code here, as a new component is first)
+//** Live, the component TSpritelyProjection (made in code here, as a new component is first)
 //** draws the view: the projection box (perspective, orthographic, cavalier, cabinet,
 //** military, oblique), the Angle and Depth sliders for the free oblique, the Lens slider
 //** with Dolly (the dolly zoom), and the Shift and Rise sliders. It is the orbit camera's
@@ -16,8 +16,8 @@ unit ProjectionTestMain;
 
 {
   ProjectionTest's form: a Gorilla3D view of a test model through the
-  Peardox orbital camera, the projection test (button, and once by itself
-  after the model loads), and TPeardoxProjection live: projection, oblique
+  Spritely orbital camera, the projection test (button, and once by itself
+  after the model loads), and TSpritelyProjection live: projection, oblique
   angle and depth, lens with the dolly zoom, shift and rise; Fit frames in
   the projection drawn. Models from the models folder or Open. The log goes
   to the memo and to ProjectionTest.log.
@@ -33,14 +33,14 @@ uses
   FMX.ScrollBox, FMX.Memo,
   Gorilla.Viewport, Gorilla.Camera, Gorilla.Model, Gorilla.GLB.Loader, Gorilla.GLTF.Loader,
   Gorilla.FBX.Loader, Gorilla.OBJ.Loader,
-  Peardox.OrbitalCamera, Peardox.Projection, ProjectionTestMeasure, ProjectionTestRunner;
+  Spritely.OrbitalCamera, Spritely.Projection, ProjectionTestMeasure, ProjectionTestRunner;
 
 type
   //** @abstract(The form: the view, the log, the test button and the live controls.)
   TPeardoxProjectionTestForm = class(TForm)
     //** @abstract(Holds the view; fills the form left of the log and above the controls.)
     ViewLayout: TLayout;
-    //** @abstract(The Gorilla3D viewport, seen through PeardoxOrbitalCamera1's camera.)
+    //** @abstract(The Gorilla3D viewport, seen through SpritelyOrbitalCamera1's camera.)
     GorillaViewport1: TGorillaViewport;
     //** @abstract(The log, also written to ProjectionTest.log.)
     LogMemo: TMemo;
@@ -67,7 +67,7 @@ type
     RiseTrack: TTrackBar;
     //** @abstract(Puts the shift and rise back to nought.)
     btnCentre: TButton;
-    //** @abstract(TPeardoxProjection's Active: off, FMX's own projection is drawn.)
+    //** @abstract(TSpritelyProjection's Active: off, FMX's own projection is drawn.)
     ActiveCheck: TCheckBox;
     //** @abstract(Free Movement: ticked, the camera may go anywhere, into the model too (it is
     //** no longer the orbit camera's Subject); unticked, it is kept outside the model's box.)
@@ -89,13 +89,13 @@ type
     LensLabel: TLabel;
     //** @abstract(The lens: the vertical field of view drawn with, 5 to 120 degrees.)
     LensTrack: TTrackBar;
-    //** @abstract(TPeardoxProjection's Dolly: a lens change moves the camera too, keeping the
+    //** @abstract(TSpritelyProjection's Dolly: a lens change moves the camera too, keeping the
     //** target plane's size - the dolly zoom.)
     DollyCheck: TCheckBox;
     //** @abstract(The last log line.)
     StatusLabel: TLabel;
     //** @abstract(The orbit camera the view is seen through.)
-    PeardoxOrbitalCamera1: TPeardoxOrbitalCamera;
+    SpritelyOrbitalCamera1: TSpritelyOrbitalCamera;
     //** @abstract(Makes the projection, the access, the tester and the timers, wires the
     //** controls and opens the log.)
     //**
@@ -112,9 +112,9 @@ type
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
     //** @abstract(The component under test: draws the live view.)
-    FProjection: TPeardoxProjection;
+    FProjection: TSpritelyProjection;
     //** @abstract(Finds and changes the matrices for the test.)
-    FAccess: TPeardoxProjectionAccess;
+    FAccess: TSpritelyProjectionAccess;
     //** @abstract(Runs the test.)
     FTester: TPeardoxProjectionTester;
     //** @abstract(The model shown, or nil.)
@@ -147,7 +147,7 @@ type
     //**
     //** @param(AText The line.)
     procedure LogLine(const AText: string);
-    //** @abstract(TPeardoxProjection's OnLog: its lines into the log.)
+    //** @abstract(TSpritelyProjection's OnLog: its lines into the log.)
     //**
     //** @param(Sender The projection.)
     //** @param(AText The line.)
@@ -227,7 +227,7 @@ type
     //** @param(Sender The box.)
     procedure DollyChange(Sender: TObject);
     //** @abstract(A projection chosen; the component turns the camera to the kind's preset
-    //** angles, if it has them (TPeardoxProjection.CameraPreset, PresetAngles).)
+    //** angles, if it has them (TSpritelyProjection.CameraPreset, PresetAngles).)
     //**
     //** @param(Sender The box.)
     procedure KindChange(Sender: TObject);
@@ -288,9 +288,9 @@ implementation
 {$R *.fmx}
 
 const
-  //** @abstract(The test model; SRDemoScene's spheres and cubes give the measure plenty of
+  //** @abstract(The test model; DemoScene's spheres and cubes give the measure plenty of
   //** edges.)
-  TEST_MODEL = 'SRDemoSceneNoWall.glb';
+  TEST_MODEL = 'DemoSceneNoWall.glb';
   //** @abstract(Loaded if TEST_MODEL is not found.)
   FALLBACK_MODEL = 'uvcube.glb';
   //** @abstract(The folder the models are in.)
@@ -335,12 +335,12 @@ const
   AUTO_TEST_DELAY_MS = 1500;
   //** @abstract(Whether the projection test runs by itself after the first model loads.
   //** False since ProjComp5 (owner, 8 November 2026: what the test showed is settled, and
-  //** TPeardoxProjection is the way); Run test still runs it, and True brings it back.)
+  //** TSpritelyProjection is the way); Run test still runs it, and True brings it back.)
   AUTO_TEST = False;
   //** @abstract(Milliseconds between live reports in the log.)
   LIVE_REPORT_MS = 2000;
-  //** @abstract(The projections' names in KindBox, in TPeardoxProjectionKind's order.)
-  KIND_NAMES: array[TPeardoxProjectionKind] of string = (
+  //** @abstract(The projections' names in KindBox, in TSpritelyProjectionKind's order.)
+  KIND_NAMES: array[TSpritelyProjectionKind] of string = (
     'Projection: perspective',
     'Projection: orthographic',
     'Projection: cavalier (1, 45 deg)',
@@ -354,7 +354,7 @@ const
 
 procedure TPeardoxProjectionTestForm.FormCreate(Sender: TObject);
 var
-  K: TPeardoxProjectionKind;
+  K: TSpritelyProjectionKind;
 begin
   LogOpen;
   Caption := 'ProjectionTest';
@@ -365,12 +365,12 @@ begin
   // The component under test, made in code first; the orbit camera's
   // Projection, so it gives the target distance, takes part in the dolly
   // zoom and its fits follow what is drawn
-  FProjection := TPeardoxProjection.Create(Self);
+  FProjection := TSpritelyProjection.Create(Self);
   FProjection.OnLog := ProjectionLog;
   FProjection.Viewport := GorillaViewport1;
-  PeardoxOrbitalCamera1.Projection := FProjection;
+  SpritelyOrbitalCamera1.Projection := FProjection;
   // The test's own access, for the survey and measures
-  FAccess := TPeardoxProjectionAccess.Create(Self, GorillaViewport1);
+  FAccess := TSpritelyProjectionAccess.Create(Self, GorillaViewport1);
   FAccess.OnLog := LogLine;
   FTester := TPeardoxProjectionTester.Create(GorillaViewport1, FAccess);
   FTester.OnLog := LogLine;
@@ -389,7 +389,7 @@ begin
   FSetting := True;
   try
     KindBox.Items.Clear;
-    for K := Low(TPeardoxProjectionKind) to High(TPeardoxProjectionKind) do
+    for K := Low(TSpritelyProjectionKind) to High(TSpritelyProjectionKind) do
       KindBox.Items.Add(KIND_NAMES[K]);
     ShiftTrack.Min := -TRACK_RANGE;
     ShiftTrack.Max := TRACK_RANGE;
@@ -452,7 +452,7 @@ begin
   // came after this log was closed); each step logged
   if FProjection <> nil then
   begin
-    PeardoxOrbitalCamera1.Projection := nil;
+    SpritelyOrbitalCamera1.Projection := nil;
     FreeAndNil(FProjection);
     LogLine('Projection component freed');
   end;
@@ -516,7 +516,7 @@ end;
 
 procedure TPeardoxProjectionTestForm.ProjectionLog(Sender: TObject; const AText: string);
 begin
-  LogLine('TPeardoxProjection: ' + AText);
+  LogLine('TSpritelyProjection: ' + AText);
 end;
 
 function TPeardoxProjectionTestForm.FindModelFolder: string;
@@ -592,7 +592,7 @@ begin
   FModel.Position.Point := Point3D(Box.TopLeftNear.X + (Box.Width / 2),
     Box.TopLeftNear.Y + (Box.Height / 2), Box.TopLeftNear.Z + (Box.Depth / 2));
   FModel.RotationAngle.X := MODEL_TURN_X;
-  PeardoxOrbitalCamera1.Subject := SubjectWanted;
+  SpritelyOrbitalCamera1.Subject := SubjectWanted;
   // The camera's own lens again (without a dolly: the fit below sets the
   // distance), then the front view, the start view
   KeepDolly := FProjection.Dolly;
@@ -602,7 +602,7 @@ begin
   FrontView;
   PlaceHook;
   ShowValues;
-  LogLine(Format('Loaded %s; distance %.2f', [APath, PeardoxOrbitalCamera1.Distance]));
+  LogLine(Format('Loaded %s; distance %.2f', [APath, SpritelyOrbitalCamera1.Distance]));
   Result := True;
 end;
 
@@ -682,7 +682,7 @@ begin
   LogLine(Format('Live: %s, angle %.0f, depth %.2f; lens %.1f deg, camera distance %.2f; ' +
     'shift %.2f, rise %.2f; active %s; written in %d frame(s) in %.0f s; projection found %s',
     [KIND_NAMES[FProjection.Kind], FProjection.ObliqueAngle, FProjection.ObliqueScale,
-     FProjection.EffectiveFieldOfView, PeardoxOrbitalCamera1.Distance, FProjection.ShiftX,
+     FProjection.EffectiveFieldOfView, SpritelyOrbitalCamera1.Distance, FProjection.ShiftX,
      FProjection.ShiftY, BoolToStr(FProjection.Active, True), Frames, LIVE_REPORT_MS / 1000,
      BoolToStr(FProjection.Found, True)]));
 end;
@@ -720,7 +720,7 @@ begin
   try
     // The component off, FMX's own projection back: the test writes its own
     FProjection.Active := False;
-    FTester.Run([GorillaViewport1.Camera, PeardoxOrbitalCamera1.Camera]);
+    FTester.Run([GorillaViewport1.Camera, SpritelyOrbitalCamera1.Camera]);
   finally
     FProjection.Active := WasActive;
     FTesting := False;
@@ -769,10 +769,10 @@ begin
     Exit;
   // FitToBounds, not the every-angle fit: as tight as the present angles,
   // lens, shift and projection allow, so following the projection shows
-  if PeardoxOrbitalCamera1.FitToBounds(FModel, VIEW_MARGIN) then
+  if SpritelyOrbitalCamera1.FitToBounds(FModel, VIEW_MARGIN) then
     LogLine(Format('Fit: %s, lens %.1f deg, shift %.2f, rise %.2f: distance %.2f',
       [KIND_NAMES[FProjection.Kind], FProjection.EffectiveFieldOfView, FProjection.ShiftX,
-       FProjection.ShiftY, PeardoxOrbitalCamera1.Distance]))
+       FProjection.ShiftY, SpritelyOrbitalCamera1.Distance]))
   else
     LogLine('Fit FAILED');
 end;
@@ -781,15 +781,15 @@ procedure TPeardoxProjectionTestForm.FrontView;
 begin
   if FModel = nil then
     Exit;
-  PeardoxOrbitalCamera1.Azimuth := FRONT_AZIMUTH;
-  PeardoxOrbitalCamera1.PolarAngle := FRONT_POLAR;
-  PeardoxOrbitalCamera1.Roll := 0;
+  SpritelyOrbitalCamera1.Azimuth := FRONT_AZIMUTH;
+  SpritelyOrbitalCamera1.PolarAngle := FRONT_POLAR;
+  SpritelyOrbitalCamera1.Roll := 0;
   // The every-angle fit puts the target on the model's centre (its depth
   // against the target, the glass in StereoModel, is 0)
-  if PeardoxOrbitalCamera1.FitToBoundsMax(FModel, VIEW_MARGIN) then
+  if SpritelyOrbitalCamera1.FitToBoundsMax(FModel, VIEW_MARGIN) then
     LogLine(Format('Front view: azimuth %.0f, inclination %.0f, roll 0, the target on the ' +
-      'model''s centre, distance %.2f', [PeardoxOrbitalCamera1.Azimuth,
-      PeardoxOrbitalCamera1.PolarAngle, PeardoxOrbitalCamera1.Distance]))
+      'model''s centre, distance %.2f', [SpritelyOrbitalCamera1.Azimuth,
+      SpritelyOrbitalCamera1.PolarAngle, SpritelyOrbitalCamera1.Distance]))
   else
     LogLine('Front view: framing FAILED');
 end;
@@ -828,7 +828,7 @@ begin
     Exit;
   // With no Subject the orbit camera keeps it out of nothing: the wheel can
   // take it into the model (inside DollyHallway, whose box is the hallway)
-  PeardoxOrbitalCamera1.Subject := SubjectWanted;
+  SpritelyOrbitalCamera1.Subject := SubjectWanted;
   if FreeCheck.IsChecked then
     LogLine('Free Movement on: the camera may go into the model')
   else
@@ -848,7 +848,7 @@ begin
     Exit;
   // The component turns the camera for the kinds with a preset (it logs the
   // angles)
-  FProjection.Kind := TPeardoxProjectionKind(KindBox.ItemIndex);
+  FProjection.Kind := TSpritelyProjectionKind(KindBox.ItemIndex);
   LogLine(KIND_NAMES[FProjection.Kind]);
 end;
 
@@ -877,14 +877,14 @@ var
 begin
   if FSetting then
     Exit;
-  Before := PeardoxOrbitalCamera1.Distance;
-  // With Dolly the projection moves the camera (TPeardoxOrbitalCamera's
+  Before := SpritelyOrbitalCamera1.Distance;
+  // With Dolly the projection moves the camera (TSpritelyOrbitalCamera's
   // ProjectionLensChanged) so the target plane keeps its size
   FProjection.FieldOfView := LensTrack.Value;
   LensLabel.Text := Format('Lens %.0f', [FProjection.EffectiveFieldOfView]);
-  if FProjection.Dolly and (Abs(PeardoxOrbitalCamera1.Distance - Before) > 0.0001) then
+  if FProjection.Dolly and (Abs(SpritelyOrbitalCamera1.Distance - Before) > 0.0001) then
     StatusLabel.Text := Format('Dolly: lens %.1f deg, camera distance %.2f',
-      [FProjection.EffectiveFieldOfView, PeardoxOrbitalCamera1.Distance]);
+      [FProjection.EffectiveFieldOfView, SpritelyOrbitalCamera1.Distance]);
 end;
 
 procedure TPeardoxProjectionTestForm.ViewResized(Sender: TObject);
@@ -914,7 +914,7 @@ begin
   end;
   // As StereoModel: right turns the camera right round the centre, down
   // raises it
-  PeardoxOrbitalCamera1.Orbit((X - FDragLast.X) * ORBIT_DEGREES_PER_PIXEL,
+  SpritelyOrbitalCamera1.Orbit((X - FDragLast.X) * ORBIT_DEGREES_PER_PIXEL,
     (Y - FDragLast.Y) * ORBIT_DEGREES_PER_PIXEL);
   FDragLast := PointF(X, Y);
 end;
@@ -931,7 +931,7 @@ procedure TPeardoxProjectionTestForm.ViewMouseWheel(Sender: TObject; Shift: TShi
 begin
   Handled := True;
   // The wheel away (positive) brings the view nearer
-  PeardoxOrbitalCamera1.Zoom(Power(ZOOM_STEP, -WheelDelta / WHEEL_NOTCH));
+  SpritelyOrbitalCamera1.Zoom(Power(ZOOM_STEP, -WheelDelta / WHEEL_NOTCH));
 end;
 
 end.

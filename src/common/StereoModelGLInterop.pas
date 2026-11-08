@@ -1,13 +1,13 @@
 //** @abstract(Zero copy for Gorilla3D: its OpenGL picture copied into Direct3D 11 eye
 //** textures on the GPU, for the bridge to weave.)
 //**
-//** TPeardoxGLInterop makes two eye textures on the bridge's Direct3D 11 device (srb_GetDevice)
+//** TPeardoxGLInterop makes two eye textures on the bridge's Direct3D 11 device (lnb_GetDevice)
 //** and registers them with OpenGL through NVIDIA's WGL_NV_DX_interop2 (also offered by AMD
 //** and Intel drivers), each the colour attachment of a framebuffer of its own. After each
 //** eye's RenderManual, CopyEye takes the part of FMX's picture where the display's glass is
 //** (TPeardoxGorillaEyes works it out), resolves it if it is multisampled, and blits it into
 //** the eye's texture, scaled to fill it and turned the right way up (OpenGL's rows run from
-//** the bottom). The textures then go to TPeardoxLeiaSR.SubmitEyeTextures: no MakeScreenshot,
+//** the bottom). The textures then go to TLenticularDisplay.SubmitEyeTextures: no MakeScreenshot,
 //** no copy through the CPU, no upload (owner, 7 November 2026: "all the speed we can give
 //** them helps them").
 //**
@@ -19,7 +19,7 @@ unit StereoModelGLInterop;
   Zero copy for Gorilla3D: two eye textures on the bridge's D3D11 device,
   registered with OpenGL (WGL_NV_DX_interop2), filled after each eye's
   RenderManual by blitting the glass's part of FMX's picture into them,
-  scaled and flipped; then TPeardoxLeiaSR.SubmitEyeTextures. Needs
+  scaled and flipped; then TLenticularDisplay.SubmitEyeTextures. Needs
   Gorilla3D's GL context current. Windows only.
 }
 
@@ -122,7 +122,7 @@ type
     //** OpenGL, for a picture of ASourceWidth x ASourceHeight. Gorilla3D's context must be
     //** current.)
     //**
-    //** @param(ADevice The bridge's ID3D11Device (TPeardoxLeiaSR.BridgeDevice).)
+    //** @param(ADevice The bridge's ID3D11Device (TLenticularDisplay.BridgeDevice).)
     //**
     //** @param(ASourceWidth The width of the picture Gorilla3D draws, in pixels.)
     //**
@@ -815,7 +815,7 @@ var
 begin
   {$IFDEF MSWINDOWS}
   // OpenGL's side can only be undone with its context current: Start's is
-  // made current for it if none is (FormClose, SR stopping), and let go of
+  // made current for it if none is (FormClose, the display stopping), and let go of
   // after; if that cannot be done its few names are left
   Current := wglGetCurrentContext <> 0;
   MadeCurrent := False;

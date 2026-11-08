@@ -1,4 +1,4 @@
-//** @abstract(The projection test: tries every way TPeardoxProjectionAccess has of moving the
+//** @abstract(The projection test: tries every way TSpritelyProjectionAccess has of moving the
 //** picture across the lens (a lens shift and rise), measures what each really did, and logs
 //** it.)
 //**
@@ -33,7 +33,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, System.Math, System.Math.Vectors,
-  FMX.Types3D, FMX.Graphics, Gorilla.Viewport, Peardox.Projection, ProjectionTestMeasure;
+  FMX.Types3D, FMX.Graphics, Gorilla.Viewport, Spritely.Projection, ProjectionTestMeasure;
 
 const
   //** @abstract(How far each test moves the picture, in normalised device units: 0.1 is a tenth
@@ -62,7 +62,7 @@ type
   //** @param(ASX Shift, normalised device units, + right.)
   //** @param(ASY Rise, normalised device units, + up.)
   //** @returns(The change.)
-  TPeardoxAdjustMaker = reference to function(ASX, ASY: Single): TPeardoxMatrixAdjust;
+  TSpritelyAdjustMaker = reference to function(ASX, ASY: Single): TSpritelyMatrixAdjust;
 
   //** @abstract(Runs the projection test on a Gorilla3D viewport.)
   TPeardoxProjectionTester = class
@@ -70,9 +70,9 @@ type
     //** @abstract(The viewport drawn.)
     FViewport: TGorillaViewport;
     //** @abstract(Finds and changes the matrices.)
-    FAccess: TPeardoxProjectionAccess;
+    FAccess: TSpritelyProjectionAccess;
     //** @abstract(Where log lines go.)
-    FOnLog: TPeardoxLogProc;
+    FOnLog: TSpritelyLogProc;
     //** @abstract(The ways that shifted and rose the picture as expected.)
     FWorking: TStringList;
     //** @abstract(The ways that moved it, but not as expected.)
@@ -82,11 +82,11 @@ type
     //** @abstract(How many times the hook was drawn in the last frame's MakeScreenshot.)
     FShotCalls: Integer;
     //** @abstract(The first projection slot that worked, or nil.)
-    FBestProjection: TPeardoxMatrixSlot;
+    FBestProjection: TSpritelyMatrixSlot;
     //** @abstract(How FBestProjection was written when it worked.)
     FBestProjectionTiming: TPeardoxTestTiming;
     //** @abstract(The first camera slot that worked, or nil.)
-    FBestCamera: TPeardoxMatrixSlot;
+    FBestCamera: TSpritelyMatrixSlot;
     //** @abstract(Whether SetRenderToMatrix worked, written inside the frame.)
     FRenderToWorks: Boolean;
     //** @abstract(Whether SetCameraMatrix with a shear worked, inside the frame.)
@@ -115,7 +115,7 @@ type
     //** @param(ATarget What was written.)
     //** @param(ASlot The slot written, or nil.)
     //** @returns(A note, or empty.)
-    function GetterNote(ATarget: TPeardoxAdjustTarget; ASlot: TPeardoxMatrixSlot): string;
+    function GetterNote(ATarget: TSpritelyAdjustTarget; ASlot: TSpritelyMatrixSlot): string;
     //** @abstract(One test: a change, two frames, measured and logged, and everything put back.)
     //**
     //** @param(AName The test's name for the log.)
@@ -126,9 +126,9 @@ type
     //** @param(ASY Rise, normalised device units.)
     //** @param(AAdjust The change.)
     //** @returns(What the second frame says.)
-    function RunCase(const AName: string; ATarget: TPeardoxAdjustTarget;
-      ASlot: TPeardoxMatrixSlot; ATiming: TPeardoxTestTiming; ASX, ASY: Single;
-      const AAdjust: TPeardoxMatrixAdjust): TPeardoxShiftVerdict;
+    function RunCase(const AName: string; ATarget: TSpritelyAdjustTarget;
+      ASlot: TSpritelyMatrixSlot; ATiming: TPeardoxTestTiming; ASX, ASY: Single;
+      const AAdjust: TSpritelyMatrixAdjust): TPeardoxShiftVerdict;
     //** @abstract(A shift test and, if the picture moved, a rise test; notes the outcome.)
     //**
     //** @param(AName The way's name for the log.)
@@ -137,9 +137,9 @@ type
     //** @param(ATiming When to change it.)
     //** @param(AMaker Makes the change.)
     //** @returns(True if both went as expected.)
-    function RunBoth(const AName: string; ATarget: TPeardoxAdjustTarget;
-      ASlot: TPeardoxMatrixSlot; ATiming: TPeardoxTestTiming;
-      const AMaker: TPeardoxAdjustMaker): Boolean;
+    function RunBoth(const AName: string; ATarget: TSpritelyAdjustTarget;
+      ASlot: TSpritelyMatrixSlot; ATiming: TPeardoxTestTiming;
+      const AMaker: TSpritelyAdjustMaker): Boolean;
     //** @abstract(Tries one slot every way.)
     //**
     //** @param(AName The slot's name for the log.)
@@ -148,8 +148,8 @@ type
     //** @param(AMaker Makes the change.)
     //** @param(ATiming When it first worked.)
     //** @returns(True if any timing worked.)
-    function RunSlot(const AName: string; ATarget: TPeardoxAdjustTarget;
-      ASlot: TPeardoxMatrixSlot; const AMaker: TPeardoxAdjustMaker;
+    function RunSlot(const AName: string; ATarget: TSpritelyAdjustTarget;
+      ASlot: TSpritelyMatrixSlot; const AMaker: TSpritelyAdjustMaker;
       out ATiming: TPeardoxTestTiming): Boolean;
     //** @abstract(The summary at the end of the log.)
     procedure LogSummary;
@@ -158,7 +158,7 @@ type
     //**
     //** @param(AViewport The viewport to draw.)
     //** @param(AAccess The access made for that viewport.)
-    constructor Create(AViewport: TGorillaViewport; AAccess: TPeardoxProjectionAccess);
+    constructor Create(AViewport: TGorillaViewport; AAccess: TSpritelyProjectionAccess);
     //** @abstract(Frees the lists.)
     destructor Destroy; override;
     //** @abstract(Runs the whole test; the viewport's ManualRendering, UseFixedFrameRate and
@@ -167,17 +167,17 @@ type
     //** @param(AExtra More objects for Survey to look through: the cameras.)
     procedure Run(const AExtra: array of TObject);
     //** @abstract(The first projection slot that worked, or nil; valid until the next Survey.)
-    property BestProjection: TPeardoxMatrixSlot read FBestProjection;
+    property BestProjection: TSpritelyMatrixSlot read FBestProjection;
     //** @abstract(How BestProjection was written when it worked.)
     property BestProjectionTiming: TPeardoxTestTiming read FBestProjectionTiming;
     //** @abstract(The first camera slot that worked, or nil; valid until the next Survey.)
-    property BestCamera: TPeardoxMatrixSlot read FBestCamera;
+    property BestCamera: TSpritelyMatrixSlot read FBestCamera;
     //** @abstract(Whether SetRenderToMatrix worked inside the frame.)
     property RenderToWorks: Boolean read FRenderToWorks;
     //** @abstract(Whether SetCameraMatrix with a shear worked inside the frame.)
     property ShearWorks: Boolean read FShearWorks;
     //** @abstract(Where log lines go.)
-    property OnLog: TPeardoxLogProc read FOnLog write FOnLog;
+    property OnLog: TSpritelyLogProc read FOnLog write FOnLog;
   end;
 
 //** @abstract(The name of a timing, for the log.)
@@ -191,28 +191,28 @@ function TimingName(ATiming: TPeardoxTestTiming): string;
 //** @param(ASX Shift.)
 //** @param(ASY Rise.)
 //** @returns(The change.)
-function ShiftAdjust(ASX, ASY: Single): TPeardoxMatrixAdjust;
+function ShiftAdjust(ASX, ASY: Single): TSpritelyMatrixAdjust;
 
 //** @abstract(The change for a camera matrix: times ShearForShift of the context's projection.)
 //**
 //** @param(ASX Shift.)
 //** @param(ASY Rise.)
 //** @returns(The change.)
-function ShearAdjust(ASX, ASY: Single): TPeardoxMatrixAdjust;
+function ShearAdjust(ASX, ASY: Single): TSpritelyMatrixAdjust;
 
 //** @abstract(The change for SetRenderToMatrix, for row vectors: ClipShift.)
 //**
 //** @param(ASX Shift.)
 //** @param(ASY Rise.)
 //** @returns(The change.)
-function ClipRowsAdjust(ASX, ASY: Single): TPeardoxMatrixAdjust;
+function ClipRowsAdjust(ASX, ASY: Single): TSpritelyMatrixAdjust;
 
 //** @abstract(The change for SetRenderToMatrix, for column vectors: ClipShift transposed.)
 //**
 //** @param(ASX Shift.)
 //** @param(ASY Rise.)
 //** @returns(The change.)
-function ClipColumnsAdjust(ASX, ASY: Single): TPeardoxMatrixAdjust;
+function ClipColumnsAdjust(ASX, ASY: Single): TSpritelyMatrixAdjust;
 
 implementation
 
@@ -227,16 +227,16 @@ begin
   end;
 end;
 
-function ShiftAdjust(ASX, ASY: Single): TPeardoxMatrixAdjust;
+function ShiftAdjust(ASX, ASY: Single): TSpritelyMatrixAdjust;
 begin
   Result :=
     function(const AMatrix: TMatrix3D; AContext: TContext3D): TMatrix3D
     begin
-      Result := TPeardoxProjectionAccess.ShiftProjection(AMatrix, ASX, ASY);
+      Result := TSpritelyProjectionAccess.ShiftProjection(AMatrix, ASX, ASY);
     end;
 end;
 
-function ShearAdjust(ASX, ASY: Single): TPeardoxMatrixAdjust;
+function ShearAdjust(ASX, ASY: Single): TSpritelyMatrixAdjust;
 begin
   Result :=
     function(const AMatrix: TMatrix3D; AContext: TContext3D): TMatrix3D
@@ -244,33 +244,33 @@ begin
       if AContext = nil then
         Result := AMatrix
       else
-        Result := AMatrix * TPeardoxProjectionAccess.ShearForShift(
+        Result := AMatrix * TSpritelyProjectionAccess.ShearForShift(
           AContext.CurrentProjectionMatrix, ASX, ASY);
     end;
 end;
 
-function ClipRowsAdjust(ASX, ASY: Single): TPeardoxMatrixAdjust;
+function ClipRowsAdjust(ASX, ASY: Single): TSpritelyMatrixAdjust;
 begin
   Result :=
     function(const AMatrix: TMatrix3D; AContext: TContext3D): TMatrix3D
     begin
-      Result := AMatrix * TPeardoxProjectionAccess.ClipShift(ASX, ASY, True);
+      Result := AMatrix * TSpritelyProjectionAccess.ClipShift(ASX, ASY, True);
     end;
 end;
 
-function ClipColumnsAdjust(ASX, ASY: Single): TPeardoxMatrixAdjust;
+function ClipColumnsAdjust(ASX, ASY: Single): TSpritelyMatrixAdjust;
 begin
   Result :=
     function(const AMatrix: TMatrix3D; AContext: TContext3D): TMatrix3D
     begin
-      Result := AMatrix * TPeardoxProjectionAccess.ClipShift(ASX, ASY, False);
+      Result := AMatrix * TSpritelyProjectionAccess.ClipShift(ASX, ASY, False);
     end;
 end;
 
 { TPeardoxProjectionTester }
 
 constructor TPeardoxProjectionTester.Create(AViewport: TGorillaViewport;
-  AAccess: TPeardoxProjectionAccess);
+  AAccess: TSpritelyProjectionAccess);
 begin
   inherited Create;
   FViewport := AViewport;
@@ -329,8 +329,8 @@ begin
   end;
 end;
 
-function TPeardoxProjectionTester.GetterNote(ATarget: TPeardoxAdjustTarget;
-  ASlot: TPeardoxMatrixSlot): string;
+function TPeardoxProjectionTester.GetterNote(ATarget: TSpritelyAdjustTarget;
+  ASlot: TSpritelyMatrixSlot): string;
 var
   Ctx: TContext3D;
 begin
@@ -340,27 +340,27 @@ begin
     Exit;
   case ATarget of
     atProjectionSlot:
-      if TPeardoxProjectionAccess.SameMatrix(Ctx.CurrentProjectionMatrix, ASlot.Read) then
+      if TSpritelyProjectionAccess.SameMatrix(Ctx.CurrentProjectionMatrix, ASlot.Read) then
         Result := 'CurrentProjectionMatrix returns the written value'
       else
         Result := 'CurrentProjectionMatrix does NOT return the written value';
     atCameraSlot:
-      if TPeardoxProjectionAccess.SameMatrix(Ctx.CurrentCameraMatrix, ASlot.Read) then
+      if TSpritelyProjectionAccess.SameMatrix(Ctx.CurrentCameraMatrix, ASlot.Read) then
         Result := 'CurrentCameraMatrix returns the written value'
       else
         Result := 'CurrentCameraMatrix does NOT return the written value';
   end;
 end;
 
-function TPeardoxProjectionTester.RunCase(const AName: string; ATarget: TPeardoxAdjustTarget;
-  ASlot: TPeardoxMatrixSlot; ATiming: TPeardoxTestTiming; ASX, ASY: Single;
-  const AAdjust: TPeardoxMatrixAdjust): TPeardoxShiftVerdict;
+function TPeardoxProjectionTester.RunCase(const AName: string; ATarget: TSpritelyAdjustTarget;
+  ASlot: TSpritelyMatrixSlot; ATiming: TPeardoxTestTiming; ASX, ASY: Single;
+  const AAdjust: TSpritelyMatrixAdjust): TPeardoxShiftVerdict;
 var
   Ref, First, Second, Back: TPeardoxGreyPicture;
   R1, R2: TPeardoxShiftResult;
   ExpectX, ExpectY, BackDiff: Single;
   Notes: string;
-  Inverse: TPeardoxMatrixSlot;
+  Inverse: TSpritelyMatrixSlot;
 begin
   Ref := Frame(nil);
   // + shift moves the picture right; + rise moves it up, which is - in
@@ -419,9 +419,9 @@ begin
   Result := R2.Verdict;
 end;
 
-function TPeardoxProjectionTester.RunBoth(const AName: string; ATarget: TPeardoxAdjustTarget;
-  ASlot: TPeardoxMatrixSlot; ATiming: TPeardoxTestTiming;
-  const AMaker: TPeardoxAdjustMaker): Boolean;
+function TPeardoxProjectionTester.RunBoth(const AName: string; ATarget: TSpritelyAdjustTarget;
+  ASlot: TSpritelyMatrixSlot; ATiming: TPeardoxTestTiming;
+  const AMaker: TSpritelyAdjustMaker): Boolean;
 var
   Name: string;
   VX, VY: TPeardoxShiftVerdict;
@@ -448,8 +448,8 @@ begin
   end;
 end;
 
-function TPeardoxProjectionTester.RunSlot(const AName: string; ATarget: TPeardoxAdjustTarget;
-  ASlot: TPeardoxMatrixSlot; const AMaker: TPeardoxAdjustMaker;
+function TPeardoxProjectionTester.RunSlot(const AName: string; ATarget: TSpritelyAdjustTarget;
+  ASlot: TSpritelyMatrixSlot; const AMaker: TSpritelyAdjustMaker;
   out ATiming: TPeardoxTestTiming): Boolean;
 var
   T: TPeardoxTestTiming;
@@ -466,7 +466,7 @@ end;
 
 procedure TPeardoxProjectionTester.CheckScreenshotLag;
 var
-  S: TPeardoxMatrixSlot;
+  S: TSpritelyMatrixSlot;
   Ref, One, Two: TPeardoxGreyPicture;
   R1, R2: TPeardoxShiftResult;
   ExpectX: Single;
@@ -530,7 +530,7 @@ procedure TPeardoxProjectionTester.Run(const AExtra: array of TObject);
 var
   SavedManual, SavedFixed, SavedCulling, Worked: Boolean;
   Ref, Again: TPeardoxGreyPicture;
-  S: TPeardoxMatrixSlot;
+  S: TSpritelyMatrixSlot;
   Count: Integer;
   Timing: TPeardoxTestTiming;
   ContextName, CameraName: string;

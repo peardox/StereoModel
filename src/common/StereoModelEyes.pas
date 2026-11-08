@@ -1,12 +1,12 @@
 //** @abstract(Glasses-free 3D for a Gorilla3D view: TPeardoxGorillaEyes draws it once per eye,
-//** from where each eye really is, and hands the pair to TPeardoxLeiaSR to weave.)
+//** from where each eye really is, and hands the pair to TLenticularDisplay to weave.)
 //**
 //** Kept in the program until it is settled; then it becomes a component in lib. Each frame
 //** it:
 //**
 //** @orderedList(
 //**   @item(reads the tracked eyes (millimetres from the display's centre) from
-//**     TPeardoxLeiaSR, or uses a fixed viewer in front of the view when the eyes are not
+//**     TLenticularDisplay, or uses a fixed viewer in front of the view when the eyes are not
 //**     tracked or LookAround is off, with the saved eye separation;)
 //**   @item(for each eye, puts the orbital camera's own Gorilla3D camera where that eye is,
 //**     looking straight ahead (parallel to the orbit camera), renders the viewport
@@ -17,7 +17,7 @@
 //**     the bridge and OpenGL allow, otherwise through screenshots copied side by side.)
 //** )
 //**
-//** The geometry is the per-eye off-axis view of SRDelphiFMX's TSRStereoRenderer (Kooima's
+//** The geometry is the per-eye off-axis view of SRDelphiFMX's stereo renderer (Kooima's
 //** generalised perspective projection). The orbit centre, the target, is at the target depth
 //** D in front of the orbit camera, and that plane is the glass: the view's rectangle on the
 //** display fills the orbit camera's vertical field of view there, which sets the scale, scene
@@ -30,12 +30,12 @@
 //** running, so here the cut is made when the picture is copied, and the picture is rendered
 //** RenderScale times the view's size each way so the part is still sharp.
 //**
-//** Three of the LeiaSR settings change this (TPeardoxLeiaSRSettings): PerEyeView off puts
+//** Three of the display settings change this (TLenticularDisplaySettings): PerEyeView off puts
 //** each eye at the orbit camera's distance in the direction the real eye is, so the glass
 //** fills the picture (no zoom, rendered at the view's size: full speed, the depth
 //** exaggerated); RenderScale sets how much larger than the view the picture is rendered;
 //** Weave off draws one view from between the eyes for both, with the lens off
-//** (TPeardoxLeiaSR.Flat), for screen recordings.
+//** (TLenticularDisplay.Flat), for screen recordings.
 //**
 //** Frames are drawn whenever the program is idle (Application.OnIdle, any handler already
 //** there still called), so they come as fast as they can be drawn while mouse, keyboard,
@@ -60,8 +60,8 @@ uses
   System.SysUtils, System.Classes, System.Types, System.UITypes, System.Math,
   System.Math.Vectors, System.Diagnostics,
   FMX.Types, FMX.Types3D, FMX.Controls3D, FMX.Graphics, FMX.Forms,
-  Gorilla.Viewport, Gorilla.Camera, Gorilla.Model, Peardox.OrbitalCamera, Peardox.LeiaSR,
-  Peardox.LeiaSR.Settings, Peardox.LeiaSR.Api, StereoModelGLInterop;
+  Gorilla.Viewport, Gorilla.Camera, Gorilla.Model, Spritely.OrbitalCamera, Lenticular.Display,
+  Lenticular.Display.Settings, Lenticular.Display.Api, StereoModelGLInterop;
 
 const
   //** @abstract(Milliseconds without a frame after which the watchdog timer draws one.)
@@ -95,17 +95,17 @@ type
     Part: TRectF;
   end;
 
-  //** @abstract(Draws the Gorilla3D view once per eye and hands the pair to TPeardoxLeiaSR to
+  //** @abstract(Draws the Gorilla3D view once per eye and hands the pair to TLenticularDisplay to
   //** weave; see the unit description.)
   //**
-  //** Set LeiaSR, Camera and Viewport, then Start once LeiaSR is running (its OnStarted), and
+  //** Set Display, Camera and Viewport, then Start once Display is running (its OnStarted), and
   //** Stop before it stops.
   TPeardoxGorillaEyes = class(TComponent)
   private
-    //** @abstract(See LeiaSR.)
-    FLeiaSR: TPeardoxLeiaSR;
+    //** @abstract(See Display.)
+    FDisplay: TLenticularDisplay;
     //** @abstract(See Camera.)
-    FCamera: TPeardoxOrbitalCamera;
+    FCamera: TSpritelyOrbitalCamera;
     //** @abstract(See Viewport.)
     FViewport: TGorillaViewport;
     //** @abstract(See Active.)
@@ -196,11 +196,11 @@ type
     //** @abstract(Sets Camera, watching for it being freed.)
     //**
     //** @param(AValue The orbital camera.)
-    procedure SetCamera(const AValue: TPeardoxOrbitalCamera);
-    //** @abstract(Sets LeiaSR, watching for it being freed.)
+    procedure SetCamera(const AValue: TSpritelyOrbitalCamera);
+    //** @abstract(Sets Display, watching for it being freed.)
     //**
-    //** @param(AValue The LeiaSR component.)
-    procedure SetLeiaSR(const AValue: TPeardoxLeiaSR);
+    //** @param(AValue The TLenticularDisplay.)
+    procedure SetDisplay(const AValue: TLenticularDisplay);
     //** @abstract(Passes a line to OnLog.)
     //**
     //** @param(AText The line.)
@@ -230,7 +230,7 @@ type
     //** sliding the model across the view.)
     //**
     //** The field of view is read through the camera's own projection
-    //** (TPeardoxOrbitalGorillaCamera.ProjectToView), into FProjX and FProjY, so Gorilla3D's
+    //** (TSpritelyOrbitalGorillaCamera.ProjectToView), into FProjX and FProjY, so Gorilla3D's
     //** convention and the viewport's shape are as Gorilla3D draws them.
     //**
     //** @param(AScale Set to scene units per millimetre.)
@@ -330,16 +330,16 @@ type
     constructor Create(AOwner: TComponent); override;
     //** @abstract(Stops and frees it.)
     destructor Destroy; override;
-    //** @abstract(Starts drawing: the viewport to manual rendering, LeiaSR set Weaving, the
+    //** @abstract(Starts drawing: the viewport to manual rendering, Display set Weaving, the
     //** frames begun.)
     //**
-    //** @returns(True if it started; False, with the reason logged, if LeiaSR is not running or
-    //** something is not set.)
+    //** @returns(True if it started; False, with the reason logged, if the display is not running
+    //** or something is not set.)
     function Start: Boolean;
-    //** @abstract(Stops drawing: LeiaSR's Weaving off and the viewport's rendering put back.)
+    //** @abstract(Stops drawing: Display's Weaving off and the viewport's rendering put back.)
     procedure Stop;
     //** @abstract(Logs everything that sets what the viewer sees, as one block marked
-    //** SNAPSHOT, in the same terms as SRDelphiFMX's TSRStereoRenderer.LogSnapshot, so a view
+    //** SNAPSHOT, in the same terms as SRDelphiFMX's stereo renderer's LogSnapshot, so a view
     //** that looks right there can be compared with this one.)
     //**
     //** @param(ANote A line from the program to head the block (the view's angles, say); empty
@@ -347,13 +347,13 @@ type
     procedure LogSnapshot(const ANote: string);
     //** @abstract(True while frames are drawn.)
     property Active: Boolean read FActive;
-    //** @abstract(Frames the bridge has woven (it answered SRB_OK) since Start.)
+    //** @abstract(Frames the bridge has woven (it answered LNB_OK) since Start.)
     property WovenFrames: Int64 read FWovenFrames;
-    //** @abstract(The LeiaSR component the frames are woven by.)
-    property LeiaSR: TPeardoxLeiaSR read FLeiaSR write SetLeiaSR;
+    //** @abstract(The TLenticularDisplay the frames are woven by.)
+    property Display: TLenticularDisplay read FDisplay write SetDisplay;
     //** @abstract(The orbital camera: its Gorilla3D camera is the one moved for each eye, and its
     //** Distance is the target depth, the glass.)
-    property Camera: TPeardoxOrbitalCamera read FCamera write SetCamera;
+    property Camera: TSpritelyOrbitalCamera read FCamera write SetCamera;
     //** @abstract(The viewport drawn.)
     property Viewport: TGorillaViewport read FViewport write SetViewport;
     //** @abstract(True (the default) to hand the bridge Gorilla3D's pictures on the GPU
@@ -362,14 +362,14 @@ type
     //** screenshots.)
     property ZeroCopy: Boolean read FZeroCopy write FZeroCopy;
     //** @abstract(True if zero copy can be tried: wanted, and the bridge gives its device
-    //** (TPeardoxLeiaSR.BridgeDevice). The program then sizes the viewport in logical units,
+    //** (TLenticularDisplay.BridgeDevice). The program then sizes the viewport in logical units,
     //** as Gorilla3D draws it in those.)
     //**
     //** @returns(Whether.)
     function ZeroCopyPossible: Boolean;
     //** @abstract(How many times the woven view's size, each way, the program should make the
-    //** viewport while weaving: the LeiaSR setting RenderScale, kept to
-    //** PEARDOX_MIN_RENDER_SCALE .. PEARDOX_MAX_RENDER_SCALE, with PerEyeView; 1 without it,
+    //** viewport while weaving: the display setting RenderScale, kept to
+    //** LENTICULAR_MIN_RENDER_SCALE .. LENTICULAR_MAX_RENDER_SCALE, with PerEyeView; 1 without it,
     //** as the whole picture is then woven.)
     //**
     //** The glass takes up only part of each eye's picture with PerEyeView: about half its
@@ -381,7 +381,7 @@ type
     function RenderScale: Single;
     //** @abstract(Lets go of zero copy's textures and its OpenGL objects (its context made
     //** current for it): call while the viewport's OpenGL context still exists, in FormClose
-    //** before SR stops, and when SR has stopped.)
+    //** before the display stops, and when the display has stopped.)
     procedure ReleaseZeroCopy;
     //** @abstract(Every line of its log: the start, and once a second the frame rate, the time
     //** in each stage, the scale and each eye's part of the picture.)
@@ -439,20 +439,20 @@ end;
 function TPeardoxGorillaEyes.RenderScale: Single;
 begin
   Result := 1;
-  if (FLeiaSR <> nil) and FLeiaSR.Settings.PerEyeView then
-    Result := EnsureRange(FLeiaSR.Settings.RenderScale, PEARDOX_MIN_RENDER_SCALE,
-      PEARDOX_MAX_RENDER_SCALE);
+  if (FDisplay <> nil) and FDisplay.Settings.PerEyeView then
+    Result := EnsureRange(FDisplay.Settings.RenderScale, LENTICULAR_MIN_RENDER_SCALE,
+      LENTICULAR_MAX_RENDER_SCALE);
 end;
 
 function TPeardoxGorillaEyes.ZeroCopyPossible: Boolean;
 begin
-  Result := FZeroCopy and (FLeiaSR <> nil) and (FLeiaSR.BridgeDevice <> nil);
+  Result := FZeroCopy and (FDisplay <> nil) and (FDisplay.BridgeDevice <> nil);
 end;
 
 function TPeardoxGorillaEyes.CanZeroCopy: Boolean;
 begin
   Result := FZeroCopy and (FInterop <> nil) and FInterop.Ready and
-    (FInterop.Device = FLeiaSR.BridgeDevice) and (FInterop.Device <> nil);
+    (FInterop.Device = FDisplay.BridgeDevice) and (FInterop.Device <> nil);
 end;
 
 procedure TPeardoxGorillaEyes.PrepareZeroCopy;
@@ -462,7 +462,7 @@ var
 begin
   if not FZeroCopy then
     Exit;
-  Dev := FLeiaSR.BridgeDevice;
+  Dev := FDisplay.BridgeDevice;
   if Dev = nil then
     Exit;
   // A failure is not tried again on the same device
@@ -557,10 +557,10 @@ begin
   inherited Notification(AComponent, Operation);
   if Operation <> opRemove then
     Exit;
-  if (AComponent = FLeiaSR) or (AComponent = FCamera) or (AComponent = FViewport) then
+  if (AComponent = FDisplay) or (AComponent = FCamera) or (AComponent = FViewport) then
     Stop;
-  if AComponent = FLeiaSR then
-    FLeiaSR := nil;
+  if AComponent = FDisplay then
+    FDisplay := nil;
   if AComponent = FCamera then
     FCamera := nil;
   if AComponent = FViewport then
@@ -579,7 +579,7 @@ begin
     FViewport.FreeNotification(Self);
 end;
 
-procedure TPeardoxGorillaEyes.SetCamera(const AValue: TPeardoxOrbitalCamera);
+procedure TPeardoxGorillaEyes.SetCamera(const AValue: TSpritelyOrbitalCamera);
 begin
   if AValue = FCamera then
     Exit;
@@ -591,16 +591,16 @@ begin
     FCamera.FreeNotification(Self);
 end;
 
-procedure TPeardoxGorillaEyes.SetLeiaSR(const AValue: TPeardoxLeiaSR);
+procedure TPeardoxGorillaEyes.SetDisplay(const AValue: TLenticularDisplay);
 begin
-  if AValue = FLeiaSR then
+  if AValue = FDisplay then
     Exit;
   Stop;
-  if FLeiaSR <> nil then
-    FLeiaSR.RemoveFreeNotification(Self);
-  FLeiaSR := AValue;
-  if FLeiaSR <> nil then
-    FLeiaSR.FreeNotification(Self);
+  if FDisplay <> nil then
+    FDisplay.RemoveFreeNotification(Self);
+  FDisplay := AValue;
+  if FDisplay <> nil then
+    FDisplay.FreeNotification(Self);
 end;
 
 procedure TPeardoxGorillaEyes.Log(const AText: string);
@@ -611,14 +611,14 @@ end;
 
 function TPeardoxGorillaEyes.Start: Boolean;
 var
-  Info: TSRBDisplayInfo;
+  Info: TLNBDisplayInfo;
 begin
   Result := FActive;
   if FActive then
     Exit;
-  if (FLeiaSR = nil) or not FLeiaSR.Running then
+  if (FDisplay = nil) or not FDisplay.Running then
   begin
-    Log('Eyes NOT started: LeiaSR is not running');
+    Log('Eyes NOT started: the display is not running');
     Exit;
   end;
   if (FCamera = nil) or (FCamera.Camera = nil) or (FViewport = nil) or
@@ -644,15 +644,15 @@ begin
   // Each eye is woven at the display's recommended view size
   FViewWidth := PEARDOX_EYES_DEFAULT_VIEW_WIDTH;
   FViewHeight := PEARDOX_EYES_DEFAULT_VIEW_HEIGHT;
-  if FLeiaSR.DisplayInfo(Info) and (Info.recommendedViewWidth > 0) and
+  if FDisplay.DisplayInfo(Info) and (Info.recommendedViewWidth > 0) and
     (Info.recommendedViewHeight > 0) then
   begin
     FViewWidth := Info.recommendedViewWidth;
     FViewHeight := Info.recommendedViewHeight;
   end;
   // Flat first, so the lens never comes on when it is not wanted
-  FLeiaSR.Flat := not FLeiaSR.Settings.Weave;
-  FLeiaSR.Weaving := True;
+  FDisplay.Flat := not FDisplay.Settings.Weave;
+  FDisplay.Weaving := True;
   FActive := True;
   FWatchdogFrames := 0;
   FLastFrameTick := TThread.GetTickCount64;
@@ -661,10 +661,10 @@ begin
   FIdleHooked := True;
   FWatchdog.Enabled := True;
   Log(Format('Eyes started: %s, woven at %d x %d (the display''s view), rendered at %.2f ' +
-    'times it, target depth %.3f (the glass)%s', [IfThen(FLeiaSR.Settings.PerEyeView,
+    'times it, target depth %.3f (the glass)%s', [IfThen(FDisplay.Settings.PerEyeView,
     'each eye drawn from where it is (per-eye view)',
     'each eye drawn from the orbit camera''s distance (full speed)'), FViewWidth, FViewHeight,
-    RenderScale, FCamera.Distance, IfThen(FLeiaSR.Settings.Weave, '',
+    RenderScale, FCamera.Distance, IfThen(FDisplay.Settings.Weave, '',
     '; flat (weave off): one view from between the eyes, the lens off')]));
   Result := True;
 end;
@@ -687,8 +687,8 @@ begin
   if not FActive then
     Exit;
   FActive := False;
-  if (FLeiaSR <> nil) and not (csDestroying in FLeiaSR.ComponentState) then
-    FLeiaSR.Weaving := False;
+  if (FDisplay <> nil) and not (csDestroying in FDisplay.ComponentState) then
+    FDisplay.Weaving := False;
   if (FViewport <> nil) and not (csDestroying in FViewport.ComponentState) then
   begin
     FViewport.ManualRendering := FSavedManual;
@@ -704,26 +704,26 @@ var
   Sep: Single;
   Fixed: Boolean;
 begin
-  Sep := FLeiaSR.Settings.EyeSeparationMM;
-  Fixed := not (FLeiaSR.Settings.LookAround and FLeiaSR.EyesTracked);
+  Sep := FDisplay.Settings.EyeSeparationMM;
+  Fixed := not (FDisplay.Settings.LookAround and FDisplay.EyesTracked);
   if Fixed then
   begin
     // A viewer straight in front of the view's centre
     if Sep <= 0 then
-      Sep := PEARDOX_DEFAULT_EYE_SEPARATION_MM;
-    Mid := Point3D(FLeiaSR.WindowCenterMM.X, FLeiaSR.WindowCenterMM.Y,
+      Sep := LENTICULAR_DEFAULT_EYE_SEPARATION_MM;
+    Mid := Point3D(FDisplay.WindowCenterMM.X, FDisplay.WindowCenterMM.Y,
       PEARDOX_EYES_NOMINAL_VIEWER_MM);
     ALeft := Mid - Point3D(Sep / 2, 0, 0);
     ARight := Mid + Point3D(Sep / 2, 0, 0);
-    if FLeiaSR.EyesTracked then
+    if FDisplay.EyesTracked then
       FLastEyesFrom := 'fixed viewer (LookAround off)'
     else
       FLastEyesFrom := 'fixed viewer (eyes not tracked)';
   end
   else
   begin
-    ALeft := FLeiaSR.LeftEyeMM;
-    ARight := FLeiaSR.RightEyeMM;
+    ALeft := FDisplay.LeftEyeMM;
+    ARight := FDisplay.RightEyeMM;
     FLastEyesFrom := 'tracked';
     // The saved separation instead of the tracker's, which wanders, about
     // the tracked midpoint
@@ -745,7 +745,7 @@ begin
   AScale := 0;
   Result := False;
   D := FCamera.Distance;
-  if (FLeiaSR.WindowSizeMM.Height <= 0) or (FViewport.Width <= 0) or (FViewport.Height <= 0) or
+  if (FDisplay.WindowSizeMM.Height <= 0) or (FViewport.Width <= 0) or (FViewport.Height <= 0) or
     (D <= 0) then
     Exit;
   // The point one unit right, one down and one ahead of the orbit camera,
@@ -764,11 +764,11 @@ begin
   // depth, that is the view's height on the display. Not at the target's:
   // a right drag moves the target (the glass) with the camera still, and
   // a scale that followed it moved every eye's camera sideways - the model
-  // slid across the SR view (owner, 22:59 and 23:10: "it still moves").
+  // slid across the 3D view (owner, 22:59 and 23:10: "it still moves").
   // With the scale kept, the glass and the viewer move along the line of
   // sight together and the model only comes out of the screen or goes in
   FScaleDepth := ModelDepth;
-  AScale := 2 * FScaleDepth / (FProjY * FLeiaSR.WindowSizeMM.Height);
+  AScale := 2 * FScaleDepth / (FProjY * FDisplay.WindowSizeMM.Height);
   Result := True;
 end;
 
@@ -803,24 +803,24 @@ begin
   // through the orbit centre (Z = 0), the orbit camera at Z = -D. FMX's Y is
   // down, the display's up
   Z := Max(AEyeMM.Z, PEARDOX_EYES_MIN_EYE_DISTANCE_MM);
-  if FLeiaSR.Settings.PerEyeView then
-    E := Point3D((AEyeMM.X - FLeiaSR.WindowCenterMM.X) * AScale,
-      -(AEyeMM.Y - FLeiaSR.WindowCenterMM.Y) * AScale, -Z * AScale)
+  if FDisplay.Settings.PerEyeView then
+    E := Point3D((AEyeMM.X - FDisplay.WindowCenterMM.X) * AScale,
+      -(AEyeMM.Y - FDisplay.WindowCenterMM.Y) * AScale, -Z * AScale)
   else
   begin
     // Full speed: at the orbit camera's distance, in the direction the real
     // eye is, so the glass fills the picture (no zoom) and only its offset
     // remains
-    E := Point3D((AEyeMM.X - FLeiaSR.WindowCenterMM.X) / Z, -(AEyeMM.Y -
-      FLeiaSR.WindowCenterMM.Y) / Z, -1) * FScaleDepth;
+    E := Point3D((AEyeMM.X - FDisplay.WindowCenterMM.X) / Z, -(AEyeMM.Y -
+      FDisplay.WindowCenterMM.Y) / Z, -1) * FScaleDepth;
   end;
   AView.Camera := E;
   // The glass's corners from there, the eye's camera looking the same way
   // as the orbit camera: X / Z and Y / Z through the projection, as
   // fractions of the picture from its top-left corner
   Z := -E.Z;
-  HalfW := FLeiaSR.WindowSizeMM.Width / 2 * AScale;
-  HalfH := FLeiaSR.WindowSizeMM.Height / 2 * AScale;
+  HalfW := FDisplay.WindowSizeMM.Width / 2 * AScale;
+  HalfH := FDisplay.WindowSizeMM.Height / 2 * AScale;
   AView.Part := RectF((1 + (-HalfW - E.X) / Z * FProjX) / 2,
     (1 + (-HalfH - E.Y) / Z * FProjY) / 2, (1 + (HalfW - E.X) / Z * FProjX) / 2,
     (1 + (HalfH - E.Y) / Z * FProjY) / 2);
@@ -830,10 +830,10 @@ end;
 
 procedure TPeardoxGorillaEyes.LogSnapshot(const ANote: string);
 const
-  LensNames: array[TPeardoxLeiaSRLensState] of string = ('not known', 'on', 'off');
+  LensNames: array[TLenticularDisplayLensState] of string = ('not known', 'on', 'off');
   EyeNames: array[0..1] of string = ('L', 'R');
 var
-  Info: TSRBDisplayInfo;
+  Info: TLNBDisplayInfo;
   I: Integer;
   P: TRectF;
   Zoom: Single;
@@ -852,31 +852,31 @@ begin
   Log('=== SNAPSHOT ===');
   if ANote <> '' then
     Log('  ' + ANote);
-  if (FLeiaSR = nil) or not FLeiaSR.Running or (FCamera = nil) then
+  if (FDisplay = nil) or not FDisplay.Running or (FCamera = nil) then
   begin
-    Log('  LeiaSR is not running');
+    Log('  the display is not running');
     Log('=== END SNAPSHOT ===');
     Exit;
   end;
-  if FLeiaSR.DisplayInfo(Info) then
+  if FDisplay.DisplayInfo(Info) then
     Log(Format('  display %d x %d px, %.1f x %.1f mm, recommended view %d x %d per eye',
       [Info.resolutionWidth, Info.resolutionHeight, Info.physicalWidthMM, Info.physicalHeightMM,
        Info.recommendedViewWidth, Info.recommendedViewHeight]));
   Log(Format('  viewport on the display: centre (%.1f, %.1f) mm, %.1f x %.1f mm, view %s',
-    [FLeiaSR.WindowCenterMM.X, FLeiaSR.WindowCenterMM.Y, FLeiaSR.WindowSizeMM.Width,
-     FLeiaSR.WindowSizeMM.Height, FLastViewInfo]));
+    [FDisplay.WindowCenterMM.X, FDisplay.WindowCenterMM.Y, FDisplay.WindowSizeMM.Width,
+     FDisplay.WindowSizeMM.Height, FLastViewInfo]));
   Log(Format('  eyes tracked L%s R%s mm (%s), drawn from L%s R%s mm (%s), look-around %s, ' +
-    'lens %s', [Pt(FLeiaSR.LeftEyeMM), Pt(FLeiaSR.RightEyeMM),
-    IfThen(FLeiaSR.EyesTracked, 'tracked', 'NOT tracked'), Pt(FLastEyes[0]), Pt(FLastEyes[1]),
-    FLastEyesFrom, BoolToStr(FLeiaSR.Settings.LookAround, True),
-    LensNames[FLeiaSR.LensState]]));
+    'lens %s', [Pt(FDisplay.LeftEyeMM), Pt(FDisplay.RightEyeMM),
+    IfThen(FDisplay.EyesTracked, 'tracked', 'NOT tracked'), Pt(FLastEyes[0]), Pt(FLastEyes[1]),
+    FLastEyesFrom, BoolToStr(FDisplay.Settings.LookAround, True),
+    LensNames[FDisplay.LensState]]));
   Log(Format('  settings: EyeSeparationMM %.1f (0 = tracked), LatencyFrames %d, LensMode %d',
-    [FLeiaSR.Settings.EyeSeparationMM, FLeiaSR.Settings.LatencyFrames,
-     FLeiaSR.Settings.LensMode]));
+    [FDisplay.Settings.EyeSeparationMM, FDisplay.Settings.LatencyFrames,
+     FDisplay.Settings.LensMode]));
   Log(Format('  camera: field of view %.2f deg, target depth (the glass) %.3f units; viewport ' +
     '%.0f x %.0f, rendered at %.2f times the view; per-eye view %s, weave %s', [FCamera.FOV, FCamera.Distance,
     FViewport.Width, FViewport.Height, RenderScale,
-    BoolToStr(FLeiaSR.Settings.PerEyeView, True), BoolToStr(FLeiaSR.Settings.Weave, True)]));
+    BoolToStr(FDisplay.Settings.PerEyeView, True), BoolToStr(FDisplay.Settings.Weave, True)]));
   if FLastScale > 0 then
   begin
     Log(Format('  scale %.6f world units per mm (%.3f mm per unit), set at the model''s depth ' +
@@ -978,7 +978,7 @@ begin
   end;
   FCopyMs := FCopyMs + Watch.Elapsed.TotalMilliseconds;
   Watch := TStopwatch.StartNew;
-  if FLeiaSR.SubmitViews(@FBuffer[0], FViewWidth, FViewHeight, Pitch, RGBA) = SRB_OK then
+  if FDisplay.SubmitViews(@FBuffer[0], FViewWidth, FViewHeight, Pitch, RGBA) = LNB_OK then
     Inc(FWovenFrames);
   FSubmitMs := FSubmitMs + Watch.Elapsed.TotalMilliseconds;
 end;
@@ -1001,7 +1001,7 @@ var
 begin
   if FInFrame or not FActive then
     Exit;
-  if (FLeiaSR = nil) or not FLeiaSR.Running or (FCamera = nil) or (FCamera.Camera = nil) or
+  if (FDisplay = nil) or not FDisplay.Running or (FCamera = nil) or (FCamera.Camera = nil) or
     (FViewport = nil) then
   begin
     Stop;
@@ -1010,13 +1010,13 @@ begin
   FInFrame := True;
   try
     Watch := TStopwatch.StartNew;
-    FLeiaSR.UpdateEyes;
+    FDisplay.UpdateEyes;
     EyePair(L, R);
     // Weave off: one view from between the eyes for both, the lens off
     // (owner, 22:37: for screen recordings, which cannot catch the woven
     // picture; the view still follows the head)
-    Flat := not FLeiaSR.Settings.Weave;
-    FLeiaSR.Flat := Flat;
+    Flat := not FDisplay.Settings.Weave;
+    FDisplay.Flat := Flat;
     if Flat then
     begin
       L := (L + R) * 0.5;
@@ -1053,8 +1053,8 @@ begin
             RightTex := FInterop.LeftTexture;
             FLastViewInfo := FLastViewInfo + ', flat';
           end;
-          if FLeiaSR.SubmitEyeTextures(FInterop.LeftTexture, RightTex, FInterop.Width,
-            FInterop.Height) = SRB_OK then
+          if FDisplay.SubmitEyeTextures(FInterop.LeftTexture, RightTex, FInterop.Width,
+            FInterop.Height) = LNB_OK then
             Inc(FWovenFrames);
           FSubmitMs := FSubmitMs + Watch2.Elapsed.TotalMilliseconds;
         end

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Draws the palette icons of the Peardox components.
+"""Draws the palette icons of the Spritely and Lenticular components.
 
     python3 tools/gen_icons.py [--preview sheet.png]
 
@@ -13,7 +13,8 @@ on a light and a dark background, read back from the rendered frames.
 
 Style, as in TSteamAPI's palette icons (G3DGames/TSteamAPI,
 tools/gen_icons.py, whose .ico writer this is): a rounded tile in the
-group colour with one white symbol on it, drawn on a 24-unit grid. The
+group colour with one white symbol on it, drawn on a 24-unit grid. Each
+set has its own colour: Spritely green, Lenticular blue. The
 tile fills the whole square so its edges land on whole pixels at every
 size, and its corners leave the bottom-left pixel transparent (Delphi
 takes that pixel as the transparent colour when it ignores alpha).
@@ -35,9 +36,10 @@ SVG_DIR = os.path.join(ICON_DIR, "svg")
 SIZES = [16, 24, 32, 48, 64, 256]
 
 W = "#FFFFFF"
-# The Peardox group colour: a pear green, mid-luminance so the tile reads
-# on light and dark IDE themes
-PEARDOX = "#3E7F3A"
+# The group colours, mid-luminance so the tiles read on light and dark IDE
+# themes: Spritely a pear green, Lenticular a slate blue
+SPRITELY = "#3E7F3A"
+LENTICULAR = "#3A5E9A"
 GOLD = "#E9B53C"
 # Alpha under this counts as transparent, as in tools/gen_icon_res.py
 CLEAR_BELOW = 64
@@ -116,10 +118,37 @@ def projection():
     return back + edges + front + body
 
 
+def lenticular_display():
+    """A flat screen seen through a sheet of upright lenses: the screen's outline on a
+    stand, a row of lens ridges across its top edge, and the stripes the lenses split
+    the picture into, each eye seeing every other one; a gold dot in the middle stripe
+    for the point that stands out of the screen."""
+    x0, y0, w, h = 3.2, 5.0, 17.6, 11.2   # the screen
+    line = f'fill="none" stroke="{W}" stroke-width="1.4" stroke-linejoin="round"'
+    screen = f'<rect x="{x0}" y="{y0}" width="{w}" height="{h}" rx="1.2" {line}/>'
+    stand = (f'<path d="M12 {y0 + h} L12 19.2 M8.2 19.6 L15.8 19.6" fill="none" '
+             f'stroke="{W}" stroke-width="1.4" stroke-linecap="round"/>')
+    n = 5
+    step = w / n
+    # The lens ridges: one arc per lens, standing on the screen's top edge
+    ridges = "".join(
+        f'<path d="M{x0 + i * step:.2f} {y0} A{step / 2:.2f} {step / 2:.2f} 0 0 1 '
+        f'{x0 + (i + 1) * step:.2f} {y0}" fill="none" stroke="{W}" stroke-width="1.2"/>'
+        for i in range(n))
+    # The stripes under the lenses, every other one filled
+    stripes = "".join(
+        f'<rect x="{x0 + i * step + 0.9:.2f}" y="{y0 + 1.6}" width="{step - 1.8:.2f}" '
+        f'height="{h - 3.2}" fill="{W}" opacity="{0.85 if i % 2 == 0 else 0.35}"/>'
+        for i in range(n))
+    centre = f'<circle cx="12" cy="{y0 + h / 2:.2f}" r="1.7" fill="{GOLD}"/>'
+    return stripes + screen + ridges + stand + centre
+
+
 # Class name -> (tile colour, symbol). Symbols may use {T} for the tile colour.
 ICONS = {
-    "TPeardoxOrbitalCamera": (PEARDOX, orbital_camera()),
-    "TPeardoxProjection": (PEARDOX, projection()),
+    "TSpritelyOrbitalCamera": (SPRITELY, orbital_camera()),
+    "TSpritelyProjection": (SPRITELY, projection()),
+    "TLenticularDisplay": (LENTICULAR, lenticular_display()),
 }
 
 
