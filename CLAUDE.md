@@ -337,6 +337,13 @@ rise in the 2D window, in SR, or both - it decides between route 2
   run), one Gorilla.Imaging.TGA.TTargaFileFormat, and two TStringList
   holding shader source (vertPos, return vec4). For Gorilla3D's author,
   with the projection-offset and field-of-view questions.
+  CAUSE FOUND (8 November 2026): the leak comes with
+  TGorillaModel.LoadNewModelFromFile, the class function LoadModel used.
+  Sprite3D, with the same FBX loader, does not leak: it makes the model
+  itself (TGorillaModel.Create(viewport)) and loads with the instance
+  method LoadFromFile. StereoCam63 loads that way (LoadModel frees the new
+  model if its load fails). Owner to test: whether the TGA and shader
+  TStringList leaks go too; if not, they are a separate Gorilla3D bug.
 - Glasses-free 3D (owner, 7 November 2026, 15:53): the target is LeiaSR,
   through peardox/SRDelphiFMX's bridge. Step 0 (StereoCam22): a NEW
   PACKAGE, PeardoxLeiaSR, separate from the camera package (requires rtl,
