@@ -66,7 +66,7 @@ Keep this file up to date when the rules or the state of the work change.
   lib, src/common, src/ui and src/*.dpr, or every @link is reported.
 - A new unit goes in both the `.dpr` and the `.dproj` (UTF-8 with BOM).
 
-## Handover (7 November 2026, 23:17)
+## Handover (8 November 2026, 12:22)
 
 Read this section first; "Where the work is" below is the full history,
 for when a detail is needed.
@@ -75,8 +75,16 @@ for when a detail is needed.
 
 - GitHub `main` holds everything up to StereoCam58a (merge d84819d; the
   `stereo` branch is gone). The owner's copy is ahead: StereoCam59 to 62,
-  delivered as zips, tested and working (owner, 23:17: "that's good now").
-  Ask whether they have been pushed before building on GitHub.
+  delivered as zips, tested and working (owner, 23:17: "that's good now"),
+  then StereoCam63 (8 November: the FBX leak fix, `LoadModel` and this
+  file; owner, 12:22: "The fix works"). StereoCam63 was built on GitHub
+  `main` at df67bde. Ask whether they have been pushed before building on
+  GitHub.
+- **FBX leak: fixed** (StereoCam63). `LoadModel` makes the model itself
+  (`TGorillaModel.Create(GorillaViewport1)`) and loads with the instance
+  method `LoadFromFile`, as Sprite3D does; never go back to the class
+  function `TGorillaModel.LoadNewModelFromFile`, which leaks the FBX
+  loader's parse tree (Gorilla3D 1.5.3). See Lessons learned.
 - Submodule SRDelphiFMX at 2c4a2f1 (`srb_GetDevice`, `srb_SetFrameCap`,
   `srb_CopyEyeTexture` / `srb_PresentViews`). Never change it from here.
 - StereoCam60 changed the PeardoxLeiaSR package (settings + `Flat`); the
@@ -235,7 +243,9 @@ which is what `x_ndc += sx * w` does after the projection, or a shear
    TGorillaProjectionSettings (added in ToMatrix as Offset times the w
    column to the x and y columns), or a way for a camera to supply its
    own projection. Already on the list of questions for him (with the
-   field-of-view and FBX-leak questions); the owner relays.
+   field-of-view questions, and the LoadNewModelFromFile FBX leak as a
+   bug report, not a question: worked round in StereoCam63); the owner
+   relays.
 5. **RTTI writes** to FMX's / Gorilla3D's private projection fields
    (the owner, 17:37: "some of the FMX3D fields for the projection matrix
    are strictly private", the source is there): fragile, and which field
@@ -342,8 +352,10 @@ rise in the 2D window, in SR, or both - it decides between route 2
   Sprite3D, with the same FBX loader, does not leak: it makes the model
   itself (TGorillaModel.Create(viewport)) and loads with the instance
   method LoadFromFile. StereoCam63 loads that way (LoadModel frees the new
-  model if its load fails). Owner to test: whether the TGA and shader
-  TStringList leaks go too; if not, they are a separate Gorilla3D bug.
+  model if its load fails). Owner (8 November 2026, 12:22): "The fix
+  works". Not reported separately: whether the TGA and shader TStringList
+  leaks went too; if a later dump shows them, they are a separate
+  Gorilla3D bug.
 - Glasses-free 3D (owner, 7 November 2026, 15:53): the target is LeiaSR,
   through peardox/SRDelphiFMX's bridge. Step 0 (StereoCam22): a NEW
   PACKAGE, PeardoxLeiaSR, separate from the camera package (requires rtl,
@@ -1016,6 +1028,13 @@ Not to start unless the owner asks for one.
   takes it as Win32-only and greys it out while the project's active
   platform is Win64 (owner, 7 November 2026). Every new Peardox component
   carries the attribute.
+- **Loading a model**: make the TGorillaModel (owned by the viewport,
+  parented to it) and call its `LoadFromFile`; never use the class
+  function `TGorillaModel.LoadNewModelFromFile`. In Gorilla3D 1.5.3 it
+  never frees the FBX loader's parse tree, so every FBX load leaks it
+  (TFBXNode, TFBXProperty, their TObjectLists and name dictionaries).
+  Found by comparing with Sprite3D, which loads with `LoadFromFile` and
+  does not leak (StereoCam63).
 - **Reading a FastMM5 leak dump**: when an exception aborts shut-down,
   TApplication, TPlatformWin, the form and its registry entries all show
   as leaks; they are a symptom. The leaked object of our own class is the
